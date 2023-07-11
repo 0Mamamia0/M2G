@@ -76,50 +76,45 @@ namespace m2g {
     namespace piv {
         template<bool flip>
         void line_copy(uint8_t* dst, uint8_t* src, int pixel) {
-            // if (!flip) {
-            //     memcpy(dst, src, pixel << 2);
-            // }
-            // else {
-            //     uint32_t* dst32 = (uint32_t *)dst;
-            //     uint32_t* src32 = (uint32_t *)src + pixel;
-            //     while (pixel-- > 0) {
-            //         *dst32++ = *--src32;
-            //     }
-            // }
+            if (!flip) {
+                memcpy(dst, src, pixel << 2);
+            }
+            else {
+                uint32_t* dst32 = (uint32_t *)dst;
+                uint32_t* src32 = (uint32_t *)src + pixel;
+                while (pixel-- > 0) {
+                    *dst32++ = *--src32;
+                }
+            }
         }
 
-        void line_move(uint8_t* dst, uint8_t* src, int pixel) {
-            // memmove(dst, src, pixel << 2);
-        }
+
 
         template<bool x_flip, bool y_flip>
         void rect_copy(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
-            // if (y_flip) {
-            //     src = src + (height - 1) * src_stride;
-            //     src_stride = -src_stride;
-            // }
-            //
-            // while (height-- > 0) {
-            //     line_copy<x_flip>(dst, src, width);
-            //     dst += dst_stride;
-            //     src += src_stride;
-            // }
+            if (y_flip) {
+                src = src + (height - 1) * src_stride;
+                src_stride = -src_stride;
+            }
+
+            while (height-- > 0) {
+                line_copy<x_flip>(dst, src, width);
+                dst += dst_stride;
+                src += src_stride;
+            }
         }
 
 
-        void rect_move(uint8_t* dst, uint8_t* src, ptrdiff_t stride, int width, int height) {
-            //        if(flip) {
-            //            ptrdiff_t offset = (height - 1) * stride;
-            //            dst = dst + offset;
-            //            src = src + offset;
-            //            stride = -stride;
-            //        }
+        inline void line_move(uint8_t* dst, uint8_t* src, int pixel) {
+            memmove(dst, src, pixel << 2);
+        }
 
-            // while (height-- > 0) {
-            //     line_move(dst, src, width);
-            //     dst += stride;
-            //     src += stride;
-            // }
+        inline void rect_move(uint8_t* dst, uint8_t* src, ptrdiff_t stride, int width, int height) {
+            while (height-- > 0) {
+                line_move(dst, src, width);
+                dst += stride;
+                src += stride;
+            }
         }
     }
 
@@ -131,8 +126,8 @@ namespace m2g {
 
         int width = dst_area.getWidth();
         int height = dst_area.getHeight();
-        int src_offset = (src_area.top * stride) + (src_area.left * 4);
-        int dst_offset = (dst_area.top * stride) + (dst_area.left * 4);
+        ptrdiff_t src_offset = (src_area.top * stride) + (src_area.left * 4);
+        ptrdiff_t dst_offset = (dst_area.top * stride) + (dst_area.left * 4);
         uint8_t* dst = pixels + dst_offset;
         uint8_t* src = pixels + src_offset;
 

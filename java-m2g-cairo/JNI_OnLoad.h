@@ -14,11 +14,11 @@ extern "C" {
 
 
 
-// extern int register_m2g_Image(JNIEnv *env);
-// extern int register_m2g_ImageCodec(JNIEnv *env);
-// extern int register_m2g_Graphics(JNIEnv *env);
-// extern int register_m2g_Font(JNIEnv *env);
-// extern int register_m2g_Objects(JNIEnv *env);
+extern int register_m2g_Image(JNIEnv *env);
+extern int register_m2g_ImageCodec(JNIEnv *env);
+extern int register_m2g_Graphics(JNIEnv *env);
+extern int register_m2g_Font(JNIEnv *env);
+extern int register_m2g_Objects(JNIEnv *env);
 
 #ifdef M2G_BUILD_SHARED
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved);

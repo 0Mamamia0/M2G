@@ -7,13 +7,6 @@
 #include "Clip.h"
 #include "Rect.h"
 
-
-
-
-
-
-
-
 namespace m2g {
 
 

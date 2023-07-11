@@ -989,8 +989,8 @@ namespace m2g {
         graphics->drawPoint(centerX - x, centerY - y);
 
 
-        // graphics->drawLine(centerX + x, centerY + y, centerX - x, centerY + y);
-        // graphics->drawLine(centerX + x, centerY - y, centerX - x, centerY - y);
+        graphics->drawLine(centerX + x, centerY + y, centerX - x, centerY + y);
+        graphics->drawLine(centerX + x, centerY - y, centerX - x, centerY - y);
     }
 
 
