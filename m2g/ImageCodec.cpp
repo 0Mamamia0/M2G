@@ -4,8 +4,8 @@
 
 #include "ImageCodec.h"
 
+#include "stdio.h"
 #include "stb_image.h"
-
 #include "Image.h"
 #include "PixelFormat.h"
 #include "PixelBuffer.h"
@@ -32,11 +32,11 @@ Image* ImageCodec::loadImage(const char *filename) {
     int width, height, channels;
     int desired_channels = STBI_default;
 
-    FILE* file;
+//    FILE* file;
     stbi_uc* image_data = nullptr;
-    errno_t err = fopen_s(&file, filename, "r");
+//    errno_t err = fopen_s(&file, filename, "r");
 
-    if(err == 0) {
+//    if(err == 0) {
         if(stbi_info(filename, &width, &height, &channels)) {
             if(channels == 3) {
                 desired_channels  = STBI_rgb_alpha;
@@ -46,8 +46,8 @@ Image* ImageCodec::loadImage(const char *filename) {
                 return new Image(PixelBuffer::wrap(image_data, width, height, stbChannelsToFormat(channels), STB_ImageReleaseFun));
             }
         }
-        fclose(file);
-    }
+//        fclose(file);
+//    }
 
     return nullptr;
 }

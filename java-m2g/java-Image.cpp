@@ -2,7 +2,7 @@
 // Created by Admin on 2023/5/27.
 //
 
-#include "jni.h"
+#include "jni_def.h"
 #include "JNI_OnLoad.h"
 #include "m2g/Image.h"
 #include "m2g/PixelBuffer.h"

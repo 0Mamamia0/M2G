@@ -1,9 +1,10 @@
 //
 // Created by Admin on 2023/12/1.
 //
+
+#include "jni_def.h"
 #include <array>
 #include <cstring>
-#include "jni.h"
 #include "JNI_OnLoad.h"
 #include "m2g/Font.h"
 

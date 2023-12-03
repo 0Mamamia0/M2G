@@ -242,6 +242,7 @@ void blendA8(uint8_t* dst, uint8_t* src, uint8_t* rgba, int count) {
 
 
 #ifdef __SWITCH__
+#include "arm_neon.h"
 static inline uint8x8_t blend_32_neon(uint8x8_t src, uint8x8_t dst, uint16x8_t alpha) {
     int16x8_t src_wide, dst_wide;
 

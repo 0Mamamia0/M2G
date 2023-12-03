@@ -8,7 +8,7 @@
 
 
 #include <string>
-
+#include <vector>
 #include "Rect.h"
 #include "Font.h"
 #include "UTF8Iterator.h"
