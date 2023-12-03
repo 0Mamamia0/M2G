@@ -53,7 +53,7 @@ extern "C"{
 
     inline void jniReleaseStringUTFChars(JNIEnv *env, jstring str, const char *chars) {
 #ifdef JNI_C_STYLE
-        (*env)->ReleaseStringUTFChars(env, clazz, methods, nMethods);
+        (*env)->ReleaseStringUTFChars(env, str, chars);
 #else
         env->ReleaseStringUTFChars(str, chars);
 #endif
@@ -62,7 +62,7 @@ extern "C"{
 
     inline jbyte* jniGetByteArrayElements(JNIEnv *env, jbyteArray array, jboolean *isCopy) {
 #ifdef JNI_C_STYLE
-        return (*env)->GetByteArrayElements(array, isCopy);
+        return (*env)->GetByteArrayElements(env, array, isCopy);
 #else
         return env->GetByteArrayElements(array, isCopy);
 #endif
@@ -71,7 +71,7 @@ extern "C"{
 
 inline void jniReleaseByteArrayElements(JNIEnv *env, jbyteArray array, jbyte* elems, jint mode) {
 #ifdef JNI_C_STYLE
-    (*env)->ReleaseByteArrayElements(array, elems, mode);
+    (*env)->ReleaseByteArrayElements(env, array, elems, mode);
 #else
     env->ReleaseByteArrayElements(array, elems, mode);
 #endif
