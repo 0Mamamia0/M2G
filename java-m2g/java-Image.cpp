@@ -4,6 +4,7 @@
 
 #include "jni_def.h"
 #include "JNI_OnLoad.h"
+#include "java-Objects.h"
 #include "m2g/Image.h"
 #include "m2g/PixelBuffer.h"
 

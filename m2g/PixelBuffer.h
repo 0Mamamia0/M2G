@@ -17,7 +17,8 @@ class PixelBuffer {
     using ReleaseFun =  void(PixelBuffer*, void*);
 
 public:
-
+    PixelBuffer(const PixelBuffer &other);
+    PixelBuffer(PixelBuffer &&other);
     PixelBuffer(uint8_t* pixels, int width, int height, int format, ReleaseFun* fun);
     PixelBuffer(uint8_t* pixels, int width, int height, int format, int rowBytes, ReleaseFun* fun);
     ~PixelBuffer();

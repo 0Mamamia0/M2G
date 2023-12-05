@@ -14,10 +14,10 @@ if (auto rc = register_m2g_##class_name(env)) {   \
 }
 
 
-#ifdef USE_JAMVM
-JNIEXPORT jint M2G_OnLoad(JavaVM* vm, void* reserved) {
-#else
+#ifdef M2G_BUILD_SHARED
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+#else
+JNIEXPORT jint M2G_OnLoad(JavaVM* vm, void* reserved) {
 #endif
     JNIEnv* env;
     if (jniGetEnv(vm, reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {

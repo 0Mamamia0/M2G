@@ -146,22 +146,75 @@ jint NativeGraphics_GetClipHeight(JNIEnv *, jclass, jlong handle) {
 void NativeGraphics_DrawString(JNIEnv* env, jclass,  jlong handle, jstring str, jint x, jint y, jint anchor, jlong  fontHandle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     auto* font = reinterpret_cast<const Font*>(fontHandle);
-    if(graphics && font) {
+    if(graphics != nullptr && font != nullptr) {
         const char* text = jniGetStringUTFChars(env, str, nullptr);
         graphics->drawString(text, x, y, anchor, *font);
         jniReleaseStringUTFChars(env, str, text);
     }
 }
 
+void NativeGraphics_DrawRegion(JNIEnv* env, jclass,  jlong handle, jlong imageHandle,
+                                    jint x, jint y, jint width, jint height,
+                                    jint transform,  jint x_dst, jint y_dst,
+                                    jint anchor) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
+    auto* image = reinterpret_cast<Image*>(imageHandle);
+    if(graphics) {
+        graphics->drawRegion(image, x, y, width, height, transform, x_dst, y_dst, anchor);
+    }
+}
+
+void NativeGraphics_CopyArea(JNIEnv* env, jclass,  jlong handle, jint x_src, jint y_src, jint width, jint height,
+                             jint x_dst, jint y_dst, jint anchor) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
+    if(graphics) {
+        graphics->copyArea(x_src, y_src, width, height, x_dst, y_dst, anchor);
+    }
+}
+
+
+void NativeGraphics_DrawRGB(JNIEnv* env, jclass,  jlong handle, jintArray array, jint offset, jint scanLength,
+                            jint x, jint y, jint width, jint height, jboolean processAlpha) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
+    if(graphics) {
+        auto* data = jniGetIntArrayElements(env, array, nullptr);
+        int dataLength = jniGetArrayLength(env, array);
+        graphics->drawRGB(data,dataLength, offset, scanLength, x, y, width, height, processAlpha);
+        jniReleaseIntArrayElements(env, array, data, JNI_ABORT);
+    }
+}
+
+
+void NativeGraphics_Save(JNIEnv* env, jclass,  jlong handle) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
+    if(graphics) {
+        graphics->save();
+    }
+}
+
+
+jboolean NativeGraphics_Restore(JNIEnv* env, jclass,  jlong handle) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
+    if(graphics) {
+        return graphics->restore();
+    }
+    return false;
+}
+
+
+jboolean NativeGraphics_RestoreToCount(JNIEnv* env, jclass,  jlong handle, jint count) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
+    if(graphics) {
+        return graphics->restoreToCount(count);
+    }
+    return false;
+}
 
 
 extern int register_m2g_Graphics(JNIEnv *env) {
     static const JNINativeMethod methods[] = {
-
             {"jniCreateFormImage"       , "(J)J"   , reinterpret_cast<void*>(NativeGraphics_CreateFormImage)      },
             {"jniRelease"       , "(J)V"           , reinterpret_cast<void*>(NativeGraphics_Release)      },
-
-
             {"jniDrawLine"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawLine)      },
             {"jniDrawRect"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawRect)      },
             {"jniFillRect"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_FillRect)      },
@@ -169,30 +222,23 @@ extern int register_m2g_Graphics(JNIEnv *env) {
             {"jniFillCircle"       , "(JIII)V"           , reinterpret_cast<void*>(NativeGraphics_FillCircle)      },
             {"jniDrawImage"       , "(JJIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawImage)      },
             {"jniDrawImageWH"       , "(JJIIIII)V"        , reinterpret_cast<void*>(NativeGraphics_DrawImageWH)      },
+            {"jniDrawRegion"       , "(JJIIIIIIII)V"        , reinterpret_cast<void*>(NativeGraphics_DrawRegion)      },
             {"jniDrawString"       , "(JLjava/lang/String;IIIJ)V"    , reinterpret_cast<void*>(NativeGraphics_DrawString)      },
-
+            {"jniCopyArea"       , "(JIIIIIII)V"        , reinterpret_cast<void*>(NativeGraphics_CopyArea)      },
+            {"jniDrawRGB"       , "(J[IIIIIIIZ)V"        , reinterpret_cast<void*>(NativeGraphics_DrawRGB)      },
             {"jniSetColor"       , "(JI)V"           , reinterpret_cast<void*>(NativeGraphics_SetColor)      },
-
             {"jniTranslate"       , "(JII)V"           , reinterpret_cast<void*>(NativeGraphics_Translate)      },
             {"jniGetTranslateX"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetTranslateX)      },
             {"jniGetTranslateY"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetTranslateY)      },
-
             {"jniSetClip"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_SetClip)      },
             {"jniClipRect"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_ClipRect)      },
-
             {"jniGetClipX"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetClipX)      },
             {"jniGetClipY"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetClipY)      },
             {"jniGetClipWidth"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetClipWidth)      },
             {"jniGetClipHeight"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetClipHeight)      },
-
-
-
-//            {"jniGetWidth"      , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetWidth)      },
-//            {"jniGetHeight"     , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetHeight)      },
-//            {"jniIsMutable"     , "(J)Z"           , reinterpret_cast<void*>(NativeImage_IsMutable)      },
-//            {"jniGetRGB"        , "(J[IIIIIIII)V"  , reinterpret_cast<void*>(NativeImage_GetRGB)      },
-//            {"jniGetPixelsAdders"       , "(J)J"           , reinterpret_cast<void*>(NativeImage_GetPixelsAdders)      },
-//            {"jniGetChannels"       , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetChannels)      },
+            {"jniSave"       , "(J)V"           ,      reinterpret_cast<void*>(NativeGraphics_Save)      },
+            {"jniRestore"       , "(J)Z"           ,       reinterpret_cast<void*>(NativeGraphics_Restore)      },
+            {"jniRestoreToCount"       , "(JI)Z"           , reinterpret_cast<void*>(NativeGraphics_RestoreToCount)      },
     };
 
     const auto clazz = jniFindClass(env, "iml/m2g/NativeGraphics");

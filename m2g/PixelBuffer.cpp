@@ -17,7 +17,8 @@ static void Release(PixelBuffer* buffer, void* pixels) {
 
 std::shared_ptr<PixelBuffer> PixelBuffer::allocate(int width, int height, int format) {
     int bpp = PixelFormat::getBytePerPixel(format);
-    auto* data = new uint8_t[width * height * bpp];
+    size_t bytes = width * height * bpp;
+    uint8_t* data = new uint8_t[width * height * bpp];
     return std::make_shared<PixelBuffer>(data, width, height, format, &Release);
 }
 
@@ -43,17 +44,7 @@ std::shared_ptr<PixelBuffer>PixelBuffer::wrap(uint8_t *data, int width, int heig
 
 
 PixelBuffer::PixelBuffer(uint8_t *pixels, int width, int height, int format, ReleaseFun *fun)
-        : pixel(pixels)
-        , width(width)
-        , height(height)
-        , format(format)
-        , bpp (PixelFormat::getBytePerPixel(format))
-        , spp (PixelFormat::shiftPerPixel(format))
-        , stride(width)
-        , rowByte(width * bpp)
-        , paddedRowByte(rowByte)
-        , size(height * paddedRowByte)
-        , fun(fun){
+        : PixelBuffer(pixels, width, height, format, width * PixelFormat::getBytePerPixel(format), fun){
 
 }
 
@@ -73,6 +64,23 @@ PixelBuffer::PixelBuffer(uint8_t *pixels, int width, int height, int format, int
 
 }
 
+PixelBuffer::PixelBuffer(const PixelBuffer &other)
+        : PixelBuffer(nullptr, other.width, other.height, other.format, nullptr) {
+
+    auto* data = new uint8_t[size];
+    std::memcpy(data, other.pixel, size);
+    this->pixel = data;
+    this->fun = &Release;
+
+}
+
+
+PixelBuffer::PixelBuffer(PixelBuffer &&other)
+        : PixelBuffer(other.pixel, other.width, other.height, other.format, other.fun) {
+    other.pixel = nullptr;
+    other.fun = nullptr;
+}
+
 
 
 PixelBuffer::~PixelBuffer() {
@@ -80,10 +88,6 @@ PixelBuffer::~PixelBuffer() {
         fun(this, pixel);
     }
 }
-
-
-
-
 
 int PixelBuffer::getWidth() const {
     return width;
@@ -146,6 +150,7 @@ bool PixelBuffer::isColor() const {
             return false;
     }
 }
+
 
 
 

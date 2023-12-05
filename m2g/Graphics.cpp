@@ -1,22 +1,15 @@
 
 #include <cstring>
-#include <cstdint>
-#include <cassert>
 #include <utility>
-#include <iostream>
 #include <algorithm>
 #include <cmath>
 #include "draw.h"
 #include "draw_image.h"
 #include "draw_text.h"
 #include "color.h"
-
-#include "Clip.h"
-#include "Point.h"
+#include "m2g.h"
+#include "m2g-def.h"
 #include "Graphics.h"
-#include "Image.h"
-#include "Font.h"
-#include "PixelBuffer.h"
 
 
 static inline int anchorX(int anchor, int x, int w) {
@@ -543,68 +536,11 @@ void Graphics::drawLineAA(int x0, int y0, int x1, int y1)
     }
 }
 
-void Graphics::plotLineWidth(int x0, int y0, int x1, int y1, float wd){
-    int dx = abs(x1-x0), sx = x0 < x1 ? 1 : -1;
-    int dy = abs(y1-y0), sy = y0 < y1 ? 1 : -1;
-    int err = dx-dy, e2, x2, y2;                          /* error value e_xy */
-    float ed = dx+dy == 0 ? 1 : sqrt((float)dx*dx+(float)dy*dy);
 
-    for (wd = (wd+1)/2; ; ) {                                   /* pixel loop */
-        drawPixelAlpha(x0,y0,255 - std::max(0,(int)(255*(abs(err-dx+dy)/ed-wd+1))));
-        e2 = err; x2 = x0;
-        if (2*e2 >= -dx) {                                           /* x step */
-            for (e2 += dy, y2 = y0; e2 < ed*wd && (y1 != y2 || dx > dy); e2 += dx)
-                drawPixelAlpha(x0, y2 += sy, 255 - std::max(0,(int)(255*(abs(e2)/ed-wd+1))));
-            if (x0 == x1) break;
-            e2 = err; err -= dy; x0 += sx;
-        }
-        if (2*e2 <= dy) {                                            /* y step */
-            for (e2 = dx-e2; e2 < ed*wd && (x1 != x2 || dx < dy); e2 += dy)
-                drawPixelAlpha(x2 += sx, y0, 255 - std::max(0,(int)(255*(abs(e2)/ed-wd+1))));
-            if (y0 == y1) break;
-            err += dx; y0 += sy;
-        }
-    }
-}
 
 void Graphics::drawLineB(int x0, int y0, int x1, int y1) {
-//    plotLineWidth(x0, y0, x1, y1, 0.5f);
-//    drawLineAA(x0, y0, x1, y1);
-    // d = k;
-    // x1 = x0 + 1, d += k
-    // y1 = y0, d <= 0.5;  y1 = y0 + 1, d > 0.5;
-
-    // e = d - 0.5
-    // e = k - 0.5
-    // x1 = x0 + 1, e += k;
-    // y1 = y0, d <= 0.5 || d + 0.5 <= 0.5+0.5 || e <= 1 ;   e <= 1;  y1 = y0 + 1; d > 0.5 || d + 0.5 > 0.5 + 0.5 || e > 1
-    //
-
     if(clip.clipLineB(x0, y0, x1, y1)) {
         drawLineAA(x0, y0, x1, y1);
-//        int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-//        int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-//        int err = (dx > dy ? dx : -dy) / 2;
-//
-////        float gradient = dy / dx;
-////        float intersectY = y0;
-//
-//        while (x0 != x1 || y0 != y1) {
-//            int e2 = err;
-//            if (e2 > -dx) {
-//                err -= dy;
-//                x0 += sx;
-//            }
-//            if (e2 <  dy) {
-//                err += dx;
-//                y0 += sy;
-//            }
-//            drawPixel(x0, y0);
-//
-////            drawPixelAlpha(x0 , y0 + 1, 50);
-////            drawPixelAlpha(x0, y0, 255);
-////            intersectY += gradient;
-//        }
     }
 }
 
@@ -614,11 +550,8 @@ void Graphics::drawRect(int x, int y, int w, int h) {
 
     // TODO FIXME
 
-    if(clip.isEmpty() || w <= 0 || h <= 0)
+    if(clip.isEmpty() || w < 0 || h < 0)
         return;
-
-
-
     translatePoint(x, y);
 
 
@@ -634,11 +567,11 @@ void Graphics::drawRect(int x, int y, int w, int h) {
     drawLineH(x, x1, y);
     drawLineV(x, y, y1);
 
-    if(w != 1) {
+    if(w != 0) {
         drawLineV(x1, y, y1);
     }
 
-    if(h != 1) {
+    if(h != 0) {
         drawLineH(x, x1, y1);
     }
 
@@ -692,16 +625,18 @@ void Graphics::drawRect(const Rect &rect) {
 }
 
 void Graphics::fillRect(int x, int y, int w, int h) {
-    if(clip.isEmpty() || w <= 1 || h <= 1)
+    if(clip.isEmpty() || w <= 0 || h <= 0)
         return;
-    if(w == 2) {
-        drawLineV(x, y, y + h);
+
+    translatePoint(x, y);
+
+    if(w == 1) {
+        drawLineV(x, y, y + h - 1);
         return;
-    } else if(h == 2) {
-        drawLineH(x, x + w, y);
+    } else if(h == 1) {
+        drawLineH(x, x + w - 1, y);
         return;
     }
-    translatePoint(x, y);
     fillRect({x, y, x + w, y + h});
 }
 
@@ -1029,18 +964,89 @@ int Graphics::getColor() {
     return paintColor.ToARGB();
 }
 
-void Graphics::drawArc(int x, int y, int w, int h, int startAngle, int arcAngle) {
+static void ellipsePlotPoints(Graphics* graphics, double centerX, double centerY, int x, int y) {
+    graphics->drawPixel(centerX + x, centerY + y);
+    // 对称点
+    graphics->drawPixel(centerX - x, centerY + y);
+
+    graphics->drawPixel(centerX + x, centerY - y);
+    graphics->drawPixel(centerX - x, centerY - y);
+
+
+//    graphics->drawLine(centerX + x, centerY + y, centerX - x, centerY + y);
+//    graphics->drawLine(centerX + x, centerY - y, centerX - x, centerY - y);
+}
+
+
+void Graphics::drawArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
+    translatePoint(x_, y_);
+
     int radiusX = w / 2;
     int radiusY = h / 2;
-    double centerX = x + radiusX;
-    double centerY = y + radiusY;
+    double centerX = x_ + radiusX;
+    double centerY = y_ + radiusY;
 
-    for (int angle = startAngle; angle < startAngle + arcAngle; ++angle) {
-        double radians = angle * M_PI / 180.0;
-        int xPos = static_cast<int>(centerX + radiusX * cos(radians));
-        int yPos = static_cast<int>(centerY + radiusY * sin(radians));
-        drawPixel(xPos, yPos);
+    int rx2 = radiusX * radiusX;
+    int ry2 = radiusY * radiusY;
+    int p;
+
+    int x = 0, y = radiusY; // (区域1)初始点
+    int px = 0, py = 2 * rx2 * y; // 像素计算终止条件项
+
+    // 绘制椭圆起始点
+    ellipsePlotPoints(this,centerX, centerY, x, y);
+
+    // 区域1
+    p = round(ry2 - rx2 * radiusY + 0.25 * rx2);
+    while (px < py) {
+        x++;
+        px += 2 * ry2; // 通过累加来计算 2ry^2 x[k+1], 而不是每次都用乘法
+        if (p < 0) {
+            p += ry2 + px;
+
+        }
+        else {
+            y--;
+            py -= 2 * rx2;
+            p += ry2 + px - py;
+            ellipsePlotPoints(this, centerX, centerY, x, y);
+        }
+
     }
+
+    // 区域2
+    p = round(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 *
+                                                                      ry2);
+    while (y > 0) {
+        y--;
+        py -= 2 * rx2;
+        if (p > 0) {
+            p += rx2 - py;
+        }
+        else {
+            x++;
+            px += 2 * ry2;
+            p += rx2 - py + px;
+        }
+        ellipsePlotPoints(this, centerX, centerY, x, y);
+    }
+
+
+
+
+
+
+//    int radiusX = w / 2;
+//    int radiusY = h / 2;
+//    double centerX = x + radiusX;
+//    double centerY = y + radiusY;
+//
+//    for (int angle = startAngle; angle < startAngle + arcAngle; ++angle) {
+//        double radians = angle * M_PI / 180.0;
+//        int xPos = static_cast<int>(centerX + radiusX * cos(radians));
+//        int yPos = static_cast<int>(centerY + radiusY * sin(radians));
+//        drawPixel(xPos, yPos);
+//    }
 }
 
 void Graphics::fillArc(int x, int y, int w, int h, int startAngle, int arcAngle) {
@@ -1058,9 +1064,6 @@ void Graphics::fillArc(int x, int y, int w, int h, int startAngle, int arcAngle)
 }
 
 int Graphics::save() {
-
-    //bug
-
     states.emplace(
             translation,
             clip.getClipBounds(),
@@ -1069,22 +1072,24 @@ int Graphics::save() {
     return states.size() - 1;
 }
 
-void Graphics::restore() {
-    this->restoreToCount(states.size() - 1);
+bool Graphics::restore() {
+    return this->restoreToCount(states.size() - 1);
 }
 
 
-void Graphics::restoreToCount(int count) {
-    if (count < 0 && count >= states.size()) {
-        return;
+bool Graphics::restoreToCount(int count) {
+    if (count < 0 || count >= states.size()) {
+        return false;
     }
-    while (states.size() > count) {
+    while (states.size() > count + 1) {
         states.pop();
     }
     auto& state = states.top();
     this->translation = state.translate;
     this->clip.set(state.clip);
     this->paintColor = state.paintColor;
+    states.pop();
+    return true;
 }
 
 static bool isBigEndian() {
@@ -1110,11 +1115,35 @@ static bool isBigEndian() {
 void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
                        int x, int y, int width_, int height_,
                        bool processAlpha) {
-    if(isBigEndian()) {
-        drawARGB((uint8_t*)rgbData, dataLength, offset, scanLength, x, y, width_, height_);
+
+    auto* dst_pixels =  buffer->addr<uint8_t*>(x, y);
+    rgbData += offset;
+
+    if(processAlpha) {
+        for (int j  = 0; j < height_; ++j) {
+            for (int i= 0; i < width_; ++i) {
+                ((Color*)dst_pixels)[i] = rgbData[i];
+            }
+            dst_pixels += buffer->getRowBytes();
+            rgbData += scanLength;
+        }
     } else {
-        drawBGRA((uint8_t*)rgbData, dataLength, offset, scanLength, x, y, width_, height_);
+        for (int j  = 0; j < height_; ++j) {
+            for (int i= 0; i < width_; ++i) {
+                ((Color*)dst_pixels)[i] = rgbData[i] & 0xFF000000;
+            }
+            dst_pixels += buffer->getRowBytes();
+            rgbData += scanLength;
+        }
     }
+
+
+
+//    if(isBigEndian()) {
+//        drawARGB((uint8_t*)rgbData, dataLength, offset, scanLength, x, y, width_, height_);
+//    } else {
+//        drawBGRA((uint8_t*)rgbData, dataLength, offset, scanLength, x, y, width_, height_);
+//    }
 }
 
 void Graphics::drawARGB(uint8_t* data, int dataLength, int offset, int scanLength, int x, int y, int width_, int height_) {
@@ -1122,6 +1151,22 @@ void Graphics::drawARGB(uint8_t* data, int dataLength, int offset, int scanLengt
 }
 
 void Graphics::drawBGRA(uint8_t* data, int dataLength, int offset, int scanLength, int x, int y, int width_, int height_) {
+//    drawPixels()
+}
+
+void Graphics::drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
+
+}
+
+void Graphics::fillRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
+
+}
+
+void Graphics::drawEllipse(int x, int y, int radiusX, int radiusY) {
+
+}
+
+void Graphics::fillEllipse(int x, int y, int radiusX, int radiusY) {
 
 }
 

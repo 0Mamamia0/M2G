@@ -53,9 +53,7 @@ Image::~Image() {
 
 void Image::getRGB(int* argb, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) {
     int image_width = getWidth();
-
     auto* rgba = pixel->addr<Color*>(x_, y_);
-
     while (height_ > 0) {
         auto* tmp = rgba;
         for (int i = 0; i < width_; i ++) {
@@ -77,6 +75,10 @@ PixelBuffer& Image::getPixelBufferRef() {
     return *pixel.get();
 }
 
+
+std::shared_ptr<PixelBuffer> Image::getPixelBuffer() {
+    return pixel;
+}
 
 
 int Image::getFormat() const {

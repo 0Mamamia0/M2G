@@ -34,38 +34,40 @@ inline void blitRect(uint8_t* begin, int width, int height, ptrdiff_t stride, ui
 
 
 
-inline void copyLTR(uint8_t* begin, int width, uint8_t* rgba) {
-    memcpy(begin, rgba, width * 4);
+inline void copyLTR(uint8_t* dst, uint8_t* src, int pixel) {
+    memcpy(dst, src, pixel << 2);
 }
 
-inline void copyRTL(uint8_t* begin, int width, uint8_t* rgba) {
-    uint32_t* begin32 = (uint32_t*)begin;
+
+
+inline void copyRTL(uint8_t* dst, uint8_t* rgba, int pixel) {
+    uint32_t* begin32 = (uint32_t*)dst;
     uint32_t* rgba32 = (uint32_t*)rgba;
-    while (width -- > 0) {
+    while (pixel -- > 0) {
         *begin32++ = *rgba32--;
     }
 }
 
 
 
-//static inline void copyTTB(uint32_t* begin, int width, int step, uint32_t* rgba) {
-//    while (width -- > 0) {
-//        *begin++ = *rgba;
-//        rgba += step;
-//    }
-//}
-//
-//static inline void copyBTT(uint32_t* begin, int width, int step, uint32_t* rgba) {
-//    while (width-- > 0) {
-//        *begin++ = *rgba;
-//        rgba -= step;
-//    }
-//}
+inline void copyTTB(uint32_t* begin, int width, int step, uint32_t* rgba) {
+    while (width -- > 0) {
+        *begin++ = *rgba;
+        rgba += step;
+    }
+}
+
+inline void copyBTT(uint32_t* begin, int width, int step, uint32_t* rgba) {
+    while (width-- > 0) {
+        *begin++ = *rgba;
+        rgba -= step;
+    }
+}
 
 
 inline void copyRect(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
     while (height-- > 0) {
-        copyLTR(dst, width, src);
+        copyLTR(dst, src, width);
         dst += dst_stride;
         src += src_stride;
     }
@@ -73,7 +75,7 @@ inline void copyRect(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t
 
 inline void copyRectXF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
     while (height-- > 0) {
-        copyRTL(dst, width, src);
+        copyRTL(dst, src, width);
         dst += dst_stride;
         src += src_stride;
     }
@@ -82,7 +84,7 @@ inline void copyRectXF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff
 inline void copyRectYF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
     src = src + (src_stride * (height - 1));
     while (height-- > 0) {
-        copyLTR(dst, width, src);
+        copyLTR(dst, src, width);
         dst += dst_stride;
         src -= src_stride;
     }
@@ -91,7 +93,7 @@ inline void copyRectYF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff
 inline void copyRectXYF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
     src = src + (src_stride * (height - 1));
     while (height-- > 0) {
-        copyRTL(dst, width, src);
+        copyRTL(dst, src, width);
         dst += dst_stride;
         src -= src_stride;
     }
@@ -108,14 +110,10 @@ inline void copyArea(uint8_t* dst,ptrdiff_t stride, int format, const Rect& dst_
     int copy_width = dst_area.getWidth();
     int copy_height = dst_area.getHeight();
 
-
     if(src_area.contain(dst_area)) {
-
-
         int bpp = PixelFormat::getBytePerPixel(format);
         const int src_offset = (src_area.top * stride) + (src_area.left * bpp);
         const int dst_offset = (dst_area.top * stride) + (dst_area.left * bpp);
-
 
         if(src_area.top == dst_area.top) {
             for (int row = 0; row < copy_height; row++) {
@@ -136,8 +134,6 @@ inline void copyArea(uint8_t* dst,ptrdiff_t stride, int format, const Rect& dst_
                 memcpy(dst_ptr, src_ptr, copy_width * bpp);
             }
         }
-
-
     } else {
         int bpp = PixelFormat::getBytePerPixel(format);
         const int src_offset = (src_area.top * stride) + (src_area.left * bpp);
@@ -203,7 +199,7 @@ inline void blendA8_span(uint8_t* dst, const uint8_t* src, uint8_t* rgba, int co
     }
 }
 
-void blendA8_8(uint8_t* dst, const uint8_t* src, uint8_t* rgba) {
+inline void blendA8_8(uint8_t* dst, const uint8_t* src, uint8_t* rgba) {
     uint64_t s = *(uint64_t*)src;
     if(s == 0xFFFFFFFFFFFFFFFF) {
         uint32_t* d = (uint32_t*)(dst);
@@ -225,7 +221,7 @@ void blendA8_8(uint8_t* dst, const uint8_t* src, uint8_t* rgba) {
 }
 
 
-void blendA8(uint8_t* dst, uint8_t* src, uint8_t* rgba, int count) {
+inline void blendA8(uint8_t* dst, uint8_t* src, uint8_t* rgba, int count) {
     int e_c = count / 8;
     int r_c = count % 8;
     for (int i = 0; i < e_c; ++i) {

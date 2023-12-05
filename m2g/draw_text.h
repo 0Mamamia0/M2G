@@ -12,7 +12,6 @@
 #include "Rect.h"
 #include "Font.h"
 #include "UTF8Iterator.h"
-
 #include "draw_image.h"
 
 void draw_glyph(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const Glyph& glyph, int x, int y, const Font& font, int color) {

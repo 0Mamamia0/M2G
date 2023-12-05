@@ -35,22 +35,7 @@ enum {
 };
 
 
-enum {
-    TRANS_NONE          = 0,               //   0000
-    TRANS_MIRROR_ROT180 = 1,               //   0001
-    TRANS_MIRROR        = 2,               //   0010
-    TRANS_ROT180        = 3,               //   0011
 
-    TRANS_MIRROR_ROT270 = 4,               //   0100
-    TRANS_ROT90         = 5,               //   0101
-    TRANS_ROT270        = 6,               //   0110
-    TRANS_MIRROR_ROT90  = 7,               //   0111
-
-
-    TRANSFORM_INVERTED_AXES = 0x4,
-    TRANSFORM_X_FLIP =  0x2,
-    TRANSFORM_Y_FLIP = 0x1,
-};
 
 
 
@@ -93,8 +78,8 @@ public:
     int getClipWidth();
     int getClipHeight();
     int save();
-    void restore();
-    void restoreToCount(int count);
+    bool restore();
+    bool restoreToCount(int count);
 
     void clear(Color color);
 
@@ -111,7 +96,9 @@ public:
     void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2);
     void drawRect(int x, int y, int w, int h);
     void drawRect(const Rect& rect);
+    void drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight);
     void drawArc(int x, int y, int w, int h, int startAngle, int arcAngle);
+    void drawEllipse(int x, int y, int radiusX, int radiusY);
     void drawCircle(int centerX, int centerY, int r);
 
     void drawChar(char c, int x, int y, int anchor, const Font& font);
@@ -131,11 +118,12 @@ public:
 
     void fillRect(int x, int y, int w, int h);
     void fillRect(const Rect& rect);
+    void fillRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight);
+    void fillEllipse(int x, int y, int radiusX, int radiusY);
     void fillArc(int x, int y, int w, int h, int startAngle, int arcAngle);
     void fillCircle(int centerX, int centerY, int r);
     void fillTriangle(int x0, int y0, int x1, int y1, int x2, int y2);
     void copyArea(int x_src, int y_src, int width_, int height_, int x_dst, int y_dst, int anchor);
-    void plotLineWidth(int x0, int y0, int x1, int y1, float wd);
 
     void translatePoint(int& x, int& y);
     void translatePoint(int& x, int& y, int width, int height, int anchor);

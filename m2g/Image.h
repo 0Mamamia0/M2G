@@ -42,7 +42,7 @@ public:
 
 
     PixelBuffer& getPixelBufferRef();
-
+    std::shared_ptr<PixelBuffer> getPixelBuffer();
 public:
 
 //    uint8_t* data;
@@ -55,6 +55,8 @@ private:
     int width;
     int height;
     bool mut;
+
+
 };
 
 

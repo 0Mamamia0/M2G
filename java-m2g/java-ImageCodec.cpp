@@ -37,6 +37,13 @@ jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint w
 }
 
 
+jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
+    if(auto* image = reinterpret_cast<Image*>(handle)) {
+        return reinterpret_cast<jlong>(ImageCodec::createImage(image, x, y, width, height, transform));
+    }
+    return 0L;
+}
+
 
 
 int register_m2g_ImageCodec(JNIEnv* env) {
@@ -45,6 +52,7 @@ int register_m2g_ImageCodec(JNIEnv* env) {
             {"jniCreateImage"        , "(J)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImageFormImage)      },
             {"jniCreateImage"        , "([BII)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImageFromData)      },
             {"jniCreateRGBImage"        , "([IIIZ)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateRGBImage)      },
+            {"jniCreateImage"        , "(JIIIII)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImage)      },
     };
 
 

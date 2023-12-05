@@ -3,7 +3,8 @@
 //
 
 #include "ImageCodec.h"
-
+#include "m2g-def.h"
+//#include "draw.h"
 #include "stdio.h"
 #include "stb_image.h"
 #include "Image.h"
@@ -55,12 +56,13 @@ Image* ImageCodec::loadImage(const char *filename) {
 
 
 Image *ImageCodec::createImage(Image* src) {
-//    if(src->get == 3 || src->channels == 4) {
-//        Image* image = Image::createImage(src->width, src->height);
-//        memcpy(image->data, src->data, src->width * src->height * src->channels);
-//    }
-//    return Image::createImage(src->width, src->height);
-    return nullptr;
+    if(!src->isMutable()) {
+        Image* result = new Image(src->getPixelBuffer(),  true);
+        return result;
+    }
+    std::shared_ptr<PixelBuffer> copy = std::make_shared<PixelBuffer>(src->getPixelBufferRef());
+    Image* result = new Image(std::move(copy), false);
+    return result;
 }
 
 Image *ImageCodec::loadImage(uint8_t *data, int offset, int length) {
@@ -83,13 +85,10 @@ Image *ImageCodec::loadImage(uint8_t *data, int offset, int length) {
 }
 
 Image *ImageCodec::createRGBImage(int32_t *argbData, int width, int height, bool processAlpha) {
-
-    Image* image = createEmptyImage(width, height);
-
-    if(image) {
-        PixelBuffer& pixel = image->getPixelBufferRef();
-        uint8_t* pixels =  pixel.addr<uint8_t*>();
-
+    Image* image = createEmptyImage(width, height, false);
+    try {
+        auto pixel = PixelBuffer::allocate(width, height, PixelFormatType::RGBA_8888);
+        uint8_t* pixels =  pixel->addr<uint8_t*>();
         int pixelsCount = width * height;
         while (pixelsCount-- > 0) {
             int32_t argb = *argbData++;
@@ -102,26 +101,212 @@ Image *ImageCodec::createRGBImage(int32_t *argbData, int width, int height, bool
                 *pixels++ = argb >> 24 &0xFF;
             }
         }
+        return new Image(std::move(pixel), false);
+    } catch (const std::bad_alloc& e) {
+        return nullptr;
     }
-    return image;
 }
 
-Image *ImageCodec::createEmptyImage(int width, int height) {
+Image *ImageCodec::createEmptyImage(int width, int height, bool isMutable) {
     if(width <= 0 || height <= 0) {
         return nullptr;
     }
-    auto pixel = PixelBuffer::allocate(width, height, PixelFormatType::RGBA_8888);
-    return pixel == nullptr ? nullptr : new Image(std::move(pixel), true);
+    try {
+        auto pixel = PixelBuffer::allocate(width, height, PixelFormatType::RGBA_8888);
+        return new Image(std::move(pixel), isMutable);
+    } catch (const std::bad_alloc& e) {
+        return nullptr;
+    }
+
 }
 
 Image *ImageCodec::createImage(int width, int height) {
-    Image* image = createEmptyImage(width, height);
+    Image* image = createEmptyImage(width, height, true);
     if(image != nullptr) {
         PixelBuffer& pixel = image->getPixelBufferRef();
         pixel.erase(0xFF);
     }
     return image;
 
+}
+
+
+
+
+static void LTR(uint8_t* dst, uint8_t* src, int pixel, ptrdiff_t src_stride) {
+    assert(pixel > 0);
+    memcpy(dst, src, pixel << 2);
+}
+
+
+
+static void RTL(uint8_t* dst, uint8_t* rgba, int pixel, ptrdiff_t src_stride) {
+    assert(pixel > 0);
+    uint32_t* dst32 = (uint32_t*)dst;
+    uint32_t* src32 = (uint32_t*)rgba;
+    while (pixel -- > 0) {
+        *dst32 ++ = *src32 --;
+    }
+}
+
+
+
+static void TTB(uint8_t* dst, uint8_t* src, int pixel, ptrdiff_t src_stride) {
+    assert(pixel > 0);
+    uint32_t* dst32 = (uint32_t*)dst;
+    uint32_t* src32 = (uint32_t*)src;
+
+    ptrdiff_t row_step = src_stride >> 2;
+    while (pixel -- > 0) {
+        *dst32 ++ = *src32;
+        src32 += row_step;
+    }
+}
+
+static void BTT(uint8_t* dst, uint8_t* src, int pixel, ptrdiff_t src_stride) {
+    assert(pixel > 0);
+    uint32_t* dst32 = (uint32_t*)dst;
+    uint32_t* src32 = (uint32_t*)src;
+
+    ptrdiff_t row_step = src_stride >> 2;
+    while (pixel -- > 0) {
+        *dst32++ = *src32;
+        src32 -= row_step;
+    }
+}
+
+
+
+Image *ImageCodec::createImage(Image *src, int x, int y, int width, int height, int transform) {
+    if((transform & ~Transform::TRANSFORM_MASK) != 0) {
+        return nullptr;
+    }
+
+    int dst_width, dst_height;
+    int src_x, src_y;
+    ptrdiff_t inc;
+
+    if(transform & TRANSFORM_INVERTED_AXES) {
+        dst_width  = height;
+        dst_height = width;
+    } else {
+        dst_width  = width;
+        dst_height = height;
+    }
+
+    Image* image = createEmptyImage(dst_width, dst_height, false);
+    if(image == nullptr) {
+        return nullptr;
+    }
+
+    auto& dst_buffer = image->getPixelBufferRef();
+
+    auto& src_buffer = src->getPixelBufferRef();
+    int dst_stride = dst_buffer.getRowBytes();
+    int src_stride = src_buffer.getRowBytes();
+
+    using copy_opt = void (*)(uint8_t*, uint8_t*, int,  ptrdiff_t);
+    copy_opt opt = nullptr;
+
+
+    switch (transform) {
+        case Transform::TRANS_NONE:
+            src_x = x;
+            src_y = y;
+            break;
+        case Transform::TRANS_ROT90:
+            src_x = x;
+            src_y = y + height - 1;
+            break;
+        case Transform::TRANS_ROT180:
+            src_x = x + width - 1;
+            src_y = y + height - 1;
+            break;
+        case Transform::TRANS_ROT270:
+            src_x = x + width - 1;
+            src_y = y;
+            break;
+        case Transform::TRANS_MIRROR:
+            src_x = x + width - 1;
+            src_y = y;
+            break;
+        case Transform::TRANS_MIRROR_ROT90:
+            src_x = x + width - 1;
+            src_y = y + height - 1;
+            break;
+        case Transform::TRANS_MIRROR_ROT180:
+            src_x = x;
+            src_y = y + height - 1;
+            break;
+        case Transform::TRANS_MIRROR_ROT270:
+            src_x = x;
+            src_y = y;
+            break;
+        default:
+            return nullptr;
+    }
+
+
+    switch (transform) {
+        case Transform::TRANS_NONE:
+        case Transform::TRANS_MIRROR_ROT180:
+            opt = LTR;
+            break;
+        case Transform::TRANS_MIRROR:
+        case Transform::TRANS_ROT180:
+            opt = RTL;
+            break;
+        case Transform::TRANS_MIRROR_ROT270:
+        case Transform::TRANS_ROT270:
+            opt = TTB;
+            break;
+        case Transform::TRANS_ROT90:
+        case Transform::TRANS_MIRROR_ROT90:
+            opt = BTT;
+            break;
+        default:
+            return nullptr;
+    }
+
+
+    switch (transform) {
+        case Transform::TRANS_NONE:
+        case Transform::TRANS_MIRROR:
+            inc = src_stride;
+            break;
+        case Transform::TRANS_ROT180:
+        case Transform::TRANS_MIRROR_ROT180:
+            inc = -src_stride;
+            break;
+        case Transform::TRANS_ROT90:
+        case Transform::TRANS_MIRROR_ROT270:
+            inc = 4;
+            break;
+        case Transform::TRANS_MIRROR_ROT90:
+        case Transform::TRANS_ROT270:
+            inc = -4;
+            break;
+        default:
+            return nullptr;
+    }
+
+
+
+    uint8_t* dst_pixels = dst_buffer.addr<uint8_t*>();
+    uint8_t* src_pixels = src_buffer.addr<uint8_t*>(src_x, src_y);
+
+
+    while (dst_height -- > 0) {
+        opt(dst_pixels, src_pixels, dst_width,  src_stride);
+        dst_pixels += dst_stride;
+        src_pixels += inc;
+    }
+
+
+
+
+
+    return image;
 }
 
 

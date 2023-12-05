@@ -94,6 +94,14 @@ inline void jniReleaseByteArrayElements(JNIEnv *env, jbyteArray array, jbyte* el
 #endif
     }
 
+    inline jsize jniGetArrayLength(JNIEnv *env, jintArray array) {
+#ifdef JNI_C_STYLE
+    return (*env)->GetArrayLength(env, array);
+#else
+    return env->GetArrayLength(array);
+#endif
+}
+
 
 
 
