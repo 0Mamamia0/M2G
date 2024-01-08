@@ -5,7 +5,7 @@
 #ifndef LEARNSFML_JNI_ONLOAD_H
 #define LEARNSFML_JNI_ONLOAD_H
 
-#include "jni.h"
+#include "jni_def.h"
 
 
 #ifdef __cplusplus

@@ -6,11 +6,15 @@
 #define JNI_DEF_H__
 
 
-#include "jni.h"
+
 
 
 #ifdef USE_JAMVM
 #define JNI_C_STYLE
+#include "../jni/jam/jni.h"
+#else
+#include "../jni/jvm/jni.h"
+#include "../jni/jvm/jni_md.h"
 #endif
 
 
