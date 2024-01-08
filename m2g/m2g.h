@@ -4,8 +4,9 @@
 
 #ifndef M2G_H__
 #define M2G_H__
+
 #include "Clip.h"
-#include "Font.h."
+#include "Font.h"
 #include "Graphics.h"
 #include "Image.h"
 #include "ImageCodec.h"

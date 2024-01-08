@@ -16,10 +16,6 @@ include_directories(m2g)
 target_include_directories(m2g PUBLIC include ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(m2g PRIVATE -D_USE_MATH_DEFINES)
 
-
-
-
-
 add_library(java-m2g ${JAVA_M2G_SRC})
 target_include_directories(java-m2g PUBLIC include ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(java-m2g PRIVATE -DSTB_IMAGE_IMPLEMENTATION )
