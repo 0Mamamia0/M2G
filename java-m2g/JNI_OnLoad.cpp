@@ -3,7 +3,6 @@
 //
 
 #include "JNI_OnLoad.h"
-#include "jni.h"
 #include "jni_def.h"
 
 
