@@ -185,11 +185,12 @@ void NativeGraphics_DrawRGB(JNIEnv* env, jclass,  jlong handle, jintArray array,
 }
 
 
-void NativeGraphics_Save(JNIEnv* env, jclass,  jlong handle) {
+jint NativeGraphics_Save(JNIEnv* env, jclass,  jlong handle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     if(graphics) {
-        graphics->save();
+        return graphics->save();
     }
+    return -1;
 }
 
 
@@ -236,7 +237,7 @@ extern int register_m2g_Graphics(JNIEnv *env) {
             {"jniGetClipY"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetClipY)      },
             {"jniGetClipWidth"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetClipWidth)      },
             {"jniGetClipHeight"       , "(J)I"           , reinterpret_cast<void*>(NativeGraphics_GetClipHeight)      },
-            {"jniSave"       , "(J)V"           ,      reinterpret_cast<void*>(NativeGraphics_Save)      },
+            {"jniSave"       , "(J)I"           ,      reinterpret_cast<void*>(NativeGraphics_Save)      },
             {"jniRestore"       , "(J)Z"           ,       reinterpret_cast<void*>(NativeGraphics_Restore)      },
             {"jniRestoreToCount"       , "(JI)Z"           , reinterpret_cast<void*>(NativeGraphics_RestoreToCount)      },
     };

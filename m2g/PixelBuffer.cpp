@@ -12,23 +12,13 @@
 #include "PixelFormat.h"
 
 static void Release(PixelBuffer* buffer, void* pixels) {
-    // std::cout << "release" <<  pixels  << std::endl;
-    std::printf("free 0x%d \n", (int)pixels);
-    std::flush(std::cout);
     delete[] static_cast<uint8_t*>(pixels);
-
-    std::printf("free  finish 0x%d \n", (int)pixels);
-    std::flush(std::cout);
 }
 
 
 std::shared_ptr<PixelBuffer> PixelBuffer::allocate(int width, int height, int format) {
     int bpp = PixelFormat::getBytePerPixel(format);
-    size_t bytes = width * height * bpp;
     uint8_t* data = new uint8_t[width * height * bpp];
-
-    std::printf("alloc 0x%d \n", (int)data);
-    std::flush(std::cout);
     return std::make_shared<PixelBuffer>(data, width, height, format, Release);
 }
 

@@ -830,10 +830,15 @@ void Graphics::drawString(const std::string& str, int x, int y, int anchor, cons
 
 void Graphics::drawString(const char *str, int x, int y, int anchor, const Font& font) {
 
+    if(str == nullptr) {
+        return;
+    }
+
     Rect bounds = clip.getDeviceClipBounds();
     if(bounds.isEmpty()) {
         return;
     }
+
 
     int len = strlen(str);
     int x_offset = x;

@@ -102,7 +102,7 @@ inline void copyRectXYF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdif
 
 
 
-inline void copyArea(uint8_t* dst,ptrdiff_t stride, int format, const Rect& dst_area, const Rect& src_area) {
+inline void copyArea(uint8_t* dst, ptrdiff_t stride, int format, const Rect& dst_area, const Rect& src_area) {
     assert(dst_area.getWidth() == src_area.getWidth());
     assert(dst_area.getHeight() == src_area.getHeight());
     assert(dst_area.getWidth() > 0 && dst_area.getHeight() > 0);
