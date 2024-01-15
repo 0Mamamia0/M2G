@@ -55,8 +55,6 @@ int register_m2g_ImageCodec(JNIEnv* env) {
             {"jniCreateImage"        , "(JIIIII)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImage)      },
     };
 
-
-
     const auto clazz = jniFindClass(env, "iml/m2g/NativeImageCodec");
     return clazz
            ? jniRegisterNatives(env, clazz, methods, std::size(methods))
