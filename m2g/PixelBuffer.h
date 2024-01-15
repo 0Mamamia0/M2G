@@ -13,7 +13,6 @@ class Color;
 
 //template
 class PixelBuffer {
-
     using ReleaseFun =  void(PixelBuffer*, void*);
 
 public:

@@ -1,6 +1,5 @@
 
 #include <cstring>
-#include <utility>
 #include <algorithm>
 #include <cmath>
 #include "draw.h"
@@ -275,191 +274,193 @@ void Graphics::drawImage(Image* image, int x_src, int y_src, int w_src, int h_sr
                Rect::makeXYWH(x_src, y_src, w_src, h_src), clip.getDeviceClipBounds(), dst_buffer.getFormat(), src_buffer.getFormat());
 }
 
+
+void drawRegion() {
+    // uint8_t* src_offset = src_pixels.addr<uint8_t*>(offsetX, offsetY);
+    // uint8_t* dst_offset = buffer->addr<uint8_t*>(dstRectClip.left, dstRectClip.top);
+
+    // ptrdiff_t src_stride = src_pixels.getRowBytes();
+    // ptrdiff_t dst_stride = buffer->getRowBytes();
+
+    // switch (transform) {
+    //     case TRANS_MIRROR:
+    //         copyRectXF(dst_offset, src_offset, dst_stride, src_stride, width_, height_);
+    //         break;
+    //     case TRANS_ROT180:
+    //         copyRectXYF(dst_offset, src_offset, dst_stride, src_stride, width_, height_);
+    //         break;
+    //     case TRANS_MIRROR_ROT180:
+    //         src_offset = src_pixels.addr<uint8_t*>(x_src + offsetX, y_src);
+    //         copyRectYF(dst_offset, src_offset, dst_stride, src_stride, width_, height_ - offsetY);
+    //         break;
+    //
+    // }
+}
+
 void Graphics::drawRegion(Image* image, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst, int anchor) {
     if(transform == 0) {
         drawImage(image, x_src, y_src, w_src, h_src, x_dst, y_dst);
     } else {
-        if(image == nullptr
-           || x_src < 0
-           || y_src < 0
-           || w_src <= 0
-           || h_src <= 0
-           || x_src + w_src > image->getWidth()
-           || y_src + h_src > image->getHeight()
-                ) {
+        int x0 = 0;
+        int y0 = 0;
+
+
+        int x_step = 0;
+        int y_step = 0;
+
+        int w_dst, h_dst;
+        int w_dst_clip, h_dst_clip;
+
+
+        if(!ValidImage(image, x_src, y_src, w_src, h_src)) {
             return;
         }
 
-        int x1 = 0;
-        int y1 = 0;
-        int xInc = 0;
-        int yInc = 0;
-
-        int width_, height_;
-
-        auto& src_pixels = image->getPixelBufferRef();
-//        int src_stride = src_pixels.getStride();
-//        int dst_stride = buffer->getStride();
-
-        if(transform & TRANSFORM_INVERTED_AXES) {
-            width_  = h_src;
-            height_ = w_src;
-        } else {
-            width_  = w_src;
-            height_ = h_src;
-        }
-
-        Rect bounds = clip.getDeviceClipBounds();
+        const Rect bounds = clip.getDeviceClipBounds();
         if(bounds.isEmpty() ) {
             return;
         }
 
-        Rect dstRect = Rect::makeXYWH(x_dst, y_dst, width_, height_);
-        Rect dstRectClip = dstRect.intersect(bounds);
+        auto& src_pixels = image->getPixelBufferRef();
+        int src_stride = src_pixels.getStride();
+        int dst_stride = buffer->getStride();
 
-        if(dstRectClip.isEmpty()) {
+        if(transform & TRANSFORM_INVERTED_AXES) {
+            w_dst  = h_src;
+            h_dst = w_src;
+        } else {
+            w_dst  = w_src;
+            h_dst = h_src;
+        }
+
+
+        translatePoint(x_dst, y_dst);
+        const Rect src_rect = Rect::makeXYWH(x_src, y_src, w_src, h_src);
+        const Rect dst_rect = Rect::makeXYWH(x_dst, y_dst, w_dst, h_dst);
+        const Rect dst_rect_clip = bounds.intersect(dst_rect);
+
+        if(dst_rect_clip.isEmpty()) {
             return;
         }
 
-        int offsetX = dstRectClip.left - x_dst;
-        int offsetY = dstRectClip.top - y_dst;
+        int x_offset = dst_rect_clip.left - x_dst;
+        int y_offset = dst_rect_clip.top - y_dst;
 
-
-        uint8_t* src_offset = src_pixels.addr<uint8_t*>(offsetX, offsetY);
-        uint8_t* dst_offset = buffer->addr<uint8_t*>(dstRectClip.left, dstRectClip.top);
-
-        ptrdiff_t src_stride = src_pixels.getRowBytes();
-        ptrdiff_t dst_stride = buffer->getRowBytes();
-
-        switch (transform) {
-            case TRANS_MIRROR:
-                copyRectXF(dst_offset, src_offset, dst_stride, src_stride, width_, height_);
-                break;
-            case TRANS_ROT180:
-                copyRectXYF(dst_offset, src_offset, dst_stride, src_stride, width_, height_);
-                break;
-            case TRANS_MIRROR_ROT180:
-                src_offset = src_pixels.addr<uint8_t*>(x_src + offsetX, y_src);
-                copyRectYF(dst_offset, src_offset, dst_stride, src_stride, width_, height_ - offsetY);
-                break;
-
+        if(transform & TRANSFORM_X_FLIP) {
+            x0 = w_src - 1;
+        } else {
+            x0 = 0;
         }
 
 
-//        if(transform & TRANSFORM_X_FLIP) {
-//            x1 = w_src - 1;
-//        } else {
-//            x1 = 0;
-//        }
-//
-//
-//        if(transform & TRANSFORM_Y_FLIP) {
-//            y1 = h_src - 1;
-//        } else {
-//            y1 = 0;
-//        }
-//
-//
-//
+        if(transform & TRANSFORM_Y_FLIP) {
+            y0 = h_src - 1;
+        } else {
+            y0 = 0;
+        }
 
-//        switch (transform) {
-//            case TRANS_NONE:
-//                xInc = 1;
-//                yInc = src_stride;
-//                x1 = offsetX;
-//                y1 = offsetY;
-//                break;
-//            case TRANS_MIRROR:
-//                xInc = -1;
-//                yInc = src_stride;
-//                x1 = w_src - offsetX - 1;
-//                y1 = offsetY;
-//                break;
-//            case TRANS_ROT180:
-//                xInc = -1;
-//                yInc = -src_stride;
-//                x1 = w_src - offsetX - 1;
-//                y1 = h_src - offsetY - 1;
-//                break;
-//            case TRANS_MIRROR_ROT180:
-//                xInc = 1;
-//                yInc = -src_stride;
-//                x1 = offsetX;
-//                y1 = h_src - offsetY - 1;
-//                break;
-//            case TRANS_ROT90:
-//                xInc = -src_stride;
-//                yInc = 1;
-//                x1 = offsetY;
-//                y1 = h_src - offsetX - 1;
-//                break;
-//            case TRANS_ROT270:
-//                xInc = src_stride;
-//                yInc = -1;
-//                x1 = w_src - offsetY - 1;
-//                y1 = offsetX;
-//                break;
-//            case TRANS_MIRROR_ROT90:
-//                xInc = -src_stride;
-//                yInc = -1;
-//                x1 = w_src - offsetY - 1;
-//                y1 = h_src - offsetX -  1;
-//                break;
-//            case TRANS_MIRROR_ROT270:
-//                xInc = src_stride;
-//                yInc = 1;
-//                x1 = offsetY;
-//                y1 = offsetX;
-//                break;
-//            default:
-//                return;
-//
-//        }
-//
-//        uint32_t* src_offset = src_pixels.addr<uint32_t*>();
-//        uint32_t* dst_offset = buffer->addr<uint32_t*>(dstRectClip.left, dstRectClip.top);
-//
-//        uint32_t* dst_row = nullptr;
-//        uint32_t* src_row = nullptr;
-//
-//
-//        for (int j = 0; j < height_; ++j) {
-//            dst_row = dst_offset + j * dst_stride;
-////            src_row = src_offset + y1  * src_stride + x1;
-//
-//
-//            int x0 = x1;
-//            for (int i = 0; i < width_; ++i) {
-//
-//
-//
-//                *dst_row = *(src_offset + y1  + x0);
-////                *dst_row = *src_row;
-////                blend1px((uint8_t*) dst_row, (uint8_t*) src_row);
-//                dst_row ++;
-////                src_row += xInc;
-//
-//
-//                x0 += xInc;
-//            }
-//
-//            y1 += yInc;
-//        }
+        switch (transform) {
+            case TRANS_NONE:
+                x_step = 1;
+                y_step = src_stride;
+                x0 = x_offset;
+                y0 = y_offset;
+                break;
+            case TRANS_MIRROR:
+                x_step = -1;
+                y_step = src_stride;
+                x0 = w_src - x_offset - 1;
+                y0 = y_offset;
+                break;
+            case TRANS_ROT180:
+                x_step = -1;
+                y_step = -src_stride;
+                x0 = w_src - y_offset - 1;
+                y0 = h_src - x_offset - 1;
+                break;
+            case TRANS_MIRROR_ROT180:
+                x_step = 1;
+                y_step = -src_stride;
+                x0 = x_offset;
+                y0 = h_src - y_offset - 1;
+                break;
+            case TRANS_ROT90:
+                x_step = -src_stride;
+                y_step = 1;
+                x0 = y_offset;
+                y0 = h_src - x_offset - 1;
+                break;
+            case TRANS_ROT270:
+                x_step = src_stride;
+                y_step = -1;
+                x0 = w_src - y_offset - 1;
+                y0 = x_offset;
+                break;
+            case TRANS_MIRROR_ROT90:
+                x_step = -src_stride;
+                y_step = -1;
+                x0 = w_src - y_offset - 1;
+                y0 = h_src - x_offset -  1;
+                break;
+            case TRANS_MIRROR_ROT270:
+                x_step = src_stride;
+                y_step = 1;
+                x0 = y_offset;
+                y0 = x_offset;
+                break;
+            default:
+                return;
+        }
+
+        x0 += x_src;
+        y0 += y_src;
 
 
+        int w = dst_rect_clip.getWidth();
+        int h = dst_rect_clip.getHeight();
 
-//        for (int j = y1; j < h_src; j += yInc) {
-//            for (int i = x1; i < w_src; i += xInc) {
-//                *(dst_row + j  * dst_stride + i)  = *(src_row + j * src_stride + i);
-//            }
-//        }
+        if(image->getFormat() == RGBA_8888) {
+            auto fun = [] (uint32_t* dst, uint32_t* src, int w, int x_step) {
+                while(w -- >0) {
+                    blend1px((uint8_t*)dst, (uint8_t*)src);
+                    dst += 1;
+                    src += x_step;
+                }
+            };
+
+            uint32_t* src = src_pixels.addr<uint32_t*>(x0, y0);
+            uint32_t* dst = buffer->addr<uint32_t*>(dst_rect_clip.left, dst_rect_clip.top);
+            while (h -- > 0) {
+                fun(dst, src, w, x_step);
+                dst += dst_stride;
+                src += y_step;
+            }
+
+        } else if (image->getFormat() == RGB_888X) {
+            auto fun = [] (uint32_t* dst, uint32_t* src, int w, int x_step) {
+                while(w -- >0) {
+                    *dst = *src;
+                    dst += 1;
+                    src += x_step;
+                }
+            };
+
+            uint32_t* src = src_pixels.addr<uint32_t*>(x0, y0);
+            uint32_t* dst = buffer->addr<uint32_t*>(dst_rect_clip.left, dst_rect_clip.top);
+            while (h -- > 0) {
+                fun(dst, src, w, x_step);
+                dst += dst_stride;
+                src += y_step;
+            }
+        }
     }
 }
 
 
+// 内存越界
 
-void Graphics::drawImage(Image* image, int x_dst,int y_dst, int dstWidth, int dstHeight, int anchor) {
-    if(image == nullptr || dstWidth <= 0 || dstHeight <= 0) {
+void Graphics::drawImage(Image* src, int x_dst,int y_dst, int dst_width, int dst_height, int anchor) {
+    if(src == nullptr || dst_width <= 0 || dst_height <= 0) {
         return;
     }
 
@@ -468,16 +469,15 @@ void Graphics::drawImage(Image* image, int x_dst,int y_dst, int dstWidth, int ds
         return;
     }
 
+    int src_width = src->getWidth();
+    int src_height = src->getHeight();
 
-    int srcWidth = image->getWidth();
-    int srcHeight = image->getHeight();
-
-    translatePoint(x_dst, y_dst, srcWidth, srcHeight, anchor);
+    translatePoint(x_dst, y_dst, src_width, src_height, anchor);
 
     PixelBuffer& dst_buffer = *buffer;
-    PixelBuffer& src_buffer = image->getPixelBufferRef();
+    PixelBuffer& src_buffer = src->getPixelBufferRef();
     drawPixelsScale(dst_buffer.addr<uint8_t*>(), src_buffer.addr<uint8_t*>(), dst_buffer.getRowBytes(), src_buffer.getRowBytes(),
-    Rect::makeXYWH(x_dst, y_dst, dstWidth, dstHeight), Rect::makeWH(srcWidth, srcHeight), bounds, dst_buffer.getFormat(), src_buffer.getFormat());
+    Rect::makeXYWH(x_dst, y_dst, dst_width, dst_height), Rect::makeWH(src_width, src_height), bounds, dst_buffer.getFormat(), src_buffer.getFormat());
 
 }
 
@@ -496,7 +496,6 @@ inline void Graphics::drawLineV(int x, int y0, int y1) {
             drawPixel(x, y0);
             y0 ++;
         } while (y0 != y1);
-
     }
 }
 
@@ -1099,51 +1098,64 @@ static bool isBigEndian() {
     } endian;
 
     if(endian.bytes[0] == 0x01) {
-        return false;
-    } else if(endian.bytes[0] == 0x04) {
         return true;
+    } else if(endian.bytes[0] == 0x04) {
+        return false;
     } else {
-        std::terminate();
+        assert(false);
     }
 }
-
-
-
-
-
 
 void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
                        int x, int y, int width_, int height_,
                        bool processAlpha) {
 
-    auto* dst_pixels =  buffer->addr<uint8_t*>(x, y);
-    rgbData += offset;
-
-    if(processAlpha) {
-        for (int j  = 0; j < height_; ++j) {
-            for (int i= 0; i < width_; ++i) {
-                ((Color*)dst_pixels)[i] = rgbData[i];
-            }
-            dst_pixels += buffer->getRowBytes();
-            rgbData += scanLength;
-        }
-    } else {
-        for (int j  = 0; j < height_; ++j) {
-            for (int i= 0; i < width_; ++i) {
-                ((Color*)dst_pixels)[i] = rgbData[i] & 0xFF000000;
-            }
-            dst_pixels += buffer->getRowBytes();
-            rgbData += scanLength;
-        }
+    if(clip.isEmpty() || width <= 0 || height <= 0) {
+        return;
+    }
+    translatePoint(x, y);
+    Rect dst_rect_clip = clip.intersect(Rect::makeXYWH(x, y, width_, height_));
+    if(dst_rect_clip.isEmpty()) {
+        return;
     }
 
+    int src_format = 0;
 
 
-//    if(isBigEndian()) {
-//        drawARGB((uint8_t*)rgbData, dataLength, offset, scanLength, x, y, width_, height_);
-//    } else {
-//        drawBGRA((uint8_t*)rgbData, dataLength, offset, scanLength, x, y, width_, height_);
-//    }
+    if(isBigEndian()) {
+        src_format = processAlpha ? ARGB_8888 : XRGB_8888;
+    } else {
+        src_format = processAlpha ? BGRA_8888 : BGRX_8888;
+    }
+
+    int bpp = PixelFormat::getBytePerPixel(src_format);
+
+    rgbData += offset;
+
+    int x0 = dst_rect_clip.left   - x;
+    int y0 = dst_rect_clip.top    - y;
+
+    auto* dst_pixels = buffer->addr<uint8_t*>(dst_rect_clip.left, dst_rect_clip.top);
+    auto* src_pixels = reinterpret_cast<uint8_t*>(rgbData) + (y0 * scanLength) + x0 * bpp;
+    drawPixels(dst_pixels, src_pixels, buffer->getRowBytes(), scanLength * bpp, width_ - x0, height_ -y0, RGBA_8888, src_format);
+
+    // if(processAlpha) {
+    //     for (int j  = 0; j < height_; ++j) {
+    //         for (int i= 0; i < width_; ++i) {
+    //             ((Color*)dst_pixels)[i] = rgbData[i];
+    //         }
+    //         dst_pixels += buffer->getRowBytes();
+    //         rgbData += scanLength;
+    //     }
+    // } else {
+    //     for (int j  = 0; j < height_; ++j) {
+    //         for (int i= 0; i < width_; ++i) {
+    //             ((Color*)dst_pixels)[i] = rgbData[i] & 0xFF000000;
+    //         }
+    //         dst_pixels += buffer->getRowBytes();
+    //         rgbData += scanLength;
+    //     }
+    // }
 }
 
 void Graphics::drawARGB(uint8_t* data, int dataLength, int offset, int scanLength, int x, int y, int width_, int height_) {
@@ -1151,7 +1163,7 @@ void Graphics::drawARGB(uint8_t* data, int dataLength, int offset, int scanLengt
 }
 
 void Graphics::drawBGRA(uint8_t* data, int dataLength, int offset, int scanLength, int x, int y, int width_, int height_) {
-//    drawPixels()
+
 }
 
 void Graphics::drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {

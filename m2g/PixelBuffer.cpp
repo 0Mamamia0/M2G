@@ -7,11 +7,18 @@
 
 #include <memory>
 #include <cstring>
+#include <iostream>
 
 #include "PixelFormat.h"
 
 static void Release(PixelBuffer* buffer, void* pixels) {
+    // std::cout << "release" <<  pixels  << std::endl;
+    std::printf("free 0x%d \n", (int)pixels);
+    std::flush(std::cout);
     delete[] static_cast<uint8_t*>(pixels);
+
+    std::printf("free  finish 0x%d \n", (int)pixels);
+    std::flush(std::cout);
 }
 
 
@@ -19,7 +26,10 @@ std::shared_ptr<PixelBuffer> PixelBuffer::allocate(int width, int height, int fo
     int bpp = PixelFormat::getBytePerPixel(format);
     size_t bytes = width * height * bpp;
     uint8_t* data = new uint8_t[width * height * bpp];
-    return std::make_shared<PixelBuffer>(data, width, height, format, &Release);
+
+    std::printf("alloc 0x%d \n", (int)data);
+    std::flush(std::cout);
+    return std::make_shared<PixelBuffer>(data, width, height, format, Release);
 }
 
 std::shared_ptr<PixelBuffer> PixelBuffer::wrap(uint8_t* data, int width, int height, int format, ReleaseFun* fun) {
@@ -27,7 +37,7 @@ std::shared_ptr<PixelBuffer> PixelBuffer::wrap(uint8_t* data, int width, int hei
 }
 
 std::shared_ptr<PixelBuffer>PixelBuffer::wrap(uint8_t *data, int width, int height, int format, int rowByte, PixelBuffer::ReleaseFun *fun) {
-    return std::make_shared<PixelBuffer>(data, width, height, format, rowByte, nullptr);
+    return std::make_shared<PixelBuffer>(data, width, height, format, rowByte, fun);
 }
 
 //std::shared_ptr<PixelBuffer> PixelBuffer::wrap(void *pixels, int width, int height, int bpp) {
@@ -49,7 +59,7 @@ PixelBuffer::PixelBuffer(uint8_t *pixels, int width, int height, int format, Rel
 }
 
 PixelBuffer::PixelBuffer(uint8_t *pixels, int width, int height, int format, int rowByte,
-                         PixelBuffer::ReleaseFun *fun)
+                         ReleaseFun* fun)
         : pixel(pixels)
         , width(width)
         , height(height)
@@ -66,12 +76,10 @@ PixelBuffer::PixelBuffer(uint8_t *pixels, int width, int height, int format, int
 
 PixelBuffer::PixelBuffer(const PixelBuffer &other)
         : PixelBuffer(nullptr, other.width, other.height, other.format, nullptr) {
-
     auto* data = new uint8_t[size];
     std::memcpy(data, other.pixel, size);
     this->pixel = data;
     this->fun = &Release;
-
 }
 
 

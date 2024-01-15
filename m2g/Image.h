@@ -17,10 +17,6 @@ class PixelBuffer;
 class Image {
 
 
-
-
-
-
 public:
 
     Image(std::shared_ptr<PixelBuffer> pixel);

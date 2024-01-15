@@ -112,7 +112,7 @@ public:
 
     void drawRGB(int* rgbData, int dataLength, int offset, int scanLength, int x, int y, int width, int height, bool processAlpha);
     void drawImage(Image* image, int x, int y, int anchor = 0);
-    void drawImage(Image* src, int x, int y, int dstWidth, int dstHeight, int anchor = 0);
+    void drawImage(Image* src, int x, int y, int dst_width, int dst_height, int anchor = 0);
     void drawImage(Image* image, int x_src, int y_src, int w_src, int h_src, int x_dst, int y_dst, int anchor = 0);
     void drawRegion(Image* src, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst, int anchor);
 
