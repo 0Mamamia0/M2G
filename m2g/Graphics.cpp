@@ -11,6 +11,36 @@
 #include "Graphics.h"
 
 
+#ifdef _MSC_VER
+#if defined(_WIN32) || defined(_WIN64)
+#define BIG_ENDIAN
+#endif
+#endif
+
+
+#ifdef __GNUC__
+#if defined(__x86_64__) || defined(__i386__)
+#define BIG_ENDIAN
+#endif
+#endif
+
+
+
+
+static bool isBigEndian() {
+    static union  {
+        uint32_t value = 0x01020304;
+        uint8_t bytes[4];
+    } endian;
+    if(endian.bytes[0] == 0x01) {
+        return true;
+    } else if(endian.bytes[0] == 0x04) {
+        return false;
+    } else {
+        assert(false);
+    }
+}
+
 static inline int anchorX(int anchor, int x, int w) {
     switch (anchor & (LEFT | RIGHT | HCENTER)) {
         case RIGHT:
@@ -62,8 +92,6 @@ static inline int anchorTextY(int anchor, int y, const Font& font) {
             return y + metrics.ascent;
     }
 }
-
-
 
 bool ValidImage(Image* image, int x, int y, int w, int h) {
     return image!= nullptr
@@ -457,7 +485,7 @@ void Graphics::drawRegion(Image* image, int x_src, int y_src, int w_src, int h_s
 }
 
 
-// 内存越界
+
 
 void Graphics::drawImage(Image* src, int x_dst,int y_dst, int dst_width, int dst_height, int anchor) {
     if(src == nullptr || dst_width <= 0 || dst_height <= 0) {
@@ -512,8 +540,7 @@ inline void Graphics::drawLineH(int x0, int x1, int y) {
     }
 }
 
-void Graphics::drawLineAA(int x0, int y0, int x1, int y1)
-{
+void Graphics::drawLineAA(int x0, int y0, int x1, int y1){
     int dx = abs(x1-x0), sx = x0<x1 ? 1 : -1;
     int dy = abs(y1-y0), sy = y0<y1 ? 1 : -1;
     int err = dx-dy, e2, x2;                       /* error value e_xy */
@@ -964,12 +991,12 @@ int Graphics::getColor() {
 }
 
 static void ellipsePlotPoints(Graphics* graphics, double centerX, double centerY, int x, int y) {
-    graphics->drawPixel(centerX + x, centerY + y);
-    // 对称点
-    graphics->drawPixel(centerX - x, centerY + y);
-
-    graphics->drawPixel(centerX + x, centerY - y);
-    graphics->drawPixel(centerX - x, centerY - y);
+    // graphics->drawPixel(centerX + x, centerY + y);
+    // // 对称点
+    // graphics->drawPixel(centerX - x, centerY + y);
+    //
+    // graphics->drawPixel(centerX + x, centerY - y);
+    // graphics->drawPixel(centerX - x, centerY - y);
 
 
 //    graphics->drawLine(centerX + x, centerY + y, centerX - x, centerY + y);
@@ -1091,20 +1118,7 @@ bool Graphics::restoreToCount(int count) {
     return true;
 }
 
-static bool isBigEndian() {
-    static union  {
-        uint32_t value = 0x01020304;
-        uint8_t bytes[4];
-    } endian;
 
-    if(endian.bytes[0] == 0x01) {
-        return true;
-    } else if(endian.bytes[0] == 0x04) {
-        return false;
-    } else {
-        assert(false);
-    }
-}
 
 void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
                        int x, int y, int width_, int height_,
@@ -1122,14 +1136,20 @@ void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
     int src_format = 0;
 
 
+#ifdef BIG_ENDIAN
+    src_format = processAlpha ? ARGB_8888 : XRGB_8888;
+#elif defined(LITTLE_ENDIAN)
+    src_format = processAlpha ? BGRA_8888 : BGRX_8888;
+#else
     if(isBigEndian()) {
         src_format = processAlpha ? ARGB_8888 : XRGB_8888;
     } else {
         src_format = processAlpha ? BGRA_8888 : BGRX_8888;
     }
+#endif
+
 
     int bpp = PixelFormat::getBytePerPixel(src_format);
-
     rgbData += offset;
 
     int x0 = dst_rect_clip.left   - x;
@@ -1158,13 +1178,6 @@ void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
     // }
 }
 
-void Graphics::drawARGB(uint8_t* data, int dataLength, int offset, int scanLength, int x, int y, int width_, int height_) {
-
-}
-
-void Graphics::drawBGRA(uint8_t* data, int dataLength, int offset, int scanLength, int x, int y, int width_, int height_) {
-
-}
 
 void Graphics::drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
 

@@ -5,12 +5,20 @@
 #include "jni_def.h"
 #include <array>
 #include <cstring>
+#include <memory>
+
 #include "JNI_OnLoad.h"
 #include "m2g/Font.h"
 
 
+namespace {
+    std::shared_ptr<Typeface> DEFAULT_TYPEFACE = Typeface::makeFormFile("/simkai.ttf");
+}
+
+
+
 jlong NativeFont_Create(JNIEnv *, jclass, jint face, jint style, jint size) {
-    return reinterpret_cast<jlong>(&Font::getDefaultFont());
+    return reinterpret_cast<jlong>(new Font(DEFAULT_TYPEFACE.get(), face, style, size));
 }
 
 jint NativeFont_GetHeight(JNIEnv *, jclass, jlong handle) {
@@ -40,8 +48,10 @@ jint NativeFont_StringWidth(JNIEnv* env, jclass, jlong handle, jstring str) {
 
 //jint NativeFont_CharsWidth(JNIEnv *, jclass, jlong font, jcharArray chars, jint offset, jint count);
 //jint NativeFont_SubstringWidth(JNIEnv *, jclass, jlong font, jstring str, jint offset, jint count);
-void NativeFont_Release(JNIEnv *, jclass, jlong font) {
-
+void NativeFont_Release(JNIEnv *, jclass, jlong handle) {
+    if(auto* font = reinterpret_cast<Font *>(handle)) {
+        delete font;
+    }
 }
 
 

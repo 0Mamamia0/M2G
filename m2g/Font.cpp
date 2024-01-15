@@ -25,13 +25,9 @@ Font::Font(Typeface* typeface, int face, int style, int size)
     , size(size)
     , metrics{}
     {
-
         const stbtt_fontinfo& fontInfo = typeface->getFontInfo();
-
-
         int ascent, descent, lineGap;
         stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
-
 
         float pixel_height;
         switch (size) {
@@ -128,7 +124,6 @@ const Glyph& Font::getGlyph(int codepoint) const{
 }
 
 std::optional<const Glyph> Font::loadGlyph(int codepoint) const {
-
     const stbtt_fontinfo* info =  &typeface->getFontInfo();
     int id = stbtt_FindGlyphIndex(info, codepoint);
 

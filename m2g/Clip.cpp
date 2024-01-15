@@ -72,7 +72,6 @@ bool Clip::clipLineH(int& x0, int& x1, int& y) const {
 }
 
 bool Clip::clipLineB(int& x0, int& y0, int& x1, int& y1) {
-
     Rect rect = getDeviceClipBounds();
     if(rect.isEmpty()) {
         return false;

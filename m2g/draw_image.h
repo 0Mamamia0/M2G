@@ -198,12 +198,9 @@ static void drawPixels(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff
 static void drawPixelsScaleRGB888X(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
                                    const Rect& region, float ratioX, float ratioY) {
 
-    // int srcX = -1;
-    int srcY = -1;
 
+    int srcY = -1;
     uint8_t* dst_row = dst + (dst_stride * region.top) + (region.left << 2);
-    // uint8_t* dst_colum = nullptr;
-    // uint8_t* src_row = nullptr;
     size_t row_bytes = region.getWidth() << 2;
 
 
@@ -226,47 +223,19 @@ static void drawPixelsScaleRGB888X(uint8_t* dst, uint8_t* src, ptrdiff_t dst_str
         int sy = (int)((y + 0.5f) * ratioY);
         if(sy == srcY) {
             memcpy(dst_row, dst_row - dst_stride, row_bytes);
-            continue;
+        } else {
+            srcY = sy;
+            fun(dst_row, src + (sy * src_stride), region.left, region.right, ratioX);
         }
-        srcY = sy;
-        fun(dst_row, src + (sy * src_stride), region.left, region.right, ratioX);
         dst_row += dst_stride;
     }
 
-    // for (int y = region.top; y < region.bottom; ++y) {
-    //     int sy = (int)((y + 0.5f) * ratioY);
-    //     dst_row += dst_stride;
-    //     dst_colum = dst_row;
-    //
-    //     if(sy == srcY) {
-    //         memcpy(dst_row, dst_row - dst_stride, region.getWidth() << 2);
-    //         continue;
-    //     }
-    //
-    //     srcY = sy;
-    //     src_row = src + srcY * src_stride;
-    //
-    //     for (int x = region.left; x < region.right; ++ x) {
-    //         int sx = (int)((x + 0.5f) * ratioX);
-    //         if(sx != srcX) {
-    //             srcX = sx;
-    //             *(uint32_t*)dst_colum = *(uint32_t*)(src_row + (srcX << 2));
-    //         } else {
-    //             *(uint32_t*)dst_colum = *((uint32_t*)dst_colum - 1);
-    //
-    //         }
-    //         dst_colum += 4;
-    //     }
-    //
-    //     srcX = -1;
-    // }
+
 
 }
 
 static void drawPixelsScaleRGBA8888(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
                                    const Rect& region, float ratioX, float ratioY) {
-    int srcX = -1;
-    int srcY = -1;
 
     uint8_t* dst_row = dst + (dst_stride * region.top) + (region.left << 2);
 
@@ -283,30 +252,6 @@ static void drawPixelsScaleRGBA8888(uint8_t* dst, uint8_t* src, ptrdiff_t dst_st
         fun(dst_row, src + (sy * src_stride), region.left, region.right, ratioX);
         dst_row += dst_stride;
     }
-
-
-    // uint8_t* dst_row = dst + (dst_stride * region.top) + (region.left << 2);
-    // uint8_t* src_row = nullptr;
-    // uint8_t * colum;
-
-    // for (int y = region.top; y < region.bottom; ++y) {
-    //     srcY = (int)((y + 0.5f) * ratioY);
-    //     src_row = src + srcY * src_stride;
-    //     colum = dst_row;
-    //
-    //     uint8_t* color = nullptr;
-    //     for (int x = region.left; x < region.right; ++ x) {
-    //         int sx = (int)((x + 0.5f) * ratioX);
-    //         if(sx != srcX) {
-    //             srcX = sx;
-    //             color = (src_row + (srcX << 2));
-    //         }
-    //         blend1px(colum, color);
-    //         colum += 4;
-    //     }
-    //     dst_row += dst_stride;
-    //     srcX = -1;
-    // }
 }
 
 

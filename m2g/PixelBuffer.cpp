@@ -2,23 +2,18 @@
 // Created by Admin on 2023/5/26.
 //
 
-#include "PixelBuffer.h"
 
+
+
+#include "PixelBuffer.h"
 
 #include <memory>
 #include <cstring>
 #include <iostream>
-
 #include "PixelFormat.h"
 
 static void Release(PixelBuffer* buffer, void* pixels) {
-    // std::cout << "release" <<  pixels  << std::endl;
-    std::printf("free 0x%d \n", (int)pixels);
-    std::flush(std::cout);
     delete[] static_cast<uint8_t*>(pixels);
-
-    std::printf("free  finish 0x%d \n", (int)pixels);
-    std::flush(std::cout);
 }
 
 
@@ -26,9 +21,6 @@ std::shared_ptr<PixelBuffer> PixelBuffer::allocate(int width, int height, int fo
     int bpp = PixelFormat::getBytePerPixel(format);
     size_t bytes = width * height * bpp;
     uint8_t* data = new uint8_t[width * height * bpp];
-
-    std::printf("alloc 0x%d \n", (int)data);
-    std::flush(std::cout);
     return std::make_shared<PixelBuffer>(data, width, height, format, Release);
 }
 
@@ -39,18 +31,6 @@ std::shared_ptr<PixelBuffer> PixelBuffer::wrap(uint8_t* data, int width, int hei
 std::shared_ptr<PixelBuffer>PixelBuffer::wrap(uint8_t *data, int width, int height, int format, int rowByte, PixelBuffer::ReleaseFun *fun) {
     return std::make_shared<PixelBuffer>(data, width, height, format, rowByte, fun);
 }
-
-//std::shared_ptr<PixelBuffer> PixelBuffer::wrap(void *pixels, int width, int height, int bpp) {
-//    return wrap(pixels, width, height, bpp,  width * bpp);
-//}
-//
-//std::shared_ptr<PixelBuffer> PixelBuffer::wrap(void *pixels, int width, int height, int bpp, int stride) {
-//    assert(pixels != nullptr && width > 0 && height > 0 && bpp > 0 && stride >= bpp * width);
-//    return std::make_shared<PixelBuffer>(pixels, width, height, bpp, stride, nullptr);
-//}
-
-
-
 
 
 PixelBuffer::PixelBuffer(uint8_t *pixels, int width, int height, int format, ReleaseFun *fun)
