@@ -8,52 +8,76 @@
 #include "m2g/Graphics.h"
 
 
-jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
+static jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return reinterpret_cast<jlong>(image->getGraphics());
     }
     return 0;
 }
 
-void NativeGraphics_Release(JNIEnv *, jclass, jlong handle) {
+static void NativeGraphics_Release(JNIEnv *, jclass, jlong handle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     delete graphics;
 }
 
 
-void NativeGraphics_DrawLine(JNIEnv *, jclass, jlong graphicsHandle, jint x0, jint y0, jint x1, jint y1) {
-    if(auto* graphics = reinterpret_cast<Graphics*>(graphicsHandle)) {
+static void NativeGraphics_DrawLine(JNIEnv *, jclass, jlong handle, jint x0, jint y0, jint x1, jint y1) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->drawLine(x0, y0, x1, y1);
     }
 }
 
-void NativeGraphics_DrawRect(JNIEnv *, jclass, jlong graphicsHandle, jint x, jint y, jint width, jint height) {
-    if(auto* graphics = reinterpret_cast<Graphics*>(graphicsHandle)) {
+static void NativeGraphics_DrawRect(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->drawRect(x, y, width, height);
     }
 }
 
-void NativeGraphics_FillRect(JNIEnv *, jclass, jlong graphicsHandle, jint x, jint y, jint width, jint height) {
-    if(auto* graphics = reinterpret_cast<Graphics*>(graphicsHandle)) {
+static void NativeGraphics_FillRect(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->fillRect(x, y, width, height);
     }
 }
 
-void NativeGraphics_DrawCircle(JNIEnv *, jclass, jlong graphicsHandle, jint centerX, jint centerY, jint r) {
-    if(auto* graphics = reinterpret_cast<Graphics*>(graphicsHandle)) {
+static void NativeGraphics_DrawRoundRect(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height, jint arcWidth, jint arcHeight) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
+        graphics->drawRoundRect(x, y, width, height, arcWidth, arcHeight);
+    }
+}
+
+static void NativeGraphics_FillRoundRect(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height, jint arcWidth, jint arcHeight) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
+        graphics->fillRoundRect(x, y, width, height, arcWidth, arcHeight);
+    }
+}
+
+static void NativeGraphics_DrawArc(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height, jint arcWidth, jint arcHeight) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
+        graphics->drawArc(x, y, width, height, arcWidth, arcHeight);
+    }
+}
+
+static void NativeGraphics_FillArc(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height, jint arcWidth, jint arcHeight) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
+        graphics->fillArc(x, y, width, height, arcWidth, arcHeight);
+    }
+}
+
+static void NativeGraphics_DrawCircle(JNIEnv *, jclass, jlong handle, jint centerX, jint centerY, jint r) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->drawCircle( centerX, centerY, r);
     }
 }
 
-void NativeGraphics_FillCircle(JNIEnv *, jclass, jlong graphicsHandle, jint centerX, jint centerY, jint r) {
-    if(auto* graphics = reinterpret_cast<Graphics*>(graphicsHandle)) {
+static void NativeGraphics_FillCircle(JNIEnv *, jclass, jlong handle, jint centerX, jint centerY, jint r) {
+    if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->fillCircle(centerX, centerY, r);
     }
 }
 
 
-void NativeGraphics_DrawImageWH(JNIEnv *, jclass, jlong graphicsHandle, jlong imageHandle, jint x, jint y, jint width, jint height, jint anchor) {
-    auto* graphics = reinterpret_cast<Graphics*>(graphicsHandle);
+static void NativeGraphics_DrawImageWH(JNIEnv *, jclass, jlong handle, jlong imageHandle, jint x, jint y, jint width, jint height, jint anchor) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
     auto* image = reinterpret_cast<Image*>(imageHandle);
     if(graphics != nullptr && image != nullptr) {
         graphics->drawImage(image, x, y, width, height, anchor);
@@ -62,8 +86,8 @@ void NativeGraphics_DrawImageWH(JNIEnv *, jclass, jlong graphicsHandle, jlong im
 
 
 
-void NativeGraphics_DrawImage(JNIEnv *, jclass, jlong graphicsHandle, jlong imageHandle, jint x, jint y, jint anchor) {
-    auto* graphics = reinterpret_cast<Graphics*>(graphicsHandle);
+static void NativeGraphics_DrawImage(JNIEnv *, jclass, jlong handle, jlong imageHandle, jint x, jint y, jint anchor) {
+    auto* graphics = reinterpret_cast<Graphics*>(handle);
     auto* image = reinterpret_cast<Image*>(imageHandle);
     if(graphics != nullptr && image != nullptr) {
         graphics->drawImage(image, x, y, anchor);
@@ -71,39 +95,39 @@ void NativeGraphics_DrawImage(JNIEnv *, jclass, jlong graphicsHandle, jlong imag
 }
 
 
-void NativeGraphics_SetColor(JNIEnv *, jclass, jlong handle, jint color) {
+static void NativeGraphics_SetColor(JNIEnv *, jclass, jlong handle, jint color) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->setColor(color);
     }
 }
 
 
-void NativeGraphics_Translate(JNIEnv *, jclass, jlong handle, jint x, jint y) {
+static void NativeGraphics_Translate(JNIEnv *, jclass, jlong handle, jint x, jint y) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->translate(x, y);
     }
 }
 
-void NativeGraphics_SetClip(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height) {
+static void NativeGraphics_SetClip(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->setClip(x, y, width, height);
     }
 }
 
-void NativeGraphics_ClipRect(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height) {
+static void NativeGraphics_ClipRect(JNIEnv *, jclass, jlong handle, jint x, jint y, jint width, jint height) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         graphics->clipRect(x, y, width, height);
     }
 }
 
-jint NativeGraphics_GetTranslateX(JNIEnv *, jclass, jlong handle) {
+static jint NativeGraphics_GetTranslateX(JNIEnv *, jclass, jlong handle) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         return graphics->getTranslateX();
     }
     return 0;
 }
 
-jint NativeGraphics_GetTranslateY(JNIEnv *, jclass, jlong handle) {
+static jint NativeGraphics_GetTranslateY(JNIEnv *, jclass, jlong handle) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         return graphics->getTranslateY();
     }
@@ -111,14 +135,14 @@ jint NativeGraphics_GetTranslateY(JNIEnv *, jclass, jlong handle) {
 }
 
 
-jint NativeGraphics_GetClipX(JNIEnv *, jclass, jlong handle) {
+static jint NativeGraphics_GetClipX(JNIEnv *, jclass, jlong handle) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         return graphics->getClipX();
     }
     return 0;
 }
 
-jint NativeGraphics_GetClipY(JNIEnv *, jclass, jlong handle) {
+static jint NativeGraphics_GetClipY(JNIEnv *, jclass, jlong handle) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         return graphics->getClipY();
     }
@@ -127,7 +151,7 @@ jint NativeGraphics_GetClipY(JNIEnv *, jclass, jlong handle) {
 
 
 
-jint NativeGraphics_GetClipWidth(JNIEnv *, jclass, jlong handle) {
+static jint NativeGraphics_GetClipWidth(JNIEnv *, jclass, jlong handle) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         return graphics->getClipWidth();
     }
@@ -135,7 +159,7 @@ jint NativeGraphics_GetClipWidth(JNIEnv *, jclass, jlong handle) {
 }
 
 
-jint NativeGraphics_GetClipHeight(JNIEnv *, jclass, jlong handle) {
+static jint NativeGraphics_GetClipHeight(JNIEnv *, jclass, jlong handle) {
     if(auto* graphics = reinterpret_cast<Graphics*>(handle)) {
         return graphics->getClipHeight();
     }
@@ -143,7 +167,7 @@ jint NativeGraphics_GetClipHeight(JNIEnv *, jclass, jlong handle) {
 }
 
 
-void NativeGraphics_DrawString(JNIEnv* env, jclass,  jlong handle, jstring str, jint x, jint y, jint anchor, jlong  fontHandle) {
+static void NativeGraphics_DrawString(JNIEnv* env, jclass,  jlong handle, jstring str, jint x, jint y, jint anchor, jlong  fontHandle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     auto* font = reinterpret_cast<const Font*>(fontHandle);
     if(graphics != nullptr && font != nullptr) {
@@ -153,7 +177,7 @@ void NativeGraphics_DrawString(JNIEnv* env, jclass,  jlong handle, jstring str, 
     }
 }
 
-void NativeGraphics_DrawRegion(JNIEnv* env, jclass,  jlong handle, jlong imageHandle,
+static void NativeGraphics_DrawRegion(JNIEnv* env, jclass,  jlong handle, jlong imageHandle,
                                     jint x, jint y, jint width, jint height,
                                     jint transform,  jint x_dst, jint y_dst,
                                     jint anchor) {
@@ -164,7 +188,7 @@ void NativeGraphics_DrawRegion(JNIEnv* env, jclass,  jlong handle, jlong imageHa
     }
 }
 
-void NativeGraphics_CopyArea(JNIEnv* env, jclass,  jlong handle, jint x_src, jint y_src, jint width, jint height,
+static void NativeGraphics_CopyArea(JNIEnv* env, jclass,  jlong handle, jint x_src, jint y_src, jint width, jint height,
                              jint x_dst, jint y_dst, jint anchor) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     if(graphics) {
@@ -173,7 +197,7 @@ void NativeGraphics_CopyArea(JNIEnv* env, jclass,  jlong handle, jint x_src, jin
 }
 
 
-void NativeGraphics_DrawRGB(JNIEnv* env, jclass,  jlong handle, jintArray array, jint offset, jint scanLength,
+static void NativeGraphics_DrawRGB(JNIEnv* env, jclass,  jlong handle, jintArray array, jint offset, jint scanLength,
                             jint x, jint y, jint width, jint height, jboolean processAlpha) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     if(graphics) {
@@ -185,7 +209,7 @@ void NativeGraphics_DrawRGB(JNIEnv* env, jclass,  jlong handle, jintArray array,
 }
 
 
-jint NativeGraphics_Save(JNIEnv* env, jclass,  jlong handle) {
+static jint NativeGraphics_Save(JNIEnv* env, jclass,  jlong handle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     if(graphics) {
         return graphics->save();
@@ -194,7 +218,7 @@ jint NativeGraphics_Save(JNIEnv* env, jclass,  jlong handle) {
 }
 
 
-jboolean NativeGraphics_Restore(JNIEnv* env, jclass,  jlong handle) {
+static jboolean NativeGraphics_Restore(JNIEnv* env, jclass,  jlong handle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     if(graphics) {
         return graphics->restore();
@@ -203,7 +227,7 @@ jboolean NativeGraphics_Restore(JNIEnv* env, jclass,  jlong handle) {
 }
 
 
-jboolean NativeGraphics_RestoreToCount(JNIEnv* env, jclass,  jlong handle, jint count) {
+static jboolean NativeGraphics_RestoreToCount(JNIEnv* env, jclass,  jlong handle, jint count) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     if(graphics) {
         return graphics->restoreToCount(count);
@@ -219,6 +243,10 @@ extern int register_m2g_Graphics(JNIEnv *env) {
             {"jniDrawLine"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawLine)      },
             {"jniDrawRect"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawRect)      },
             {"jniFillRect"       , "(JIIII)V"           , reinterpret_cast<void*>(NativeGraphics_FillRect)      },
+            {"jniDrawRoundRect"       , "(JIIIIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawRoundRect)      },
+            {"jniFillRoundRect"       , "(JIIIIII)V"           , reinterpret_cast<void*>(NativeGraphics_FillRoundRect)      },
+            {"jniDrawArc"       , "(JIIIIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawArc)      },
+            {"jniFillArc"       , "(JIIIIII)V"           , reinterpret_cast<void*>(NativeGraphics_FillArc)      },
             {"jniDrawCircle"       , "(JIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawCircle)      },
             {"jniFillCircle"       , "(JIII)V"           , reinterpret_cast<void*>(NativeGraphics_FillCircle)      },
             {"jniDrawImage"       , "(JJIII)V"           , reinterpret_cast<void*>(NativeGraphics_DrawImage)      },
