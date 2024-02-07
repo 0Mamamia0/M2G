@@ -98,6 +98,8 @@ struct Glyph{
     }
 
     bool empty() const {
+
+        // return this == nullptr || id == 0;
         return id == 0;
     }
 
@@ -118,12 +120,15 @@ public:
     int getStyle() const;
     int getFace() const;
     int getSize() const;
-    const Glyph& getGlyph(char c) const;
-    const Glyph& getGlyph(int codepoint) const;
-    std::optional<const Glyph> loadGlyph(int codepoint) const;
+    const Glyph* getGlyph(char c) const;
+    const Glyph* getGlyph(int codepoint) const;
+
     float getAdvance(const Glyph *g1, const Glyph *g2) const;
     const FontMetrics& getFontMetrics() const;
     static const Font& getDefaultFont() ;
+
+private:
+    Glyph* loadGlyph(int codepoint) const;
 
 private:
     int face;
@@ -132,8 +137,8 @@ private:
     float scale;
     Typeface* typeface;
     FontMetrics metrics;
-    mutable std::unordered_map<int, Glyph> glyph_cache;
-    mutable std::array<Glyph, 96> ascii_glyph_cache;
+    mutable std::unordered_map<int, Glyph*> glyph_cache;
+    mutable std::array<Glyph*, 96> ascii_glyph_cache;
 };
 
 

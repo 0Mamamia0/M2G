@@ -13,7 +13,7 @@
 #include "strConver.h"
 
 
-Glyph EMPTY_GLYPH(0, 0, 0, 0, 0,  {0, 0, 0, 0}, nullptr);
+// Glyph EMPTY_GLYPH(0, 0, 0, 0, 0,  {0, 0, 0, 0}, nullptr);
 
 
 
@@ -31,18 +31,17 @@ Font::Font(Typeface* typeface, int face, int style, int size)
 
         float pixel_height;
         switch (size) {
-            case SIZE_SMALL: pixel_height = 18;
+            case SIZE_SMALL: pixel_height = 12;
                 break;
-            case SIZE_MEDIUM: pixel_height = 24;
+            case SIZE_MEDIUM: pixel_height = 18;
                 break;
-            case SIZE_LARGE: pixel_height = 32;
+            case SIZE_LARGE: pixel_height = 24;
                 break;
             default:
-                pixel_height = 24;
+                pixel_height = 18;
                 break;
         }
         this->scale =  stbtt_ScaleForPixelHeight(&fontInfo, pixel_height);
-
         metrics.ascent = (float)ascent * scale;
         metrics.descent = (float)descent * scale;
         metrics.lineGap = (float)lineGap * scale;
@@ -52,29 +51,42 @@ Font::Font(Typeface* typeface, int face, int style, int size)
 
         const stbtt_fontinfo* info =  &typeface->getFontInfo();
         for (int i = 0; i < ascii_glyph_cache.size(); ++i) {
-            auto glyph = loadGlyph(i + 32);
-            if(glyph.has_value()) {
-                ascii_glyph_cache[i].set(glyph.value());
+            auto* glyph = loadGlyph(i + 32);
+            if(glyph) {
+                ascii_glyph_cache[i] = glyph;
             } else {
-                ascii_glyph_cache[i].set(EMPTY_GLYPH);
+                ascii_glyph_cache[i] = nullptr;
             }
         }
 }
 
 
 Font::~Font() {
-    for (const Glyph& glyph : ascii_glyph_cache) {
-        if(glyph.bitmap != nullptr) {
-            stbtt_FreeBitmap(glyph.bitmap, nullptr);
+
+    for(int i = 0; i < ascii_glyph_cache.size(); ++ i) {
+        auto* glyph = ascii_glyph_cache[i];
+        if(glyph != nullptr ) {
+            if(glyph->bitmap != nullptr) {
+                stbtt_FreeBitmap(glyph->bitmap, nullptr);
+            }
+            delete glyph;
+            ascii_glyph_cache[i] = nullptr;
         }
     }
 
+
+
     for(const auto& pair : glyph_cache ) {
-        const Glyph& glyph = pair.second;
-        if(glyph.bitmap != nullptr) {
-            stbtt_FreeBitmap(glyph.bitmap, nullptr);
+        const Glyph* glyph = pair.second;
+        if(glyph != nullptr) {
+            if(glyph->bitmap != nullptr) {
+                stbtt_FreeBitmap(glyph->bitmap, nullptr);
+            }
+            delete glyph;
         }
     }
+
+    glyph_cache.clear();
 }
 
 
@@ -100,12 +112,12 @@ int Font::getHeight() const{
     return  (int)std::round(metrics.height);;
 }
 
-const Glyph& Font::getGlyph(char c) const {
+const Glyph* Font::getGlyph(char c) const {
     return this->getGlyph((int)c);
 }
 
 
-const Glyph& Font::getGlyph(int codepoint) const{
+const Glyph* Font::getGlyph(int codepoint) const{
     if( codepoint >= 32 && codepoint <= 127) {
         return ascii_glyph_cache[codepoint - 32];
     }
@@ -113,21 +125,21 @@ const Glyph& Font::getGlyph(int codepoint) const{
     if(find != glyph_cache.end()) {
         return find->second;
     }
-    auto glyph = loadGlyph(codepoint);
+    auto* glyph = loadGlyph(codepoint);
     if(glyph) {
-        auto result = glyph_cache.insert(std::make_pair(codepoint, *glyph));
+        auto result = glyph_cache.insert(std::make_pair(codepoint, glyph));
         if(result.second) {
             return result.first->second;
         }
     }
-    return EMPTY_GLYPH;
+    return nullptr;
 }
 
-std::optional<const Glyph> Font::loadGlyph(int codepoint) const {
+Glyph* Font::loadGlyph(int codepoint) const {
     const stbtt_fontinfo* info =  &typeface->getFontInfo();
     int id = stbtt_FindGlyphIndex(info, codepoint);
 
-    if(id != 0 && !stbtt_IsGlyphEmpty(info, id)) {
+    if(id != 0) {
         int advance;
         int bearing;
         int width;
@@ -138,14 +150,15 @@ std::optional<const Glyph> Font::loadGlyph(int codepoint) const {
         stbtt_GetGlyphHMetrics(info, id, &advance, &bearing);
         stbtt_GetGlyphBitmapBox(info, id, scale, scale, &bounds.left, &bounds.top, &bounds.right, &bounds.bottom);
         bitmap = stbtt_GetGlyphBitmap(info, scale, scale, id, &width, &height, nullptr, nullptr);
-
-        return std::make_optional<const Glyph>(id, scale * (float)advance, scale * (float)bearing, width, height, bounds, bitmap);
+        return new Glyph(id, scale * (float)advance, scale * (float)bearing, width, height, bounds, bitmap);
     }
-
-    return std::nullopt;
+    return nullptr;
 }
 
 float Font::getAdvance(const Glyph *g1, const Glyph *g2) const {
+    if(g1 == nullptr || g2 == nullptr) {
+        return 0;
+    }
     return  scale * (float)stbtt__GetGlyphKernInfoAdvance(&typeface->getFontInfo(), g1->id, g2->id);
 }
 
@@ -166,7 +179,7 @@ int Font::charsWidth(const char *str, int len) const {
 
     while (tmp[0] != '\0') {
         codepoint = utf8_to_codepoint( tmp, &len, strlen(tmp));
-        glyphs.push_back(&this->getGlyph(codepoint));
+        glyphs.push_back(this->getGlyph(codepoint));
         tmp += len;
     }
 

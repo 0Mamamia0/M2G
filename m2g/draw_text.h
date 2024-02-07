@@ -14,20 +14,20 @@
 #include "UTF8Iterator.h"
 #include "draw_image.h"
 
-void draw_glyph(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const Glyph& glyph, int x, int y, const Font& font, int color) {
-    if(glyph.bitmap) {
-        x += glyph.bounds.left;
-        y += glyph.bounds.top;
-        drawPixelsA8_ARGB(dst, glyph.bitmap, dst_stride, glyph.width, x, y, glyph.width, glyph.height, dst_format, color);
+void draw_glyph(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const Glyph* glyph, int x, int y, const Font& font, int color) {
+    if(glyph != nullptr && glyph->bitmap) {
+        x += glyph->bounds.left;
+        y += glyph->bounds.top;
+        drawPixelsA8_ARGB(dst, glyph->bitmap, dst_stride, glyph->width, x, y, glyph->width, glyph->height, dst_format, color);
     }
 }
 
 
-void draw_glyph(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const Glyph& glyph, int x, int y, const Rect& clip, const Font& font, int color) {
-    if(glyph.bitmap) {
-        x += glyph.bounds.left;
-        y += glyph.bounds.top;
-        drawPixelsA8_ARGB(dst, glyph.bitmap, dst_stride, glyph.width, x, y, glyph.width, glyph.height, dst_format, color, clip);
+void draw_glyph(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const Glyph* glyph, int x, int y, const Rect& clip, const Font& font, int color) {
+    if(glyph != nullptr && glyph->bitmap) {
+        x += glyph->bounds.left;
+        y += glyph->bounds.top;
+        drawPixelsA8_ARGB(dst, glyph->bitmap, dst_stride, glyph->width, x, y, glyph->width, glyph->height, dst_format, color, clip);
     }
 }
 
@@ -63,13 +63,13 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
     if(top > clip.top && bottom < clip.bottom) {
         auto iter = glyphs.begin();
 
-        //clipped
-        while (iter!= glyphs.end()) {
-            const auto& current = *iter;
-            if (current->empty()) {
-                ++iter;
+        //不需要绘制
+        for (;iter!= glyphs.end(); ++iter)  {
+            const auto* current = *iter;
+            if (current == nullptr || current->empty()) {
                 continue;
             }
+
             if (x_offset + current->advance > clip.left) {
                 break;
             }
@@ -77,40 +77,47 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
             if (auto iter_next = std::next(iter); iter_next!= glyphs.end()) {
                 x_offset += font.getAdvance(current, *iter_next);
             }
-            ++iter;
         }
 
-        if (iter != glyphs.end()) {
-            const auto& current = *iter;
-            draw_glyph(dst, dst_stride, dst_format, *current, x_offset, y_offset, clip, font, color);
+
+        // 绘制和 Left Clip相交的第一个字符
+        for (;iter != glyphs.end(); ++iter) {
+            const auto* current = *iter;
+            if(current == nullptr || current->empty()) {
+                continue;
+            }
+            draw_glyph(dst, dst_stride, dst_format, current, x_offset, y_offset, clip, font, color);
             x_offset += current->advance;
             if (auto iter_next = std::next(iter); iter_next!= glyphs.end()) {
                 x_offset += font.getAdvance(current, *iter_next);
             }
-            ++iter;
+            break;
         }
 
-
-        while (iter!= glyphs.end()) {
-            const auto& current = *iter;
-            if (current->empty()) {
-                ++iter;
+        //绘制所有不与Clip相交的字符
+        for (;iter!= glyphs.end(); ++iter) {
+            const auto* current = *iter;
+            if (current == nullptr || current->empty()) {
                 continue;
             }
             if (x_offset + current->advance > clip.right) {
                 break;
             }
-            draw_glyph( dst, dst_stride, dst_format, *current, x_offset, y_offset, font, color);
+            draw_glyph( dst, dst_stride, dst_format, current, x_offset, y_offset, font, color);
             x_offset += current->advance;
             if (auto iter_next = std::next(iter); iter_next!= glyphs.end()) {
                 x_offset += font.getAdvance(current, *iter_next);
             }
-            ++iter;
         }
 
-        if (iter != glyphs.end()) {
-            const auto& current = *iter;
-            draw_glyph(dst, dst_stride, dst_format, *current, x_offset, y_offset, clip, font, color);
+        // 绘制和 Left Clip相交的第一个字符
+        for (;iter != glyphs.end(); ++iter) {
+            const auto* current = *iter;
+            if(current == nullptr || current->empty()) {
+                continue;
+            }
+            draw_glyph(dst, dst_stride, dst_format, current, x_offset, y_offset, clip, font, color);
+            break;
         }
 
 
@@ -118,11 +125,11 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
         for (auto iter = glyphs.begin(); iter != glyphs.end(); ++iter) {
             const auto *current = *iter;
 
-            if (current->empty()) {
+            if (current == nullptr || current->empty()) {
                 continue;
             }
 
-            draw_glyph(dst, dst_stride, dst_format, *current, x_offset, y_offset, clip, font, color);
+            draw_glyph(dst, dst_stride, dst_format, current, x_offset, y_offset, clip, font, color);
 
             x_offset += current->advance;
             if (auto iter_next = std::next(iter); iter_next != glyphs.end()) {
@@ -143,7 +150,7 @@ void draw_string(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const char*
     int codepoint;
     UTFIterator iterator(str, len);
     while ((codepoint = iterator.next()) != -1) {
-        glyphs.push_back(&font.getGlyph(codepoint));
+        glyphs.push_back(font.getGlyph(codepoint));
     }
 
     if(glyphs.size() == 0) {

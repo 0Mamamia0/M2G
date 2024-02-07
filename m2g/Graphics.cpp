@@ -580,8 +580,6 @@ void Graphics::drawRect(int x, int y, int w, int h) {
         return;
     translatePoint(x, y);
 
-
-
     int x1 = x + w;
     int y1 = y + h;
 
@@ -856,7 +854,6 @@ void Graphics::drawString(const std::string& str, int x, int y, int anchor, cons
 
 
 void Graphics::drawString(const char *str, int x, int y, int anchor, const Font& font) {
-
     if(str == nullptr) {
         return;
     }
@@ -865,7 +862,6 @@ void Graphics::drawString(const char *str, int x, int y, int anchor, const Font&
     if(bounds.isEmpty()) {
         return;
     }
-
 
     int len = strlen(str);
     int x_offset = x;
@@ -1164,23 +1160,7 @@ void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
     auto* src_pixels = reinterpret_cast<uint8_t*>(rgbData) + (y0 * scanLength) + x0 * bpp;
     drawPixels(dst_pixels, src_pixels, buffer->getRowBytes(), scanLength * bpp, width_ - x0, height_ -y0, RGBA_8888, src_format);
 
-    // if(processAlpha) {
-    //     for (int j  = 0; j < height_; ++j) {
-    //         for (int i= 0; i < width_; ++i) {
-    //             ((Color*)dst_pixels)[i] = rgbData[i];
-    //         }
-    //         dst_pixels += buffer->getRowBytes();
-    //         rgbData += scanLength;
-    //     }
-    // } else {
-    //     for (int j  = 0; j < height_; ++j) {
-    //         for (int i= 0; i < width_; ++i) {
-    //             ((Color*)dst_pixels)[i] = rgbData[i] & 0xFF000000;
-    //         }
-    //         dst_pixels += buffer->getRowBytes();
-    //         rgbData += scanLength;
-    //     }
-    // }
+
 }
 
 

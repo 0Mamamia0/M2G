@@ -53,6 +53,20 @@ class Graphics {
         State(Translate translate, Rect clip, Color paintColor)
                 : translate(translate), clip(clip), paintColor(paintColor){
         }
+
+        State(const State& other)
+            : translate(other.translate)
+            , clip(other.clip)
+            , paintColor(other.paintColor){
+
+        }
+
+        State(State&& other)
+            : translate(other.translate)
+            , clip(other.clip)
+            , paintColor(other.paintColor){
+
+        }
     };
 
 public:
@@ -66,18 +80,21 @@ public:
     void setColor(const Color& color);
     void setColor(int argb);
     int getColor();
+
     void translate(int x, int y);
-    int getTranslateX() const;
-    int getTranslateY() const;
     void setClip(int x, int y, int width, int height);
     void clipRect(int x, int y, int width, int height);
+
     int getClipX();
     int getClipY();
     int getClipWidth();
     int getClipHeight();
+    int getTranslateX() const;
+    int getTranslateY() const;
     int save();
     bool restore();
     bool restoreToCount(int count);
+
     void clear(Color color);
 
     void drawPoint(int x, int y);

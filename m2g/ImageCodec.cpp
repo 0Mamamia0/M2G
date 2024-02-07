@@ -296,16 +296,11 @@ Image *ImageCodec::createImage(Image *src, int x, int y, int width, int height, 
     uint8_t* dst_pixels = dst_buffer.addr<uint8_t*>();
     uint8_t* src_pixels = src_buffer.addr<uint8_t*>(src_x, src_y);
 
-
     while (dst_height -- > 0) {
         opt(dst_pixels, src_pixels, dst_width,  src_stride);
         dst_pixels += dst_stride;
         src_pixels += inc;
     }
-
-
-
-
 
     return image;
 }
