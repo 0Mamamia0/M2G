@@ -55,7 +55,7 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
     int top = y_offset - (int) ceil(metrics.ascent);
     int bottom = y_offset - (int) floor(metrics.descent);
 
-    const Glyph* invalid = font.getGlyph(65533); // �;
+    // const Glyph* invalid = font.getGlyph(65533); // �;
 
     if(top > bottom || top > clip.bottom || bottom < clip.top) {
         return;
@@ -68,9 +68,8 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
         //不需要绘制
         for (;iter!= glyphs.end(); ++iter)  {
             const auto* current = *iter;
-
             if (current == nullptr || current->empty()) {
-                current = invalid;
+                continue;
             }
 
             if (x_offset + current->advance > clip.left) {
@@ -84,10 +83,10 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
 
 
         // 绘制和 Left Clip相交的第一个字符
-        if(iter != glyphs.end()) {
+        for(;iter != glyphs.end(); ++iter) {
             const auto* current = *iter;
             if(current == nullptr || current->empty()) {
-                current = invalid;
+                continue;
             }
             draw_glyph(dst, dst_stride, dst_format, current, x_offset, y_offset, clip, font, color);
             x_offset += current->advance;
@@ -95,13 +94,14 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
                 x_offset += font.getAdvance(current, *iter_next);
             }
             ++iter;
+            break;
         }
 
         //绘制所有不与Clip相交的字符
         for (;iter!= glyphs.end(); ++iter) {
             const auto* current = *iter;
             if (current == nullptr || current->empty()) {
-                current = invalid;
+                continue;
             }
             if (x_offset + current->advance > clip.right) {
                 break;
@@ -117,7 +117,7 @@ void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::
         for (;iter != glyphs.end(); ++iter) {
             const auto* current = *iter;
             if(current == nullptr || current->empty()) {
-                current = invalid;
+                continue;
             }
             draw_glyph(dst, dst_stride, dst_format, current, x_offset, y_offset, clip, font, color);
             break;

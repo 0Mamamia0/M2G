@@ -970,7 +970,6 @@ void Graphics::fillTriangle(int x0, int y0, int x1, int y1, int x2, int y2) {
         fillTriangleV(x2, y2, x1, mid_x, mid_y);
     }
 
-
 }
 
 
@@ -992,58 +991,52 @@ int Graphics::getColor() {
 }
 
 static void ellipsePlotPoints(Graphics* graphics, double centerX, double centerY, int x, int y) {
-    // graphics->drawPixel(centerX + x, centerY + y);
-    // // 对称点
-    // graphics->drawPixel(centerX - x, centerY + y);
-    //
-    // graphics->drawPixel(centerX + x, centerY - y);
-    // graphics->drawPixel(centerX - x, centerY - y);
+    graphics->drawPoint(centerX + x, centerY + y);
+    // 对称点
+    graphics->drawPoint(centerX - x, centerY + y);
+
+    graphics->drawPoint(centerX + x, centerY - y);
+    graphics->drawPoint(centerX - x, centerY - y);
 
 
-//    graphics->drawLine(centerX + x, centerY + y, centerX - x, centerY + y);
-//    graphics->drawLine(centerX + x, centerY - y, centerX - x, centerY - y);
+    // graphics->drawLine(centerX + x, centerY + y, centerX - x, centerY + y);
+    // graphics->drawLine(centerX + x, centerY - y, centerX - x, centerY - y);
 }
 
 
-void Graphics::drawArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
-    translatePoint(x_, y_);
 
-    int radiusX = w / 2;
-    int radiusY = h / 2;
-    double centerX = x_ + radiusX;
-    double centerY = y_ + radiusY;
-
-    int rx2 = radiusX * radiusX;
-    int ry2 = radiusY * radiusY;
+template<bool fill, typename Fun>
+void arcRun (int cx, int cy, int rx, int ry, Fun fun)
+{
+    int rx2 = rx * rx;
+    int ry2 = ry * ry;
     int p;
 
-    int x = 0, y = radiusY; // (区域1)初始点
+    int x = 0, y = ry; // (区域1)初始点
     int px = 0, py = 2 * rx2 * y; // 像素计算终止条件项
 
-    // 绘制椭圆起始点
-    ellipsePlotPoints(this,centerX, centerY, x, y);
+    fun(cx, cy, x, y);
 
-    // 区域1
-    p = round(ry2 - rx2 * radiusY + 0.25 * rx2);
+    p = round(ry2 - rx2 * ry + 0.25 * rx2);
     while (px < py) {
         x++;
         px += 2 * ry2; // 通过累加来计算 2ry^2 x[k+1], 而不是每次都用乘法
         if (p < 0) {
             p += ry2 + px;
-
+            if(!fill) {
+                fun(cx, cy, x, y);
+            }
         }
         else {
             y--;
             py -= 2 * rx2;
             p += ry2 + px - py;
-            ellipsePlotPoints(this, centerX, centerY, x, y);
+            fun(cx , cy, x, y);
         }
-
     }
 
     // 区域2
-    p = round(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 *
-                                                                      ry2);
+    p = round(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
     while (y > 0) {
         y--;
         py -= 2 * rx2;
@@ -1055,39 +1048,56 @@ void Graphics::drawArc(int x_, int y_, int w, int h, int startAngle, int arcAngl
             px += 2 * ry2;
             p += rx2 - py + px;
         }
-        ellipsePlotPoints(this, centerX, centerY, x, y);
+        fun(cx, cy, x, y);
     }
 
-
-
-
-
-
-//    int radiusX = w / 2;
-//    int radiusY = h / 2;
-//    double centerX = x + radiusX;
-//    double centerY = y + radiusY;
-//
-//    for (int angle = startAngle; angle < startAngle + arcAngle; ++angle) {
-//        double radians = angle * M_PI / 180.0;
-//        int xPos = static_cast<int>(centerX + radiusX * cos(radians));
-//        int yPos = static_cast<int>(centerY + radiusY * sin(radians));
-//        drawPixel(xPos, yPos);
-//    }
 }
 
-void Graphics::fillArc(int x, int y, int w, int h, int startAngle, int arcAngle) {
+void Graphics::drawArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
+    translatePoint(x_, y_);
+
     int radiusX = w / 2;
     int radiusY = h / 2;
-    double centerX = x + radiusX;
-    double centerY = y + radiusY;
+    double centerX = x_ + radiusX;
+    double centerY = y_ + radiusY;
 
-    for (int angle = startAngle; angle < startAngle + arcAngle; ++angle) {
-        double radians = angle * M_PI / 180.0;
-        int xPos = static_cast<int>(std::round(centerX + radiusX * cos(radians)));
-        int yPos = static_cast<int>(std::round(centerY + radiusY * sin(radians)));
-        drawLine(static_cast<int>(centerX), static_cast<int>(centerY), xPos, yPos);
-    }
+    auto fun = [this](double centerX, double centerY, int x, int y) {
+        this->drawPoint(centerX + x, centerY + y);
+        this->drawPoint(centerX - x, centerY + y);
+        this->drawPoint(centerX + x, centerY - y);
+        this->drawPoint(centerX - x, centerY - y);
+    };
+
+    arcRun<false>(centerX, centerY, radiusX, radiusY, fun);
+
+}
+
+void Graphics::fillArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
+    translatePoint(x_, y_);
+
+    int radiusX = w / 2;
+    int radiusY = h / 2;
+    double centerX = x_ + radiusX;
+    double centerY = y_ + radiusY;
+
+    auto fun = [this](double centerX, double centerY, int x, int y) {
+        this->drawLineH(centerX - x, centerX + x, centerY - y);
+        this->drawLineH(centerX - x, centerX + x, centerY + y);
+    };
+
+    arcRun<true>(centerX, centerY, radiusX, radiusY, fun);
+
+    // int radiusX = w / 2;
+    // int radiusY = h / 2;
+    // double centerX = x + radiusX;
+    // double centerY = y + radiusY;
+    //
+    // for (int angle = startAngle; angle < startAngle + arcAngle; ++angle) {
+    //     double radians = angle * M_PI / 180.0;
+    //     int xPos = static_cast<int>(std::round(centerX + radiusX * cos(radians)));
+    //     int yPos = static_cast<int>(std::round(centerY + radiusY * sin(radians)));
+    //     drawLine(static_cast<int>(centerX), static_cast<int>(centerY), xPos, yPos);
+    // }
 }
 
 int Graphics::save() {
@@ -1165,11 +1175,52 @@ void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
 
 
 void Graphics::drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
+    int cx = w / 2 ;
+    int cy = h / 2;
+    int ox = cx - arcWidth;
+    int oy = cy - arcHeight;
 
+    auto fun = [this, ox, oy, x, y](double centerX, double centerY, int rx, int ry) {
+        this->drawPoint(centerX + rx + ox, centerY + ry + oy);
+        this->drawPoint(centerX - rx - ox, centerY + ry + oy);
+        this->drawPoint(centerX + rx + ox, centerY - ry - oy);
+        this->drawPoint(centerX - rx - ox, centerY - ry - oy);
+    };
+
+    int top = y + arcHeight;
+    int bottom = y + h - arcHeight;
+    int left = x + arcWidth;
+    int right = x + w - arcWidth;
+
+    this->drawLineH(left, right, y);
+    this->drawLineH(left, right, y + h);
+
+    this->drawLineV(x, top, bottom);
+    this->drawLineV(x + w, top, bottom);
+
+
+    arcRun<false>(cx + x, cy + y, arcWidth, arcHeight, fun);
 }
 
 void Graphics::fillRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
+    translatePoint(x, y);
 
+    int cx = w / 2 ;
+    int cy = h / 2;
+    int ox = cx - arcWidth;
+    int oy = cy - arcHeight;
+
+    auto fun = [this, ox, oy, x, y](double centerX, double centerY, int rx, int ry) {
+        this->drawLineH(centerX - rx - ox, centerX + rx + ox, centerY - ry - oy );
+        this->drawLineH(centerX - rx - ox, centerX + rx + ox, centerY + ry + oy );
+    };
+
+    int y_top = y + arcHeight;
+    int y_bottom = y + h - arcHeight;
+    for (int j = y_top; j < y_bottom; ++j ) {
+        this->drawLineH(x, x + w, j);
+    }
+    arcRun<true>(cx + x, cy + y, arcWidth, arcHeight, fun);
 }
 
 void Graphics::drawEllipse(int x, int y, int radiusX, int radiusY) {

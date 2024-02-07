@@ -152,26 +152,33 @@ inline void copyArea(uint8_t* dst, ptrdiff_t stride, int format, const Rect& dst
 
 inline void blend1px(uint8_t* dst, uint8_t* src) {
     int alpha = src[3];
+
+    if(alpha == 0x0) {
+        return;
+    }
+
     if(alpha == 0xFF) {
         memcpy(dst, src, 4);
-    } else if(alpha != 0x0){
-        int invAlpha = 0xFF - alpha;
-        dst[0] = (src[0] * alpha + dst[0] * invAlpha) >> 8;
-        dst[1] = (src[1] * alpha + dst[1] * invAlpha) >> 8;
-        dst[2] = (src[2] * alpha + dst[2] * invAlpha) >> 8;
-        dst[3] = 0xFF;
+        return;
     }
+
+    int invAlpha = 0xFF - alpha;
+    dst[0] = (src[0] * alpha + dst[0] * invAlpha) >> 8;
+    dst[1] = (src[1] * alpha + dst[1] * invAlpha) >> 8;
+    dst[2] = (src[2] * alpha + dst[2] * invAlpha) >> 8;
+    dst[3] = 0xFF;
 }
 
 
 
-inline void blend_span(uint8_t* dst, uint8_t* src, int count) {
+inline void blend_n(uint8_t* dst, uint8_t* src, int count) {
     for (int i = 0 ; i  < count; i++ ) {
         blend1px(dst, src);
         dst += 4;
         src += 4;
     }
 }
+
 
 
 
@@ -199,7 +206,7 @@ inline void blendA8_span(uint8_t* dst, const uint8_t* src, uint8_t* rgba, int co
     }
 }
 
-inline void blendA8_8(uint8_t* dst, const uint8_t* src, uint8_t* rgba) {
+static void blendA8_8(uint8_t* dst, const uint8_t* src, uint8_t* rgba) {
     uint64_t s = *(uint64_t*)src;
     if(s == 0xFFFFFFFFFFFFFFFF) {
         uint32_t* d = (uint32_t*)(dst);
@@ -216,7 +223,16 @@ inline void blendA8_8(uint8_t* dst, const uint8_t* src, uint8_t* rgba) {
         *d++ = color;
 
     } else if(s != 0) {
-        blendA8_span(dst, src, rgba, 8);
+        blendA8(dst,      *src ++, rgba);
+        blendA8(dst + 4,  *src ++, rgba);
+        blendA8(dst + 8,  *src ++, rgba);
+        blendA8(dst + 12, *src ++, rgba);
+        blendA8(dst + 16, *src ++, rgba);
+        blendA8(dst + 20, *src ++, rgba);
+        blendA8(dst + 24, *src ++, rgba);
+        blendA8(dst + 28, *src, rgba);
+
+        // blendA8_span(dst, src, rgba, 8);
     }
 }
 
@@ -288,13 +304,13 @@ static inline void blend(uint8_t* dst, uint8_t* src, int count) {
     dst += (offset << 2);
     src += (offset << 2);
 
-    blend_span(dst, src, num);
+    blend_n(dst, src, num);
 }
 
 
 #else
 inline void blend(uint8_t* dst, uint8_t* src, int count) {
-    blend_span(dst, src, count);
+    blend_n(dst, src, count);
 }
 
 #endif

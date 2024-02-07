@@ -7,6 +7,8 @@
 #include <fstream>
 #include <vector>
 #define STB_TRUETYPE_IMPLEMENTATION
+#include <UTF8Iterator.h>
+
 #include "stb_truetype.h"
 #include "Typeface.h"
 #include "Rect.h"
@@ -172,33 +174,51 @@ int Font::charWidth(char c) const {
 
 int Font::charsWidth(const char *str, int len) const {
 
-    const char *tmp = str;
-    int codepoint =0;
     int width = 0;
-    std::vector<const Glyph*> glyphs;
+    int codepoint = -1;
+    int invalid_width = 0;
+    const Glyph* first = nullptr;
+    const Glyph* next = nullptr;
+    // const Glyph* invalid = this->getGlyph(65533); // �;
 
-    while (tmp[0] != '\0') {
-        codepoint = utf8_to_codepoint( tmp, &len, strlen(tmp));
-        glyphs.push_back(this->getGlyph(codepoint));
-        tmp += len;
-    }
+    UTFIterator iterator(str, len);
 
-    for (int i = 0; i < glyphs.size(); i ++) {
-        const Glyph* glyph = glyphs[i];
-        const Glyph* next;
 
-        if(i < glyphs.size() - 1) {
-            next = glyphs[i + 1];
-        } else {
-            next = nullptr;
-        }
+    // if(invalid == nullptr) {
+        if((codepoint = iterator.next()) != -1) {
+            next = this->getGlyph(codepoint);
+            if(next != nullptr) {
+                width += next->advance;
+            }
+            while ((codepoint = iterator.next()) != -1) {
+                first = next;
+                next = this->getGlyph(codepoint);
 
-        width += glyph->advance;
-        if(next) {
-            width += this->getAdvance(glyph, next);
-        }
-    }
-
+                if(next != nullptr) {
+                    width += this->getAdvance(first, next);
+                    width += next->advance;
+                }
+            }
+        };
+    // } else {
+    //     if((codepoint = iterator.next()) != -1) {
+    //         next = this->getGlyph(codepoint);
+    //         if(next == nullptr) {
+    //             next = invalid;
+    //         }
+    //         width += next->advance;
+    //
+    //         while ((codepoint = iterator.next()) != -1) {
+    //             first = next;
+    //             next = this->getGlyph(codepoint);
+    //             if(next == nullptr) {
+    //                 next = invalid;
+    //             }
+    //             width += this->getAdvance(first, next);
+    //             width += next->advance;
+    //         }
+    //     };
+    // }
 
     return width;
 }
