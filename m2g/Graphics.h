@@ -85,16 +85,17 @@ public:
     void setClip(int x, int y, int width, int height);
     void clipRect(int x, int y, int width, int height);
 
-    int getClipX();
-    int getClipY();
-    int getClipWidth();
-    int getClipHeight();
+    int getClipX() const;
+    int getClipY() const;
+    int getClipWidth() const;
+    int getClipHeight() const;
     int getTranslateX() const;
     int getTranslateY() const;
     int save();
     bool restore();
     bool restoreToCount(int count);
 
+    void clear(int color);
     void clear(Color color);
 
     void drawPoint(int x, int y);

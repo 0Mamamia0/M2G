@@ -9,6 +9,8 @@
 
 #include "JNI_OnLoad.h"
 #include "m2g/Font.h"
+#include "java-Objects.h"
+
 
 
 namespace {
@@ -18,6 +20,7 @@ namespace {
 
 
 jlong NativeFont_Create(JNIEnv *, jclass, jint face, jint style, jint size) {
+    objects::increase();
     return reinterpret_cast<jlong>(new Font(DEFAULT_TYPEFACE.get(), face, style, size));
 }
 
@@ -51,6 +54,7 @@ jint NativeFont_StringWidth(JNIEnv* env, jclass, jlong handle, jstring str) {
 void NativeFont_Release(JNIEnv *, jclass, jlong handle) {
     if(auto* font = reinterpret_cast<Font *>(handle)) {
         delete font;
+        objects::decrease();
     }
 }
 

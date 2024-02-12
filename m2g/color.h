@@ -1,11 +1,13 @@
-﻿//
-// Created by Admin on 2023/7/5.
-//
+﻿
 
-#ifndef LEARNSFML_COLOR_H
-#define LEARNSFML_COLOR_H
+#ifndef M2G_COLOR_H
+#define M2G_COLOR_H
 
 #include <cstdint>
+#define R(argb) static_cast<uint8_t>((argb >> 16) & 0xFF)
+#define G(argb) static_cast<uint8_t>((argb >> 8) & 0xFF)
+#define B(argb) static_cast<uint8_t>(argb & 0xFF)
+#define A(argb) static_cast<uint8_t>((argb >> 24) & 0xFF)
 
 struct Color {
     uint8_t r;
@@ -13,33 +15,25 @@ struct Color {
     uint8_t b;
     uint8_t a;
 
-
     Color(): r(0), g(0), b(0), a(0){
 
-    }
-
-    explicit Color(int argb):
-            r(static_cast<uint8_t>((argb >> 16) & 0xFF)),
-            g(static_cast<uint8_t>((argb >> 8) & 0xFF)),
-            b(static_cast<uint8_t>(argb & 0xFF)),
-            a(static_cast<uint8_t>((argb >> 24) & 0xFF)){
     }
 
     Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a): r(r), g(g), b(b), a(a){
 
     }
 
-
+    explicit Color(int argb) : Color(R(argb), G(argb), B(argb), A(argb)) {
+    }
 
 
     Color& operator = (int argb) {
-        r = static_cast<uint8_t>((argb >> 16) & 0xFF);
-        g = static_cast<uint8_t>((argb >> 8) & 0xFF);
-        b = static_cast<uint8_t>(argb & 0xFF);
-        a = static_cast<uint8_t>((argb >> 24) & 0xFF);
+        r = R(argb);
+        g = G(argb);
+        b = B(argb);
+        a = A(argb);
         return *this;
     }
-
 
     uint8_t* addr8() {
         return (uint8_t*)this;
@@ -53,25 +47,12 @@ struct Color {
         color |= (b & 0xFF);
         return color;
     }
-
-//    Color operator*(Color color, float s) {
-//        return {
-//            static_cast<uint8_t>(color.r * s),
-//            static_cast<uint8_t>(color.g * s),
-//            static_cast<uint8_t>(color.b * s),
-//            static_cast<uint8_t>(color.a * s)
-//        };
-//    }
-//
-//    Color operator+ (Color c0, Color c1) {
-//        return {
-//                static_cast<uint8_t>(c0.r + c1.r),
-//                static_cast<uint8_t>(c0.g + c1.g),
-//                static_cast<uint8_t>(c0.b + c1.b),
-//                static_cast<uint8_t>(c0.a + c1.a)
-//        };
-//    }
-
 };
 
-#endif //LEARNSFML_COLOR_H
+
+
+#undef A
+#undef R
+#undef G
+#undef B
+#endif

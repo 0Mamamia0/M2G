@@ -36,7 +36,7 @@ bool Clip::contain(const Point &point) const {
     return bounds.contain(point);
 }
 
-bool Clip::isEmpty() {
+bool Clip::isEmpty() const{
     return bounds.isEmpty();
 }
 
@@ -71,7 +71,7 @@ bool Clip::clipLineH(int& x0, int& x1, int& y) const {
     return true;
 }
 
-bool Clip::clipLineB(int& x0, int& y0, int& x1, int& y1) {
+bool Clip::clipLineB(int& x0, int& y0, int& x1, int& y1) const {
     Rect rect = getDeviceClipBounds();
     if(rect.isEmpty()) {
         return false;
@@ -130,7 +130,7 @@ void Clip::setXYWH(int x, int y, int width, int height) {
     bounds.setXYWH(x, y, width, height);
 }
 
-int Clip::getX() {
+int Clip::getX() const{
     return bounds.left;
 }
 
@@ -142,7 +142,7 @@ int Clip::getHeight() const{
     return bounds.bottom - bounds.top;
 }
 
-int Clip::getY() {
+int Clip::getY() const  {
     return bounds.top;
 }
 

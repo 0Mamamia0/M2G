@@ -6,10 +6,12 @@
 #include "JNI_OnLoad.h"
 #include "m2g/Image.h"
 #include "m2g/Graphics.h"
+#include "java-Objects.h"
 
 
 static jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
+        objects::increase();
         return reinterpret_cast<jlong>(image->getGraphics());
     }
     return 0;
@@ -18,6 +20,7 @@ static jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
 static void NativeGraphics_Release(JNIEnv *, jclass, jlong handle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     delete graphics;
+    objects::decrease();
 }
 
 

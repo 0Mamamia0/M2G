@@ -28,11 +28,13 @@ public:
 public:
     Clip(int width, int height);
 
+
+
     void setZero();
 
+    void set(const Rect& rect);
 
-
-    bool isEmpty();
+    bool isEmpty() const;
 
     bool contain(const Point& point) const;
 
@@ -42,26 +44,23 @@ public:
 
     bool clipLineH(int &x0, int &x1, int &y0) const;
 
-    bool clipLineB(int &x0, int &y0, int &x1, int &y1);
+    bool clipLineB(int &x0, int &y0, int &x1, int &y1) const;
 
     void setXYWH(int x, int y, int width, int height);
 
-    int getX();
+    int getY() const;
+
+    int getX() const;
 
     int getWidth() const;
 
     int getHeight() const;
 
-    int getY();
-
     Rect getClipBounds() const;
 
     Rect getDeviceClipBounds() const;
 
-
     Rect clipRect(const Rect &rect);
-
-    void set(const Rect& rect);
 
     Rect intersect(const Rect& rect) const;
 };

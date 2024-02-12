@@ -82,11 +82,11 @@ static inline int anchorTextY(int anchor, int y, const Font& font) {
     const FontMetrics metrics = font.getFontMetrics();
     switch (anchor & (TOP | BOTTOM | BASELINE | VCENTER)) {
         case BOTTOM:
-            return y + metrics.descent - metrics.lineGap;
+            y -=  metrics.height / 2.f;
+        case VCENTER:
+            y += (metrics.ascent + metrics.descent) / 2.f;
         case BASELINE:
             return y;
-        case VCENTER:
-            return y + (metrics.ascent - std::round(metrics.height / 2));
         case TOP:
         default:
             return y + metrics.ascent;
@@ -254,22 +254,20 @@ void Graphics::clipRect(int x, int y, int width_, int height_) {
 }
 
 
-int Graphics::getClipX() {
+int Graphics::getClipX() const{
     return clip.getX() - translation.x;
 }
 
 
-int Graphics::getClipY() {
+int Graphics::getClipY() const {
     return clip.getY() - translation.y;
 }
 
-
-
-int Graphics::getClipWidth() {
+int Graphics::getClipWidth() const{
     return clip.getWidth();
 }
 
-int Graphics::getClipHeight() {
+int Graphics::getClipHeight() const{
     return clip.getHeight();
 }
 
@@ -327,7 +325,7 @@ void drawRegion() {
 
 void Graphics::drawRegion(Image* image, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst, int anchor) {
     if(transform == 0) {
-        drawImage(image, x_src, y_src, w_src, h_src, x_dst, y_dst);
+        drawImage(image, x_src, y_src, w_src, h_src, x_dst, y_dst, anchor);
     } else {
         int x0 = 0;
         int y0 = 0;
@@ -362,7 +360,7 @@ void Graphics::drawRegion(Image* image, int x_src, int y_src, int w_src, int h_s
         }
 
 
-        translatePoint(x_dst, y_dst);
+        translatePoint(x_dst, y_dst, w_dst, h_dst, anchor);
         const Rect src_rect = Rect::makeXYWH(x_src, y_src, w_src, h_src);
         const Rect dst_rect = Rect::makeXYWH(x_dst, y_dst, w_dst, h_dst);
         const Rect dst_rect_clip = bounds.intersect(dst_rect);
@@ -621,16 +619,21 @@ void Graphics::drawLine(int x0, int y0, int x1, int y1) {
     }
 }
 
+
+// TODO fixe tx ty
 void Graphics::drawPoint(int x, int y) {
     drawPoint({x, y});
 }
-
+// TODO fixe tx ty
 void Graphics::drawPoint(Point point) {
     if(clip.contain(point)) {
         drawPixel(point.x, point.y);
     }
 }
 
+void Graphics::clear(int color) {
+    this->clear(Color{color});
+}
 
 
 void Graphics::clear(Color color) {
@@ -805,14 +808,12 @@ void Graphics::copyArea(int x_src, int y_src, int width_, int height_, int x_dst
     int cy = dst_area.top - y_dst;
     int cw = dst_area.getWidth();
     int ch = dst_area.getHeight();
-
     src_area = Rect::makeXYWH(x_src + cx, y_src + cy, cw, ch);
 
 
     auto* pixel = buffer->addr<uint8_t *>();
     ptrdiff_t stride_ = buffer->getRowBytes();
-
-    ::copyArea(pixel, stride_, buffer->getFormat(), dst_area, src_area);
+    ::copyArea(pixel, stride_, dst_area, src_area);
 
 }
 
@@ -829,7 +830,8 @@ void Graphics::drawChar(char c, int x, int y, int anchor, const Font& font) {
     translatePoint(x, y);
     x = anchorTextX(anchor, x, font.charWidth(c), font);
     y = anchorTextY(anchor, y, font);
-    draw_char(pixel, stride, format, c, x, y, font, paintColor.ToARGB());
+
+    draw_char(pixel, stride, format, c, x, y, clip.getDeviceClipBounds(), font, paintColor.ToARGB());
 }
 
 void Graphics::drawString(const std::string& str, int x, int y, int anchor, const Font &font) {
@@ -1087,17 +1089,6 @@ void Graphics::fillArc(int x_, int y_, int w, int h, int startAngle, int arcAngl
 
     arcRun<true>(centerX, centerY, radiusX, radiusY, fun);
 
-    // int radiusX = w / 2;
-    // int radiusY = h / 2;
-    // double centerX = x + radiusX;
-    // double centerY = y + radiusY;
-    //
-    // for (int angle = startAngle; angle < startAngle + arcAngle; ++angle) {
-    //     double radians = angle * M_PI / 180.0;
-    //     int xPos = static_cast<int>(std::round(centerX + radiusX * cos(radians)));
-    //     int yPos = static_cast<int>(std::round(centerY + radiusY * sin(radians)));
-    //     drawLine(static_cast<int>(centerX), static_cast<int>(centerY), xPos, yPos);
-    // }
 }
 
 int Graphics::save() {
@@ -1230,6 +1221,8 @@ void Graphics::drawEllipse(int x, int y, int radiusX, int radiusY) {
 void Graphics::fillEllipse(int x, int y, int radiusX, int radiusY) {
 
 }
+
+
 
 
 

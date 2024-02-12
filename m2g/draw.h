@@ -32,8 +32,6 @@ inline void blitRect(uint8_t* begin, int width, int height, ptrdiff_t stride, ui
 }
 
 
-
-
 inline void copyLTR(uint8_t* dst, uint8_t* src, int pixel) {
     memcpy(dst, src, pixel << 2);
 }
@@ -73,84 +71,109 @@ inline void copyRect(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t
     }
 }
 
-inline void copyRectXF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
-    while (height-- > 0) {
-        copyRTL(dst, src, width);
-        dst += dst_stride;
-        src += src_stride;
+
+
+namespace piv {
+
+    template<bool flip>
+    void line_copy(uint8_t* dst, uint8_t* src, int pixel) {
+        if(!flip) {
+            memcpy(dst, src, pixel << 2);
+        } else {
+            uint32_t* dst32 = (uint32_t*)dst;
+            uint32_t* src32 = (uint32_t*)src + pixel;
+            while (pixel -- > 0) {
+                *dst32++ = *--src32;
+            }
+        }
     }
+
+    void line_move(uint8_t* dst, uint8_t* src, int pixel) {
+        memmove(dst, src, pixel << 2);
+    }
+
+    template<bool x_flip, bool y_flip>
+    void rect_copy(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
+        if(y_flip) {
+            src = src + (height - 1) * src_stride;
+            src_stride = -src_stride;
+        }
+
+        while (height-- > 0) {
+            line_copy<x_flip>(dst, src, width);
+            dst += dst_stride;
+            src += src_stride;
+        }
+    }
+
+
+
+
+    void rect_move(uint8_t* dst, uint8_t* src, ptrdiff_t stride, int width, int height) {
+//        if(flip) {
+//            ptrdiff_t offset = (height - 1) * stride;
+//            dst = dst + offset;
+//            src = src + offset;
+//            stride = -stride;
+//        }
+
+        while (height-- > 0) {
+            line_move(dst, src, width);
+            dst += stride;
+            src += stride;
+        }
+    }
+
+
+
 }
 
-inline void copyRectYF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
-    src = src + (src_stride * (height - 1));
-    while (height-- > 0) {
-        copyLTR(dst, src, width);
-        dst += dst_stride;
-        src -= src_stride;
-    }
-}
-
-inline void copyRectXYF(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
-    src = src + (src_stride * (height - 1));
-    while (height-- > 0) {
-        copyRTL(dst, src, width);
-        dst += dst_stride;
-        src -= src_stride;
-    }
-}
 
 
 
 
-inline void copyArea(uint8_t* dst, ptrdiff_t stride, int format, const Rect& dst_area, const Rect& src_area) {
+
+
+
+
+
+inline void copyArea(uint8_t* pixels, ptrdiff_t stride, const Rect& dst_area, const Rect& src_area) {
     assert(dst_area.getWidth() == src_area.getWidth());
     assert(dst_area.getHeight() == src_area.getHeight());
     assert(dst_area.getWidth() > 0 && dst_area.getHeight() > 0);
 
-    int copy_width = dst_area.getWidth();
-    int copy_height = dst_area.getHeight();
+    int width = dst_area.getWidth();
+    int height = dst_area.getHeight();
+    int src_offset = (src_area.top * stride) + (src_area.left * 4);
+    int dst_offset = (dst_area.top * stride) + (dst_area.left * 4);
+    uint8_t* dst = pixels + dst_offset;
+    uint8_t* src = pixels + src_offset;
+
 
     if(src_area.contain(dst_area)) {
-        int bpp = PixelFormat::getBytePerPixel(format);
-        const int src_offset = (src_area.top * stride) + (src_area.left * bpp);
-        const int dst_offset = (dst_area.top * stride) + (dst_area.left * bpp);
-
         if(src_area.top == dst_area.top) {
-            for (int row = 0; row < copy_height; row++) {
-                uint8_t* src_ptr = dst + src_offset + (row * stride);
-                uint8_t* dst_ptr = dst + dst_offset + (row * stride);
-                memmove(dst_ptr, src_ptr, copy_width * bpp);
-            }
+           piv::rect_move(dst, src, stride, width, height);
         } else if(src_area.top < dst_area.top) {
-            for (int row = copy_height - 1; row >= 0; row--)  {
-                uint8_t* src_ptr = dst + src_offset + (row * stride);
-                uint8_t* dst_ptr = dst + dst_offset + (row * stride);
-                memcpy(dst_ptr, src_ptr, copy_width * bpp);
-            }
+            dst = dst + (height - 1) * stride;
+            src = src + (height - 1) * stride;
+            stride = -stride;
+            piv::rect_copy<false, false>(dst, src, stride, stride,  width, height);
         } else {
-            for (int row = 0; row < copy_height; row++) {
-                uint8_t* src_ptr = dst + src_offset + (row * stride);
-                uint8_t* dst_ptr = dst + dst_offset + (row * stride);
-                memcpy(dst_ptr, src_ptr, copy_width * bpp);
-            }
+            piv::rect_copy<false, false>(dst, src, stride, stride, width, height);
         }
     } else {
-        int bpp = PixelFormat::getBytePerPixel(format);
-        const int src_offset = (src_area.top * stride) + (src_area.left * bpp);
-        const int dst_offset = (dst_area.top * stride) + (dst_area.left * bpp);
-
-        for (int row = 0; row < copy_height; row++) {
-            uint8_t* src_ptr = dst + src_offset + (row * stride);
-            uint8_t* dst_ptr = dst + dst_offset + (row * stride);
-            memcpy(dst_ptr, src_ptr, copy_width * bpp);
-        }
+        piv::rect_copy<false, false>(dst, src, stride, stride, width,height);
     }
 
 }
 
 
 
-inline void blend1px(uint8_t* dst, uint8_t* src) {
+inline void blend1px(void* dst_, void* src_) {
+    uint8_t * dst = (uint8_t*) dst_;
+    uint8_t * src = (uint8_t*) src_;
+
+
     int alpha = src[3];
 
     if(alpha == 0x0) {
@@ -171,12 +194,34 @@ inline void blend1px(uint8_t* dst, uint8_t* src) {
 
 
 
-inline void blend_n(uint8_t* dst, uint8_t* src, int count) {
-    for (int i = 0 ; i  < count; i++ ) {
-        blend1px(dst, src);
-        dst += 4;
-        src += 4;
+inline void blend_n(void* dst_, void* src_, int count) {
+    uint32_t* dst = (uint32_t*) dst_;
+    uint32_t* src = (uint32_t*) src_;
+
+    if(count > 0) {
+        int time = count / 8;
+        int c = count % 8;
+        switch (c) {
+            do {
+                case 8:  blend1px(dst ++, src ++);  // 0
+                case 7:  blend1px(dst ++, src ++);
+                case 6:  blend1px(dst ++, src ++);
+                case 5:  blend1px(dst ++, src ++);
+                case 4:  blend1px(dst ++, src ++);
+                case 3:  blend1px(dst ++, src ++);
+                case 2:  blend1px(dst ++, src ++);
+                case 1:  blend1px(dst ++, src ++);
+                default:;
+            } while (time -- > 0);
+        }
     }
+
+
+//    for (int i = 0 ; i  < count; i++ ) {
+//        blend1px(dst, src);
+//        dst += 4;
+//        src += 4;
+//    }
 }
 
 

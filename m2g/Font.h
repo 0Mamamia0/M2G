@@ -112,6 +112,9 @@ public:
 
     Font(Typeface* typeface, int face, int style, int size);
     ~Font();
+
+    Font(const Font& other) = delete;
+    Font(Font&& other) = delete;
     int charWidth(char c) const;
     int charsWidth(const char* str, int len) const;
     int stringWidth(const std::string& str) const;
