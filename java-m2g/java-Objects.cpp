@@ -11,11 +11,11 @@ namespace objects {
     std::atomic<int> num = 0;
 
     void increase() {
-        num ++;
+        ++num;
     }
 
     void decrease() {
-        num --;
+        --num;
     }
 
     int count() {
@@ -32,7 +32,7 @@ static jint NativeObjects_activeCount(JNIEnv *env, jclass) {
 
 
 
-int register_m2g_Objects(JNIEnv* env) {
+extern "C" int register_m2g_Objects(JNIEnv* env) {
     static const JNINativeMethod methods[] = {
             {"activeCount"       , "()I"       , reinterpret_cast<void*>(NativeObjects_activeCount)      },
     };

@@ -8,7 +8,7 @@
 namespace objects {
     void increase();
     void decrease();
-    void count();
+    int count();
 }
 
 

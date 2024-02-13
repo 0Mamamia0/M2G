@@ -100,11 +100,27 @@ inline void jniReleaseByteArrayElements(JNIEnv *env, jbyteArray array, jbyte* el
 
     inline jsize jniGetArrayLength(JNIEnv *env, jintArray array) {
 #ifdef JNI_C_STYLE
-    return (*env)->GetArrayLength(env, array);
+        return (*env)->GetArrayLength(env, array);
 #else
-    return env->GetArrayLength(array);
+        return env->GetArrayLength(array);
 #endif
-}
+    }
+
+    inline jsize jniGetStringLength(JNIEnv *env, jstring str) {
+#ifdef JNI_C_STYLE
+        return (*env)->GetStringLength(env, str);
+#else
+        return env->GetStringLength(str);
+#endif
+    }
+
+    inline jsize jniGetStringUTFLength(JNIEnv *env, jstring str) {
+#ifdef JNI_C_STYLE
+        return (*env)->GetStringUTFLength(env, str);
+#else
+        return env->GetStringUTFLength(str);
+#endif
+    }
 
 
 

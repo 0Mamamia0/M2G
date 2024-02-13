@@ -2,68 +2,69 @@
 // Created by Admin on 2023/5/27.
 //
 
-#ifndef LEARNSFML_CLIP_H
-#define LEARNSFML_CLIP_H
+#ifndef M2G_CLIP_H
+#define M2G_CLIP_H
 
 #include "Rect.h"
 
-enum {
-    CLIP_INSIDE = 0,
-    CLIP_LEFT = 1,
-    CLIP_RIGHT = 2,
-    CLIP_BOTTOM = 4,
-    CLIP_TOP = 8,
-};
+
+namespace m2g {
+    enum {
+        CLIP_INSIDE = 0,
+        CLIP_LEFT = 1,
+        CLIP_RIGHT = 2,
+        CLIP_BOTTOM = 4,
+        CLIP_TOP = 8,
+    };
 
 
-class Point;
-class Rect;
+    class Point;
+    class Rect;
 
-class Clip {
-    Rect bounds;
-    int maxWidth;
-    int maxHeight;
-public:
+    class Clip {
+        Rect bounds;
+        int maxWidth;
+        int maxHeight;
 
-public:
-    Clip(int width, int height);
+    public:
+        Clip(int width, int height);
 
+        void setZero();
 
+        void set(const Rect& rect);
 
-    void setZero();
+        bool isEmpty() const;
 
-    void set(const Rect& rect);
+        bool contain(const Point& point) const;
 
-    bool isEmpty() const;
+        bool contain(const Rect& rect) const;
 
-    bool contain(const Point& point) const;
+        bool clipLineV(int x0, int &y0, int &y1) const;
 
-    bool contain(const Rect& rect) const;
+        bool clipLineH(int &x0, int &x1, int &y0) const;
 
-    bool clipLineV(int x0, int &y0, int &y1) const;
+        bool clipLineB(int &x0, int &y0, int &x1, int &y1) const;
 
-    bool clipLineH(int &x0, int &x1, int &y0) const;
+        void setXYWH(int x, int y, int width, int height);
 
-    bool clipLineB(int &x0, int &y0, int &x1, int &y1) const;
+        int getY() const;
 
-    void setXYWH(int x, int y, int width, int height);
+        int getX() const;
 
-    int getY() const;
+        int getWidth() const;
 
-    int getX() const;
+        int getHeight() const;
 
-    int getWidth() const;
+        Rect getClipBounds() const;
 
-    int getHeight() const;
+        Rect getDeviceClipBounds() const;
 
-    Rect getClipBounds() const;
+        Rect clipRect(const Rect &rect) const;
 
-    Rect getDeviceClipBounds() const;
-
-    Rect clipRect(const Rect &rect);
-
-    Rect intersect(const Rect& rect) const;
-};
+        Rect intersect(const Rect& rect) const;
+    };
+}
 
 
-#endif //LEARNSFML_CLIP_H
+
+#endif //M2G_CLIP_H

@@ -5,9 +5,11 @@
 #include "JNI_OnLoad.h"
 #include "stb_image.h"
 #include "java-Objects.h"
-#include "m2g/Image.h"
-#include "m2g/ImageCodec.h"
+#include "Image.h"
+#include "ImageCodec.h"
 
+
+using namespace m2g;
 
 jlong NativeImageCodec_CreateImageWH(JNIEnv *, jclass, jint width, jint height) {
     if(auto* image = ImageCodec::createImage(width, height)) {
@@ -52,7 +54,7 @@ jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, ji
 
 
 
-int register_m2g_ImageCodec(JNIEnv* env) {
+extern "C" int register_m2g_ImageCodec(JNIEnv* env) {
     static const JNINativeMethod methods[] = {
             {"jniCreateImage"        , "(II)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImageWH)      },
             {"jniCreateImage"        , "(J)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImageFormImage)      },

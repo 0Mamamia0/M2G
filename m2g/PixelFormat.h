@@ -1,9 +1,7 @@
-﻿//
-// Created by Admin on 2023/5/30.
-//
+﻿
 
-#ifndef LEARNSFML_PIXELFORMAT_H
-#define LEARNSFML_PIXELFORMAT_H
+#ifndef M2G_PIXELFORMAT_H
+#define M2G_PIXELFORMAT_H
 
 enum PixelFormatType {
     GREY       = 0,
@@ -19,12 +17,10 @@ enum PixelFormatType {
 
 
 class PixelFormat {
-
 public:
     static int getBytePerPixel(int  format);
-
     static int shiftPerPixel(int format);
 };
 
 
-#endif //LEARNSFML_PIXELFORMAT_H
+#endif //M2G_PIXELFORMAT_H

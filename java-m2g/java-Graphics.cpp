@@ -4,15 +4,20 @@
 
 #include "jni_def.h"
 #include "JNI_OnLoad.h"
-#include "m2g/Image.h"
-#include "m2g/Graphics.h"
+#include "Image.h"
+#include "Graphics.h"
 #include "java-Objects.h"
+
+
+using namespace m2g;
 
 
 static jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
-        objects::increase();
-        return reinterpret_cast<jlong>(image->getGraphics());
+        if(image->isMutable()) {
+            objects::increase();
+            return reinterpret_cast<jlong>(new Graphics(image));
+        }
     }
     return 0;
 }
@@ -175,7 +180,8 @@ static void NativeGraphics_DrawString(JNIEnv* env, jclass,  jlong handle, jstrin
     auto* font = reinterpret_cast<const Font*>(fontHandle);
     if(graphics != nullptr && font != nullptr) {
         const char* text = jniGetStringUTFChars(env, str, nullptr);
-        graphics->drawString(text, x, y, anchor, *font);
+        jsize len = jniGetStringUTFLength(env, str);
+        graphics->drawString(text, len, x, y, anchor, *font);
         jniReleaseStringUTFChars(env, str, text);
     }
 }
@@ -222,24 +228,28 @@ static jint NativeGraphics_Save(JNIEnv* env, jclass,  jlong handle) {
 
 
 static jboolean NativeGraphics_Restore(JNIEnv* env, jclass,  jlong handle) {
-    auto* graphics = reinterpret_cast<Graphics*>(handle);
-    if(graphics) {
-        return graphics->restore();
-    }
-    return false;
+    // auto* graphics = reinterpret_cast<Graphics*>(handle);
+    // if(graphics) {
+    //     return graphics->restore();
+    // }
+    // return false;
+
+    return true;
 }
 
 
 static jboolean NativeGraphics_RestoreToCount(JNIEnv* env, jclass,  jlong handle, jint count) {
-    auto* graphics = reinterpret_cast<Graphics*>(handle);
-    if(graphics) {
-        return graphics->restoreToCount(count);
-    }
-    return false;
+    // auto* graphics = reinterpret_cast<Graphics*>(handle);
+    // if(graphics) {
+    //     return graphics->restoreToCount(count);
+    // }
+    // return false;
+
+    return true;
 }
 
 
-extern int register_m2g_Graphics(JNIEnv *env) {
+extern "C" int register_m2g_Graphics(JNIEnv *env) {
     static const JNINativeMethod methods[] = {
             {"jniCreateFormImage"       , "(J)J"   , reinterpret_cast<void*>(NativeGraphics_CreateFormImage)      },
             {"jniRelease"       , "(J)V"           , reinterpret_cast<void*>(NativeGraphics_Release)      },

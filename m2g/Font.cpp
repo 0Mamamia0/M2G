@@ -5,238 +5,229 @@
 #include "Font.h"
 #include <iostream>
 #include <fstream>
+#include <m2g-def.h>
 #include <vector>
-#define STB_TRUETYPE_IMPLEMENTATION
+#include <cmath>
 #include <UTF8Iterator.h>
-
-#include "stb_truetype.h"
 #include "Typeface.h"
 #include "Rect.h"
 #include "strConver.h"
+#include "stb_truetype.h"
 
 
-// Glyph EMPTY_GLYPH(0, 0, 0, 0, 0,  {0, 0, 0, 0}, nullptr);
+namespace m2g {
 
 
+    static float getFontSize(int font_size) {
+        switch (font_size) {
+            case FontSize::SMALL: return 12;
+            case FontSize::MEDIUM: return 18;
+            case FontSize::LARGE: return 24;
+            default:  return  18;
+        }
+    }
 
 
-Font::Font(Typeface* typeface, int face, int style, int size)
-    : typeface(typeface)
-    , face(face)
-    , style(style)
-    , size(size)
-    , metrics{}
-    {
+    Font::Font(Typeface* typeface, int face, int style, int size)
+        : face(face)
+        , style(style)
+        , size(size)
+        , typeface(typeface)
+        , metrics{}
+        , ascii_glyph_cache{} {
+
         const stbtt_fontinfo& fontInfo = typeface->getFontInfo();
         int ascent, descent, lineGap;
         stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
 
-        float pixel_height;
-        switch (size) {
-            case SIZE_SMALL: pixel_height = 12;
-                break;
-            case SIZE_MEDIUM: pixel_height = 18;
-                break;
-            case SIZE_LARGE: pixel_height = 24;
-                break;
-            default:
-                pixel_height = 18;
-                break;
-        }
-        this->scale =  stbtt_ScaleForPixelHeight(&fontInfo, pixel_height);
-        metrics.ascent = (float)ascent * scale;
-        metrics.descent = (float)descent * scale;
-        metrics.lineGap = (float)lineGap * scale;
-        metrics.baseline = metrics.ascent;
-        metrics.height = metrics.ascent - metrics.descent + metrics.lineGap;
+        float pixel_height = getFontSize(size);
+        this->scale = stbtt_ScaleForPixelHeight(&fontInfo, pixel_height);
+        this->metrics.ascent = (float)ascent * scale;
+        this->metrics.descent = (float)descent * scale;
+        this->metrics.lineGap = (float)lineGap * scale;
+        this->metrics.baseline = metrics.ascent;
+        this->metrics.height = metrics.ascent - metrics.descent + metrics.lineGap;
 
 
-        const stbtt_fontinfo* info =  &typeface->getFontInfo();
         for (int i = 0; i < ascii_glyph_cache.size(); ++i) {
             auto* glyph = loadGlyph(i + 32);
-            if(glyph) {
-                ascii_glyph_cache[i] = glyph;
-            } else {
+            this->ascii_glyph_cache[i] = glyph ? glyph : nullptr;
+        }
+    }
+
+
+    Font::~Font() {
+        for (int i = 0; i < ascii_glyph_cache.size(); ++i) {
+            auto* glyph = ascii_glyph_cache[i];
+            if (glyph != nullptr) {
+                if (glyph->bitmap != nullptr) {
+                    stbtt_FreeBitmap(glyph->bitmap, nullptr);
+                }
+                delete glyph;
                 ascii_glyph_cache[i] = nullptr;
             }
         }
-}
 
-
-Font::~Font() {
-
-    for(int i = 0; i < ascii_glyph_cache.size(); ++ i) {
-        auto* glyph = ascii_glyph_cache[i];
-        if(glyph != nullptr ) {
-            if(glyph->bitmap != nullptr) {
-                stbtt_FreeBitmap(glyph->bitmap, nullptr);
+        for (auto& [fst, glyph] : glyph_cache) {
+            if (glyph != nullptr) {
+                if (glyph->bitmap != nullptr) {
+                    stbtt_FreeBitmap(glyph->bitmap, nullptr);
+                }
+                delete glyph;
             }
-            delete glyph;
-            ascii_glyph_cache[i] = nullptr;
         }
+        glyph_cache.clear();
+    }
+
+
+    int Font::getStyle() const {
+        return style;
+    }
+
+    int Font::getFace() const {
+        return face;
+    }
+
+    int Font::getSize() const {
+        return size;
     }
 
 
 
-    for(const auto& pair : glyph_cache ) {
-        const Glyph* glyph = pair.second;
-        if(glyph != nullptr) {
-            if(glyph->bitmap != nullptr) {
-                stbtt_FreeBitmap(glyph->bitmap, nullptr);
-            }
-            delete glyph;
+
+    int Font::getBaseLinePosition() const {
+        return (int)std::round(metrics.baseline);
+    }
+
+    int Font::getHeight() const {
+        return (int)std::round(metrics.height);;
+    }
+
+
+    const Glyph* Font::findGlyph(char c) const {
+        return this->findGlyph((int)c);
+    }
+
+    const Glyph* Font::findGlyph(int codepoint) const {
+        if (codepoint >= 32 && codepoint <= 127) {
+            return ascii_glyph_cache[codepoint - 32];
         }
+        auto find = glyph_cache.find(codepoint);
+        return find == glyph_cache.end() ? nullptr : find->second;
     }
 
-    glyph_cache.clear();
-}
 
-
-int Font::getStyle() const {
-    return style;
-}
-
-int Font::getFace() const {
-    return face;
-}
-
-int Font::getSize() const {
-    return size;
-}
-
-
-
-int Font::getBaseLinePosition() const{
-    return (int)std::round(metrics.baseline);
-}
-
-int Font::getHeight() const{
-    return  (int)std::round(metrics.height);;
-}
-
-const Glyph* Font::getGlyph(char c) const {
-    return this->getGlyph((int)c);
-}
-
-
-const Glyph* Font::getGlyph(int codepoint) const{
-    if( codepoint >= 32 && codepoint <= 127) {
-        return ascii_glyph_cache[codepoint - 32];
+    const Glyph* Font::getGlyph(char c) const {
+        return this->getGlyph((int)c);
     }
-    auto find = glyph_cache.find(codepoint);
-    if(find != glyph_cache.end()) {
-        return find->second;
-    }
-    auto* glyph = loadGlyph(codepoint);
-    if(glyph) {
-        auto result = glyph_cache.insert(std::make_pair(codepoint, glyph));
-        if(result.second) {
-            return result.first->second;
+
+    const Glyph* Font::getGlyph(int codepoint) const {
+        if(const auto* glyph = findGlyph(codepoint)) {
+            return glyph;
         }
+
+        if(auto* glyph = loadGlyph(codepoint)) {
+            glyph_cache.insert(std::make_pair(codepoint, glyph));
+            return glyph;
+        }
+        return nullptr;
     }
-    return nullptr;
-}
 
-Glyph* Font::loadGlyph(int codepoint) const {
-    const stbtt_fontinfo* info =  &typeface->getFontInfo();
-    int id = stbtt_FindGlyphIndex(info, codepoint);
+    Glyph* Font::loadGlyph(int codepoint) const {
+        const stbtt_fontinfo* info = &typeface->getFontInfo();
+        int id = stbtt_FindGlyphIndex(info, codepoint);
 
-    if(id != 0) {
-        int advance;
-        int bearing;
-        int width;
-        int height;
-        Rect bounds;
-        uint8_t *bitmap;
+        if (id != 0) {
+            int advance;
+            int bearing;
+            int width;
+            int height;
+            Rect bounds;
+            uint8_t* bitmap;
 
-        stbtt_GetGlyphHMetrics(info, id, &advance, &bearing);
-        stbtt_GetGlyphBitmapBox(info, id, scale, scale, &bounds.left, &bounds.top, &bounds.right, &bounds.bottom);
-        bitmap = stbtt_GetGlyphBitmap(info, scale, scale, id, &width, &height, nullptr, nullptr);
-        return new Glyph(id, scale * (float)advance, scale * (float)bearing, width, height, bounds, bitmap);
+            stbtt_GetGlyphHMetrics(info, id, &advance, &bearing);
+            stbtt_GetGlyphBitmapBox(info, id, scale, scale, &bounds.left, &bounds.top, &bounds.right, &bounds.bottom);
+            bitmap = stbtt_GetGlyphBitmap(info, scale, scale, id, &width, &height, nullptr, nullptr);
+            return new Glyph(id, scale * (float)advance, scale * (float)bearing, width, height, bounds, bitmap);
+        }
+        return nullptr;
     }
-    return nullptr;
-}
 
-float Font::getAdvance(const Glyph *g1, const Glyph *g2) const {
-    if(g1 == nullptr || g2 == nullptr) {
-        return 0;
+    float Font::getAdvance(const Glyph* g1, const Glyph* g2) const {
+        if (g1 == nullptr || g2 == nullptr) {
+            return 0;
+        }
+        return (float)stbtt_GetGlyphKernAdvance(&typeface->getFontInfo(), g1->id, g2->id) * scale;
+
     }
-    return  scale * (float)stbtt__GetGlyphKernInfoAdvance(&typeface->getFontInfo(), g1->id, g2->id);
-}
 
-int Font::charWidth(char c) const {
-    int advanceWidth;
-    int leftSideBearing;
-    stbtt_GetCodepointHMetrics(&typeface->getFontInfo(), c, &advanceWidth, &leftSideBearing);
-    return (int)std::round( (float)advanceWidth * scale);;
-}
+    int Font::charWidth(char c) const {
+        const Glyph* glyph = this->getGlyph(c);
+        return glyph == nullptr ? 0 : (int)std::ceil(glyph->advance);
+    }
 
 
-int Font::charsWidth(const char *str, int len) const {
+    int Font::charsWidth(const char* str, int len) const {
+        float width = 0;
+        int codepoint = -1;
+        int invalid_width = 0;
+        const Glyph* first = nullptr;
+        const Glyph* next = nullptr;
+        // const Glyph* invalid = this->getGlyph(65533); // �;
 
-    int width = 0;
-    int codepoint = -1;
-    int invalid_width = 0;
-    const Glyph* first = nullptr;
-    const Glyph* next = nullptr;
-    // const Glyph* invalid = this->getGlyph(65533); // �;
-
-    UTFIterator iterator(str, len);
+        UTFIterator iterator(str, len);
 
 
-    // if(invalid == nullptr) {
-        if((codepoint = iterator.next()) != -1) {
+        // if(invalid == nullptr) {
+        if ((codepoint = iterator.next()) != -1) {
             next = this->getGlyph(codepoint);
-            if(next != nullptr) {
+            if (next != nullptr) {
                 width += next->advance;
             }
             while ((codepoint = iterator.next()) != -1) {
                 first = next;
                 next = this->getGlyph(codepoint);
 
-                if(next != nullptr) {
+                if (next != nullptr) {
                     width += this->getAdvance(first, next);
                     width += next->advance;
                 }
             }
         };
-    // } else {
-    //     if((codepoint = iterator.next()) != -1) {
-    //         next = this->getGlyph(codepoint);
-    //         if(next == nullptr) {
-    //             next = invalid;
-    //         }
-    //         width += next->advance;
-    //
-    //         while ((codepoint = iterator.next()) != -1) {
-    //             first = next;
-    //             next = this->getGlyph(codepoint);
-    //             if(next == nullptr) {
-    //                 next = invalid;
-    //             }
-    //             width += this->getAdvance(first, next);
-    //             width += next->advance;
-    //         }
-    //     };
-    // }
+        // } else {
+        //     if((codepoint = iterator.next()) != -1) {
+        //         next = this->getGlyph(codepoint);
+        //         if(next == nullptr) {
+        //             next = invalid;
+        //         }
+        //         width += next->advance;
+        //
+        //         while ((codepoint = iterator.next()) != -1) {
+        //             first = next;
+        //             next = this->getGlyph(codepoint);
+        //             if(next == nullptr) {
+        //                 next = invalid;
+        //             }
+        //             width += this->getAdvance(first, next);
+        //             width += next->advance;
+        //         }
+        //     };
+        // }
 
-    return width;
+        return (int)std::ceil(width);
+    }
+
+    int Font::stringWidth(const std::string& str) const {
+        return this->charsWidth(str.c_str(), str.length());
+    }
+
+    const Font& Font::getDefaultFont() {
+        static std::shared_ptr<Typeface> typeface = Typeface::makeFormFile("/simkai.ttf");
+        static Font font(typeface.get(), FontFace::SYSTEM, FontStyle::BOLD, FontSize::MEDIUM);
+        return font;
+    }
+
+    const FontMetrics& Font::getFontMetrics() const {
+        return metrics;
+    }
 }
-
-int Font::stringWidth(const std::string &str) const {
-    return this->charsWidth(str.c_str(), str.length());
-}
-
-const Font &Font::getDefaultFont(){
-    static std::shared_ptr<Typeface> typeface = Typeface::makeFormFile("/simkai.ttf");
-    static Font font(typeface.get(), FACE_SYSTEM, STYLE_BOLD, SIZE_MEDIUM);
-    return font;
-}
-
-const FontMetrics &Font::getFontMetrics() const {
-    return metrics;
-}
-
-
-
-

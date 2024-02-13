@@ -1,13 +1,9 @@
-﻿//
-// Created by Admin on 2023/5/30.
-//
-
-
+﻿
 #include "Typeface.h"
 
 #include <fstream>
 #include <vector>
-#include "stb_truetype.h"
+
 
 
 

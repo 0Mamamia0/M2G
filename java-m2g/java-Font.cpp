@@ -8,40 +8,41 @@
 #include <memory>
 
 #include "JNI_OnLoad.h"
-#include "m2g/Font.h"
+#include "Font.h"
 #include "java-Objects.h"
 
 
+using namespace m2g;
 
 namespace {
     std::shared_ptr<Typeface> DEFAULT_TYPEFACE = Typeface::makeFormFile("/simkai.ttf");
 }
 
 
-
-jlong NativeFont_Create(JNIEnv *, jclass, jint face, jint style, jint size) {
+static jlong NativeFont_Create(JNIEnv *, jclass, jint face, jint style, jint size) {
     objects::increase();
     return reinterpret_cast<jlong>(new Font(DEFAULT_TYPEFACE.get(), face, style, size));
 }
 
-jint NativeFont_GetHeight(JNIEnv *, jclass, jlong handle) {
+static jint NativeFont_GetHeight(JNIEnv *, jclass, jlong handle) {
     if(auto* font = reinterpret_cast<Font*>(handle)) {
         return font->getHeight();
     }
     return 0;
 }
 
-jint NativeFont_GetBaselinePosition(JNIEnv *, jclass, jlong handle) {
+static jint NativeFont_GetBaselinePosition(JNIEnv *, jclass, jlong handle) {
     if(auto* font = reinterpret_cast<Font*>(handle)) {
         return font->getBaseLinePosition();
     }
     return 0;
 }
 
-jint NativeFont_StringWidth(JNIEnv* env, jclass, jlong handle, jstring str) {
+static jint NativeFont_StringWidth(JNIEnv* env, jclass, jlong handle, jstring str) {
     if (auto* font = reinterpret_cast<Font *>(handle)) {
         const char* text = jniGetStringUTFChars(env, str, nullptr);
-        int width = font->charsWidth(text, strlen(text));
+        jsize len = jniGetStringUTFLength(env, str);
+        int width = font->charsWidth(text, len);
         jniReleaseStringUTFChars(env, str, text);
         return width;
     }
@@ -51,7 +52,7 @@ jint NativeFont_StringWidth(JNIEnv* env, jclass, jlong handle, jstring str) {
 
 //jint NativeFont_CharsWidth(JNIEnv *, jclass, jlong font, jcharArray chars, jint offset, jint count);
 //jint NativeFont_SubstringWidth(JNIEnv *, jclass, jlong font, jstring str, jint offset, jint count);
-void NativeFont_Release(JNIEnv *, jclass, jlong handle) {
+static void NativeFont_Release(JNIEnv *, jclass, jlong handle) {
     if(auto* font = reinterpret_cast<Font *>(handle)) {
         delete font;
         objects::decrease();
@@ -60,7 +61,7 @@ void NativeFont_Release(JNIEnv *, jclass, jlong handle) {
 
 
 
-extern int register_m2g_Font(JNIEnv *env) {
+extern "C" int register_m2g_Font(JNIEnv *env) {
     static const JNINativeMethod methods[] = {
             {"jniCreateFont", "(III)J", reinterpret_cast<void *>(NativeFont_Create)},
             {"jniGetHeight", "(J)I", reinterpret_cast<void *>(NativeFont_GetHeight)},

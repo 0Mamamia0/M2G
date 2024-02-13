@@ -6,54 +6,39 @@
 #define NXJVM_IMAGE_H
 
 #include <stdint.h>
-#include "Graphics.h"
+#include <memory>
 
 
-class Graphics;
-class PixelBuffer;
+namespace m2g {
+    class Graphics;
+    class PixelBuffer;
 
+    class Image {
+    public:
+        explicit Image(std::shared_ptr<PixelBuffer> pixel);
+        Image(std::shared_ptr<PixelBuffer> pixel, bool isMutable);
+        Image(const Image& other) = delete;
+        Image(Image&& other) noexcept = delete;
+        ~Image();
 
+        void setImmutable();
+        int getFormat() const;
+        int getWidth() const;
+        int getHeight() const;
+        bool isMutable() const;
+        bool hasAlpha() const;
+        bool isColor() const;
+        PixelBuffer& getPixelBufferRef() const;
+        std::shared_ptr<PixelBuffer> getPixelBuffer() const;
+        void getRGB(int *data, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) const;
+    private:
+        int width;
+        int height;
+        bool mut;
+        std::shared_ptr<PixelBuffer> pixel;
+    };
+}
 
-class Image {
-
-
-public:
-
-    Image(std::shared_ptr<PixelBuffer> pixel);
-    Image(std::shared_ptr<PixelBuffer> pixel, bool isMutable);
-    ~Image();
-
-    int getFormat() const;
-    int getWidth() const;
-    int getHeight() const;
-    bool isMutable() const;
-    bool hasAlpha() const;
-    bool isColor() const;
-
-    Graphics *getGraphics();
-
-    void setImmutable();
-
-    void getRGB(int *data, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_);
-
-
-    PixelBuffer& getPixelBufferRef();
-    std::shared_ptr<PixelBuffer> getPixelBuffer();
-public:
-
-//    uint8_t* data;
-
-//    int channels;
-
-
-private:
-    std::shared_ptr<PixelBuffer> pixel;
-    int width;
-    int height;
-    bool mut;
-
-
-};
 
 
 #endif //NXJVM_IMAGE_H

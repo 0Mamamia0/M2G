@@ -2,8 +2,8 @@
 // Created by Admin on 2023/5/30.
 //
 
-#ifndef LEARNSFML_TYPEFACE_H
-#define LEARNSFML_TYPEFACE_H
+#ifndef M2G_TYPEFACE_H
+#define M2G_TYPEFACE_H
 
 #include <memory>
 #include "stb_truetype.h"
@@ -23,10 +23,10 @@ public:
 
 
 private:
-    char* data;
+    // char* data;
     stbtt_fontinfo fontInfo;
 
 };
 
 
-#endif //LEARNSFML_TYPEFACE_H
+#endif //M2G_TYPEFACE_H

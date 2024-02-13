@@ -5,34 +5,34 @@
 #include "jni_def.h"
 #include "JNI_OnLoad.h"
 #include "java-Objects.h"
-#include "m2g/Image.h"
-#include "m2g/PixelBuffer.h"
+#include "Image.h"
+#include "PixelBuffer.h"
 
 
+using namespace m2g;
 
-
-jint NativeImage_GetWidth (JNIEnv *, jclass, jlong handle) {
+static jint NativeImage_GetWidth (JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->getWidth();
     }
     return 0;
 }
 
-jint NativeImage_GetHeight (JNIEnv *, jclass, jlong handle) {
+static jint NativeImage_GetHeight (JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->getHeight();
     }
     return 0;
 }
 
-jboolean NativeImage_IsMutable(JNIEnv *, jclass, jlong handle) {
+static jboolean NativeImage_IsMutable(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->isMutable();
     }
     return false;
 }
 
-void NativeImage_GetRGB(JNIEnv *env, jclass, jlong handle, jintArray data, jint dataLength, jint offset, jint scanLength, jint x, jint y, jint width, jint height) {
+static void NativeImage_GetRGB(JNIEnv *env, jclass, jlong handle, jintArray data, jint dataLength, jint offset, jint scanLength, jint x, jint y, jint width, jint height) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         jboolean isCopy;
         jint* argb = jniGetIntArrayElements(env, data, &isCopy);
@@ -41,21 +41,21 @@ void NativeImage_GetRGB(JNIEnv *env, jclass, jlong handle, jintArray data, jint 
     }
 }
 
-jlong NativeImage_GetPixelsAdders(JNIEnv *, jclass, jlong handle) {
+static jlong NativeImage_GetPixelsAdders(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->getPixelBufferRef().addr<jlong>();
     }
     return 0;
 }
 
-jint NativeImage_GetChannels(JNIEnv *, jclass, jlong handle) {
+static jint NativeImage_GetChannels(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->getPixelBufferRef().getBytePerPixel();
     }
     return 0;
 }
 
-void NativeImage_Release(JNIEnv *, jclass, jlong handle) {
+static void NativeImage_Release(JNIEnv *, jclass, jlong handle) {
     auto* image = reinterpret_cast<Image*>(handle);
     delete image;
     objects::decrease();
@@ -63,7 +63,7 @@ void NativeImage_Release(JNIEnv *, jclass, jlong handle) {
 
 
 
-int register_m2g_Image(JNIEnv* env) {
+extern "C" int register_m2g_Image(JNIEnv* env) {
     static const JNINativeMethod methods[] = {
             {"jniGetWidth"      , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetWidth)      },
             {"jniGetHeight"     , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetHeight)      },

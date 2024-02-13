@@ -29,9 +29,9 @@ int PixelFormat::shiftPerPixel(int format) {
     switch (format) {
         case GREY:       return 0;
         case GREY_ALPHA: return 1;
-        case ALPHA_8:        return 0;
+        case ALPHA_8:    return 0;
         case RGB_888X:   return 2;
         case RGBA_8888:  return 2;
-        default:                      return 0;
+        default:         return 0;
     }
 }
