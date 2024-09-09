@@ -21,7 +21,7 @@ jlong NativeImageCodec_CreateImageWH(JNIEnv *, jclass, jint width, jint height) 
 }
 
 jlong NativeImageCodec_CreateImageFormImage(JNIEnv *, jclass, jlong handle) {
-    if(auto* image = reinterpret_cast<CairoImage*>(handle)) {
+    if(auto* image = reinterpret_cast<Image*>(handle)) {
         objects::increase();
         return reinterpret_cast<jlong>(ImageCodec::createImage(image));
     }
@@ -31,7 +31,7 @@ jlong NativeImageCodec_CreateImageFormImage(JNIEnv *, jclass, jlong handle) {
 jlong NativeImageCodec_CreateImageFromData(JNIEnv *env, jclass, jbyteArray imageData, jint imageOffset, jint imageLength) {
     objects::increase();
     jbyte* data = jniGetByteArrayElements(env, imageData, nullptr);
-    CairoImage* image = ImageCodec::loadImage(reinterpret_cast<unsigned char *> (data), imageOffset, imageLength);
+    Image* image = ImageCodec::loadImage(reinterpret_cast<unsigned char *> (data), imageOffset, imageLength);
     jniReleaseByteArrayElements(env, imageData, data, JNI_ABORT);
     return reinterpret_cast<jlong>(image);
 }
@@ -39,14 +39,14 @@ jlong NativeImageCodec_CreateImageFromData(JNIEnv *env, jclass, jbyteArray image
 jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint width, jint height, jboolean processAlpha) {
     objects::increase();
     jint* rgbData = jniGetIntArrayElements(env, rgb, nullptr);
-    CairoImage* image = ImageCodec::createRGBImage(rgbData, width, height, processAlpha);
+    Image* image = ImageCodec::createRGBImage(rgbData, width, height, processAlpha);
     jniReleaseIntArrayElements(env, rgb, rgbData, JNI_ABORT);
     return reinterpret_cast<jlong>(image);
 }
 
 
 jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
-    if(auto* image = reinterpret_cast<CairoImage*>(handle)) {
+    if(auto* image = reinterpret_cast<Image*>(handle)) {
         objects::increase();
         return reinterpret_cast<jlong>(ImageCodec::createImage(image, x, y, width, height, transform));
     }

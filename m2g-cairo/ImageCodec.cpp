@@ -39,6 +39,31 @@ namespace m2g {
     }
 
     Image* ImageCodec::loadImage(const char* filename) {
+        int width, height, channels;
+        int desired_channels = STBI_default;
+
+        //    FILE* file;
+        stbi_uc* image_data = nullptr;
+        //    errno_t err = fopen_s(&file, filename, "r");
+
+        //    if(err == 0) {
+        if (stbi_info(filename, &width, &height, &channels)) {
+            if (channels == 3) {
+                desired_channels = STBI_rgb_alpha;
+            }
+            image_data = stbi_load(filename, &width, &height, &channels, desired_channels);
+            if (image_data) {
+                return new Image(image_data, width, height, channels, [](Image* image, void* data) {
+                    stbi_image_free(data);
+                });
+            }
+        }
+        //        fclose(file);
+        //    }
+
+        return nullptr;
+
+
         return nullptr;
     }
 

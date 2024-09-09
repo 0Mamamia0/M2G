@@ -46,6 +46,8 @@ namespace m2g {
         this->metrics.descent = (float)descent * scale;
         this->metrics.lineGap = (float)lineGap * scale;
         this->metrics.baseline = metrics.ascent;
+
+        //TODO check this 行高通常通过 ascent + descent + lineGap 来计算
         this->metrics.height = metrics.ascent - metrics.descent + metrics.lineGap;
 
 

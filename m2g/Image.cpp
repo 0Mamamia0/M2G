@@ -84,6 +84,10 @@ namespace m2g {
     bool Image::isColor() const {
         return pixel->isColor();
     }
+
+    void* Image::getPixels() const {
+        return pixel->addr<void*>();
+    }
 }
 
 

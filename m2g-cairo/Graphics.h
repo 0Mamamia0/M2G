@@ -91,7 +91,7 @@ namespace m2g {
 
         void drawCircle(int centerX, int centerY, int r);
 
-        // void drawChar(char c, int x, int y, int anchor, const Font&font);
+         void drawChar(char c, int x, int y, int anchor, const Font& font);
 
         void drawString(const char* str, int x, int y, int anchor, const Font& font);
 
@@ -129,6 +129,7 @@ namespace m2g {
     private:
         int color;
         cairo_t* cr;
+        cairo_surface_t* surface_;
     };
 }
 

@@ -181,7 +181,7 @@ static jint NativeGraphics_GetClipHeight(JNIEnv *, jclass, jlong handle) {
 
 static void NativeGraphics_DrawString(JNIEnv* env, jclass,  jlong handle, jstring str, jint x, jint y, jint anchor, jlong  fontHandle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
-    auto* font = reinterpret_cast<const CairoFont*>(fontHandle);
+    auto* font = reinterpret_cast<const Font*>(fontHandle);
     if(graphics != nullptr && font != nullptr) {
         const char* text = jniGetStringUTFChars(env, str, nullptr);
         jsize len = jniGetStringUTFLength(env, str);

@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "modernize-use-nodiscard"
 //
 // Created by Admin on 2023/5/22.
 //
@@ -28,6 +30,7 @@ namespace m2g {
         bool isMutable() const;
         bool hasAlpha() const;
         bool isColor() const;
+        void* getPixels() const;
         PixelBuffer& getPixelBufferRef() const;
         std::shared_ptr<PixelBuffer> getPixelBuffer() const;
         void getRGB(int *data, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) const;
@@ -42,3 +45,5 @@ namespace m2g {
 
 
 #endif //NXJVM_IMAGE_H
+
+#pragma clang diagnostic pop

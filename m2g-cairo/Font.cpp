@@ -6,10 +6,8 @@
 
 #include <mutex>
 #include <string>
-
-
 #include "cairo/cairo.h"
-#include "cairo/cairo-ft.h"
+#include "Typeface.h"
 
 
 namespace m2g {
@@ -20,7 +18,7 @@ namespace m2g {
         LARGE = 16,
     };
 
-    static double getFontSize(int font_size) {
+    static int getFontSize(int font_size) {
         switch (font_size) {
             case FontSize::SMALL: return 12;
             case FontSize::MEDIUM: return 18;
@@ -29,37 +27,32 @@ namespace m2g {
         }
     }
 
-    static std::once_flag flag;
-    static FT_Library ft_library;
-
-
-    Font::Font(int face, int style, int size)
-        : face_(face)
+    Font::Font(std::shared_ptr<Typeface> typeface, int face, int style, int size)
+        : typeface_(std::move(typeface))
+        , face_(face)
         , style_(style)
-        , size_(size){
-        std::call_once(flag, [] {
-            FT_Init_FreeType(&ft_library);
-            std::atexit([] {
-                FT_Done_FreeType(ft_library);
-            });
-        });
+        , size_(size)
+        , extents_ {0}
+        , metrics_ {0} {
 
-        FT_New_Face(ft_library, "/simkai.ttf", 0, &ft_face_);
         this->font_size_ = ::m2g::getFontSize(size);
-        this->cr_face_ = cairo_ft_font_face_create_for_ft_face(ft_face_, 0);
         this->surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
         this->cr_ = cairo_create(surface_);
 
-        cairo_set_font_face(cr_, cr_face_);
+        cairo_set_font_face(cr_, typeface_-> getCairoFace());
         cairo_set_font_size(cr_, this->font_size_);
         cairo_font_extents(cr_, &extents_);
+
+        this->metrics_.ascent = (float) extents_.ascent;
+        this->metrics_.descent = (float) -extents_.descent;
+        this->metrics_.lineGap = (float) (extents_.height - extents_.ascent - extents_.descent);
+        this->metrics_.baseline = (float) extents_.ascent;
+        this->metrics_.height = (float) extents_.height;
     }
 
     Font::~Font() {
         cairo_surface_destroy(surface_);
         cairo_destroy(cr_);
-        cairo_font_face_destroy(cr_face_);
-        FT_Done_Face(ft_face_);
     }
 
 
@@ -81,7 +74,7 @@ namespace m2g {
 
 
     cairo_font_face_t* Font::getCairoFace() const {
-        return cr_face_;
+        return typeface_->getCairoFace();
     }
 
     const cairo_font_extents_t* Font::getCairoFontExtents() const {
@@ -94,7 +87,7 @@ namespace m2g {
         buffer[1] = '\0';
         cairo_text_extents_t extents;
         cairo_text_extents(cr_, buffer, &extents);
-        return extents.width;
+        return static_cast<int>(extents.width);
     }
 
     int Font::charsWidth(const char* str, int len) const {
@@ -105,7 +98,7 @@ namespace m2g {
     int Font::stringWidth(const std::string& str) const {
         cairo_text_extents_t extents;
         cairo_text_extents(cr_, str.c_str(), &extents);
-        return extents.width;
+        return static_cast<int>(extents.width);
     }
 
     int Font::getBaseLinePosition() const {
@@ -114,5 +107,9 @@ namespace m2g {
 
     int Font::getHeight() const {
         return static_cast<int>(extents_.height);
+    }
+
+    const FontMetrics &Font::getFontMetrics() const {
+        return metrics_;
     }
 }

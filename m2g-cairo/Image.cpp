@@ -124,7 +124,7 @@ namespace m2g {
         int image_width = getWidth();
 
 
-        const void* pixels = getPixels();
+        auto pixels = static_cast<const uint8_t*>(getPixels());
         while (height_ > 0) {
 
             if(channels_ == 4) {
@@ -146,7 +146,7 @@ namespace m2g {
                     tmp += 4;
                 }
             } else if(channels_ == 3) {
-                auto* tmp = static_cast<const uint32_t*>(pixels);
+                auto* tmp = reinterpret_cast<const uint32_t*>(pixels);
                 for (int i = 0; i < width_; i ++) {
                     argb[offset + i] = (*tmp++) & 0xFF000000;
                 }
@@ -162,6 +162,8 @@ namespace m2g {
     cairo_surface_t* Image::getCairoSurface() const {
         return surface_;
     }
+
+
 }
 
 

@@ -103,25 +103,32 @@ namespace m2g {
     }
 
     Graphics::Graphics(Image* image)
-        : color(-1){
-        this->cr = cairo_create(image->getCairoSurface());
+        : color(-1) {
+        this->surface_ = image->getCairoSurface();
+        this->cr = cairo_create(surface_);
         reset();
     }
 
     Graphics::Graphics(cairo_surface_t* surface)
         : color(-1) {
+        this->surface_ = surface;
         this->cr = cairo_create(surface);
         reset();
     }
 
     Graphics::Graphics(const Graphics& other)
-        : cr(other.cr)
+        : cr(nullptr)
         , color(-1) {
+        this->surface_ = other.surface_;
+        this->cr = cairo_create(surface_);
+        reset();
     }
 
     Graphics::Graphics(Graphics&& other) noexcept
         : cr(nullptr)
+        , surface_(nullptr)
         , color(-1) {
+        std::swap(surface_, other.surface_);
         std::swap(cr, other.cr);
     }
 
@@ -149,7 +156,7 @@ namespace m2g {
         cairo_set_line_width(cr, 1);
         // cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
         // cairo_set_fill_rule(cr, CAIRO_FILL_RULE_EVEN_ODD);
-         cairo_set_antialias(cr, CAIRO_ANTIALIAS_BEST);
+         cairo_set_antialias(cr, CAIRO_ANTIALIAS_GOOD);
         // cairo_save(cr);
     }
 
@@ -179,18 +186,18 @@ namespace m2g {
     }
 
     void Graphics::drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
-        // cairo_new_path(cr);
-        // cairo_move_to(cr, x + arcWidth, y);
-        // cairo_line_to(cr, x + w - arcWidth, y);
-        // cairo_curve_to(cr, x + w, y, x + w, y, x + w, y + arcHeight);
-        // cairo_line_to(cr, x + w, y + h - arcHeight);
-        // cairo_curve_to(cr, x + w, y + h, x + w, y + h, x + w - arcWidth, y + h);
-        // cairo_line_to(cr, x + arcWidth, y + h);
-        // cairo_curve_to(cr, x, y + h, x, y + h, x, y + h - arcHeight);
-        // cairo_line_to(cr, x, y + arcHeight);
-        // cairo_curve_to(cr, x, y, x, y, x + arcWidth, y);
-        // cairo_close_path(cr);
-        // cairo_stroke(cr);
+         cairo_new_path(cr);
+         cairo_move_to(cr, x + arcWidth, y);
+         cairo_line_to(cr, x + w - arcWidth, y);
+         cairo_curve_to(cr, x + w, y, x + w, y, x + w, y + arcHeight);
+         cairo_line_to(cr, x + w, y + h - arcHeight);
+         cairo_curve_to(cr, x + w, y + h, x + w, y + h, x + w - arcWidth, y + h);
+         cairo_line_to(cr, x + arcWidth, y + h);
+         cairo_curve_to(cr, x, y + h, x, y + h, x, y + h - arcHeight);
+         cairo_line_to(cr, x, y + arcHeight);
+         cairo_curve_to(cr, x, y, x, y, x + arcWidth, y);
+         cairo_close_path(cr);
+         cairo_stroke(cr);
     }
 
     void Graphics::drawArc(int x, int y, int w, int h, int startAngle, int arcAngle) {
@@ -218,6 +225,11 @@ namespace m2g {
     void Graphics::drawCircle(int centerX, int centerY, int r) {
         cairo_arc(cr, centerX, centerY, r, 0, 2 * M_PI);
         cairo_stroke(cr);
+    }
+
+
+    void Graphics::drawChar(char c, int x, int y, int anchor, const m2g::Font& font) {
+        this->drawString({c}, x, y, anchor, font);
     }
 
     void Graphics::drawString(const char* str, int x, int y, int anchor, const Font& font) {

@@ -2,12 +2,13 @@
 // Created by Admin on 2023/5/27.
 //
 
+#include <array>
+
 #include "jni_def.h"
 #include "JNI_OnLoad.h"
 #include "java-Objects.h"
 #include "Image.h"
-#include "Image.h"
-#include "PixelBuffer.h"
+
 
 
 using namespace m2g;

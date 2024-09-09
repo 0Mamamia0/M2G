@@ -1,6 +1,8 @@
 ﻿//
 // Created by Admin on 2023/5/28.
 //
+
+#include <array>
 #include "jni_def.h"
 #include "JNI_OnLoad.h"
 #include "stb_image.h"

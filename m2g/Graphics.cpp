@@ -55,6 +55,7 @@ namespace {
         const FontMetrics& metrics = font.getFontMetrics();
         switch (anchor & (TOP | BOTTOM | BASELINE | VCENTER)) {
             case BOTTOM:
+                // TODO check
                 y -= (int)(metrics.height / 2.f);
             case VCENTER:
                 y += (int)((metrics.ascent + metrics.descent) / 2.f);

@@ -32,6 +32,9 @@ namespace m2g{
                     int height_) const;
 
         cairo_surface_t* getCairoSurface() const;
+
+        void *pixels();
+
     private:
         int width_;
         int height_;
