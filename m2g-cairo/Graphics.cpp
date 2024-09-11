@@ -278,7 +278,7 @@ namespace m2g {
 
                 }
 
-
+                std::cout << "Not impl drawRGB std::endian::little" << std::endl;
 //                cairo_set_source_surface(cr, surface, x, y);
                 // cairo_paint(cr);
             } else {
@@ -289,8 +289,9 @@ namespace m2g {
                     height,
                     scanLength * 4
                 );
-//                cairo_set_source_surface(cr, surface, x, y);
-                // cairo_paint(cr);
+                cairo_set_source_surface(cr, surface, x, y);
+                cairo_paint(cr);
+                std::cout << "Not impl drawRGB std::endian::little" << std::endl;
             }
 
         } else if constexpr (std::endian::native == std::endian::big) {
@@ -441,32 +442,44 @@ namespace m2g {
     }
 
     void Graphics::fillArc(int x, int y, int w, int h, int startAngle, int arcAngle) {
+        double xc = x + w / 2.0;
+        double yc = y + h / 2.0;
+        double xr = w / 2.0;
+        double yr = h / 2.0;
+        double start_radians = startAngle * M_PI / 180.0;
+        double arc_radians = arcAngle * M_PI / 180.0;
+
+        cairo_save(cr);
+        cairo_translate(cr, xc, yc);
+        cairo_scale(cr, 1.0, yr / xr);
+        cairo_move_to(cr, xr * cos(start_radians), yr * sin(start_radians));
+        cairo_scale(cr, xr, 1.0 / yr);
+        cairo_arc(cr, 0, 0, 1.0, start_radians, start_radians + arc_radians);
+        cairo_fill(cr);
+        cairo_restore(cr);
+
     }
 
     void Graphics::fillCircle(int centerX, int centerY, int r) {
+        cairo_arc(cr, centerX, centerY, r, 0, 2 * M_PI);
+        cairo_fill(cr);
     }
 
     void Graphics::copyArea(int x_src, int y_src, int width_, int height_, int x_dst, int y_dst, int anchor) {
-        std::cout << "not impl copyArea" << std::endl;
-        // double x1 = x_src;
-        // double y1 = y_src;
-        // double x2 = x_src + width_;
-        // double y2 = y_src + height_;
-        //
-        // // 计算目标图像的位置
-        // double dest_x = x_dst;
-        // double dest_y = y_dst;
-        //
-        // // 将源图像的矩形区域复制到目标图像的指定位置
-        // cairo_set_source_surface(cr, source_surface, x1, y1);
-        // cairo_rectangle(cr, dest_x, dest_y, width_, height_);
-        // cairo_clip(cr);
-        // cairo_paint(cr);
-        //
-        // // 清空资源
-        // cairo_surface_destroy(source_surface);
-        // cairo_surface_destroy(target_surface);
-        // cairo_destroy(cr);
+
+         double x1 = x_src;
+         double y1 = y_src;
+         double x2 = x_src + width_;
+         double y2 = y_src + height_;
+
+         double dest_x = x_dst;
+         double dest_y = y_dst;
+
+        cairo_rectangle(cr, dest_x, dest_y, width_, height_);
+        cairo_clip(cr);
+        // TODO 检查区域是否重合，不知道cairo有没有做处理
+        cairo_set_source_surface(cr, surface_, x1, y1);
+        cairo_paint(cr);
     }
 
 

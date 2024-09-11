@@ -39,9 +39,7 @@ namespace m2g {
         this->mut = false;
     }
 
-    Image::~Image() {
-
-    }
+    Image::~Image() = default;
 
     void Image::getRGB(int* argb, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) const {
         int image_width = getWidth();

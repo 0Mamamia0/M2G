@@ -4,7 +4,6 @@
 
 #include <array>
 #include "jni_def.h"
-#include "JNI_OnLoad.h"
 #include "stb_image.h"
 #include "java-Objects.h"
 #include "ImageCodec.h"

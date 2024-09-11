@@ -1,8 +1,9 @@
-﻿//
-// Created by Admin on 2023/5/28.
+//
+// Created by Admin on 2024/9/10.
 //
 
-#include "JNI_OnLoad.h"
+#include "M2G_OnLoad.h"
+
 #include "jni_def.h"
 
 
@@ -13,11 +14,7 @@ if (auto rc = register_m2g_##class_name(env)) {   \
 }
 
 
-#ifdef M2G_BUILD_SHARED
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
-#else
-JNIEXPORT jint M2G_OnLoad(JavaVM* vm, void* reserved) {
-#endif
+jint M2G_OnLoad(JavaVM* vm, void* reserved) {
     JNIEnv* env;
     if (jniGetEnv(vm, reinterpret_cast<void **>(&env), JNI_VERSION_1_6) != JNI_OK) {
         return JNI_ERR;

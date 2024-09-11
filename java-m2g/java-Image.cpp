@@ -3,7 +3,6 @@
 //
 
 #include "jni_def.h"
-#include "JNI_OnLoad.h"
 #include "java-Objects.h"
 #include "Image.h"
 #include "PixelBuffer.h"
@@ -63,19 +62,19 @@ static void NativeImage_Release(JNIEnv *, jclass, jlong handle) {
 
 
 
-// extern "C" int register_m2g_Image(JNIEnv* env) {
-//     static const JNINativeMethod methods[] = {
-//             {"jniGetWidth"      , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetWidth)      },
-//             {"jniGetHeight"     , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetHeight)      },
-//             {"jniIsMutable"     , "(J)Z"           , reinterpret_cast<void*>(NativeImage_IsMutable)      },
-//             {"jniGetRGB"        , "(J[IIIIIIII)V"  , reinterpret_cast<void*>(NativeImage_GetRGB)      },
-//             {"jniRelease"       , "(J)V"           , reinterpret_cast<void*>(NativeImage_Release)      },
-//             {"jniGetPixelsAdders"       , "(J)J"   , reinterpret_cast<void*>(NativeImage_GetPixelsAdders)      },
-//             {"jniGetChannels"       , "(J)I"       , reinterpret_cast<void*>(NativeImage_GetChannels)      },
-//     };
-//
-//     const auto clazz = jniFindClass(env, "iml/m2g/NativeImage");
-//     return clazz
-//            ? jniRegisterNatives(env, clazz, methods, std::size(methods))
-//            : JNI_ERR;
-// }
+ extern "C" int register_m2g_Image(JNIEnv* env) {
+     static const JNINativeMethod methods[] = {
+             {"jniGetWidth"      , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetWidth)      },
+             {"jniGetHeight"     , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetHeight)      },
+             {"jniIsMutable"     , "(J)Z"           , reinterpret_cast<void*>(NativeImage_IsMutable)      },
+             {"jniGetRGB"        , "(J[IIIIIIII)V"  , reinterpret_cast<void*>(NativeImage_GetRGB)      },
+             {"jniRelease"       , "(J)V"           , reinterpret_cast<void*>(NativeImage_Release)      },
+             {"jniGetPixelsAdders"       , "(J)J"   , reinterpret_cast<void*>(NativeImage_GetPixelsAdders)      },
+             {"jniGetChannels"       , "(J)I"       , reinterpret_cast<void*>(NativeImage_GetChannels)      },
+     };
+
+     const auto clazz = jniFindClass(env, "iml/m2g/NativeImage");
+     return clazz
+            ? jniRegisterNatives(env, clazz, methods, std::size(methods))
+            : JNI_ERR;
+ }

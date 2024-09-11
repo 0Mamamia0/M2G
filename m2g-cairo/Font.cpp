@@ -4,8 +4,8 @@
 
 #include "Font.h"
 
-#include <mutex>
 #include <string>
+#include <cmath>
 #include "cairo/cairo.h"
 #include "Typeface.h"
 
@@ -39,9 +39,13 @@ namespace m2g {
         this->surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
         this->cr_ = cairo_create(surface_);
 
+
+        unsigned char data[1000];
+
         cairo_set_font_face(cr_, typeface_-> getCairoFace());
         cairo_set_font_size(cr_, this->font_size_);
         cairo_font_extents(cr_, &extents_);
+
 
         this->metrics_.ascent = (float) extents_.ascent;
         this->metrics_.descent = (float) -extents_.descent;
@@ -87,7 +91,7 @@ namespace m2g {
         buffer[1] = '\0';
         cairo_text_extents_t extents;
         cairo_text_extents(cr_, buffer, &extents);
-        return static_cast<int>(extents.width);
+        return (int)std::round(extents.width);
     }
 
     int Font::charsWidth(const char* str, int len) const {
@@ -98,15 +102,15 @@ namespace m2g {
     int Font::stringWidth(const std::string& str) const {
         cairo_text_extents_t extents;
         cairo_text_extents(cr_, str.c_str(), &extents);
-        return static_cast<int>(extents.width);
+        return (int)std::round(extents.width);
     }
 
     int Font::getBaseLinePosition() const {
-        return static_cast<int>(extents_.height + (extents_.descent + extents_.ascent) / 2.0);
+        return (int)std::round(metrics_.baseline);
     }
 
     int Font::getHeight() const {
-        return static_cast<int>(extents_.height);
+        return (int)std::round(metrics_.height);
     }
 
     const FontMetrics &Font::getFontMetrics() const {

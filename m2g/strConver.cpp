@@ -6,6 +6,7 @@
 #include <iostream>
 #include <locale>
 #include <codecvt>
+#include <cstdint>
 
 extern std::string UnicodeToUTF8(const std::wstring & wstr)
 {

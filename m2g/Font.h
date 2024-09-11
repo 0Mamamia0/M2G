@@ -72,7 +72,7 @@ namespace m2g {
 
     class Font {
     public:
-        Font(Typeface* typeface, int face, int style, int size);
+        Font(std::shared_ptr<Typeface> typeface, int face, int style, int size);
 
         ~Font();
 
@@ -118,7 +118,7 @@ namespace m2g {
         int style;
         int size;
         float scale;
-        Typeface* typeface;
+        std::shared_ptr<Typeface> typeface;
         FontMetrics metrics;
         mutable std::unordered_map<int, Glyph *> glyph_cache;
         mutable std::array<Glyph *, 96> ascii_glyph_cache;

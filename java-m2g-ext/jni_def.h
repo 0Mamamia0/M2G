@@ -122,6 +122,8 @@ inline void jniReleaseByteArrayElements(JNIEnv *env, jbyteArray array, jbyte* el
 #endif
     }
 
+
+
 #ifdef __cplusplus
 };
 #endif

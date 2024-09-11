@@ -24,8 +24,6 @@ namespace objects {
 }
 
 
-
-
 static jint NativeObjects_activeCount(JNIEnv *env, jclass) {
     return objects::count();
 }

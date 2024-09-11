@@ -28,7 +28,9 @@ std::shared_ptr<Typeface> Typeface::makeFormFile(const char *fileName) {
     return nullptr;
 }
 
-Typeface::Typeface(const stbtt_fontinfo &info): fontInfo(info) {
+Typeface::Typeface(const stbtt_fontinfo &info)
+    : fontInfo{} {
+    memcpy(&fontInfo, &info, sizeof(stbtt_fontinfo));
 }
 
 Typeface::~Typeface() {

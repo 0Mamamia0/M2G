@@ -17,7 +17,8 @@ static void Release(m2g::PixelBuffer* buffer, void* pixels) {
 namespace m2g {
     std::shared_ptr<PixelBuffer> PixelBuffer::allocate(int width, int height, int format) {
         int bpp = PixelFormat::getBytePerPixel(format);
-        uint8_t* data = new uint8_t[width * height * bpp];
+        auto* data = new uint8_t[width * height * bpp];
+
         return std::make_shared<PixelBuffer>(data, width, height, format, Release);
     }
 

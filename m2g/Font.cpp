@@ -28,15 +28,15 @@ namespace m2g {
     }
 
 
-    Font::Font(Typeface* typeface, int face, int style, int size)
+    Font::Font(std::shared_ptr<Typeface> typeface, int face, int style, int size)
         : face(face)
         , style(style)
         , size(size)
-        , typeface(typeface)
+        , typeface(std::move(typeface))
         , metrics{}
         , ascii_glyph_cache{} {
 
-        const stbtt_fontinfo& fontInfo = typeface->getFontInfo();
+        const stbtt_fontinfo& fontInfo = this->typeface->getFontInfo();
         int ascent, descent, lineGap;
         stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
 
@@ -225,7 +225,7 @@ namespace m2g {
 
     const Font& Font::getDefaultFont() {
         static std::shared_ptr<Typeface> typeface = Typeface::makeFormFile("/simkai.ttf");
-        static Font font(typeface.get(), FontFace::SYSTEM, FontStyle::BOLD, FontSize::MEDIUM);
+        static Font font(typeface, FontFace::SYSTEM, FontStyle::BOLD, FontSize::MEDIUM);
         return font;
     }
 

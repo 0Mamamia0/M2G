@@ -22,19 +22,26 @@ aux_source_directory(java-m2g JAVA_M2G_SRC)
 aux_source_directory(m2g-cairo M2G_CAIRO_SRC)
 aux_source_directory(java-m2g-cairo JAVA_M2G_CAIRO_SRC)
 
+
+set(JAVA_M2G_EXT_SRC java-m2g-ext/java-Objects.cpp java-m2g-ext/M2G_OnLoad.cpp)
+
+
+
 add_library(m2g ${M2G_SRC} ${STB_SRC})
-add_library(java-m2g ${JAVA_M2G_SRC})
+add_library(java-m2g ${JAVA_M2G_SRC} ${JAVA_M2G_EXT_SRC})
 add_library(m2g-cairo ${M2G_CAIRO_SRC} ${STB_SRC})
-add_library(java-m2g-cairo ${JAVA_M2G_CAIRO_SRC})
+add_library(java-m2g-cairo ${JAVA_M2G_CAIRO_SRC} ${JAVA_M2G_EXT_SRC})
+
 
 target_include_directories(m2g PRIVATE include)
 target_include_directories(m2g PUBLIC stb m2g)
-target_include_directories(java-m2g PRIVATE include)
+target_include_directories(java-m2g PRIVATE include java-m2g-ext)
 target_include_directories(java-m2g PUBLIC stb m2g)
+
 target_include_directories(m2g-cairo PUBLIC include)
 target_include_directories(m2g-cairo PUBLIC stb m2g-cairo)
 target_include_directories(java-m2g-cairo PRIVATE include)
-target_include_directories(java-m2g-cairo PUBLIC stb m2g-cairo)
+target_include_directories(java-m2g-cairo PUBLIC stb m2g-cairo java-m2g-ext)
 
 target_compile_definitions(m2g PRIVATE -D_USE_MATH_DEFINES)
 target_compile_definitions(m2g-cairo PRIVATE -D_USE_MATH_DEFINES)
@@ -61,10 +68,14 @@ endif()
 
 
 if(ENABLE_BUILD_SHARED)
-    add_library(java-m2g-shared SHARED java-m2g/JNI_OnLoad.cpp)
-    target_link_libraries(java-m2g-shared java-m2g)
-    target_compile_definitions(java-m2g-shared PRIVATE -DM2G_BUILD_SHARED)
-#    add_library(java-m2g-cairo-shared SHARED )
+    add_library(java-m2g-shared SHARED java-m2g-ext/JNI_OnLoad.cpp)
+    target_link_libraries(java-m2g-shared java-m2g m2g)
+    target_compile_definitions(java-m2g-shared PRIVATE -DM2G_BUILD_SHARED -DM2G_USE_STB_IMAGE_IMPL)
+
+
+    add_library(java-m2g-cairo-shared SHARED java-m2g-ext/JNI_OnLoad.cpp)
+    target_link_libraries(java-m2g-cairo-shared java-m2g m2g)
+    target_compile_definitions(java-m2g-shared PRIVATE -DM2G_BUILD_SHARED -DM2G_USE_STB_IMAGE_IMPL)
 endif()
 
 

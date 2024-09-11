@@ -4,10 +4,9 @@
 
 #include "jni_def.h"
 #include <array>
-#include <cstring>
 #include <memory>
 
-#include "JNI_OnLoad.h"
+
 #include "Font.h"
 #include "java-Objects.h"
 
@@ -15,13 +14,18 @@
 using namespace m2g;
 
 namespace {
+#if defined(__SWITCH__)
     std::shared_ptr<Typeface> DEFAULT_TYPEFACE = Typeface::makeFormFile("/simkai.ttf");
+#else
+    std::shared_ptr<Typeface> DEFAULT_TYPEFACE = Typeface::makeFormFile("D:\\Project\\C\\SimpleM2G\\bin\\simkai.ttf");
+#endif
+
 }
 
 
 static jlong NativeFont_Create(JNIEnv *, jclass, jint face, jint style, jint size) {
     objects::increase();
-    return reinterpret_cast<jlong>(new Font(DEFAULT_TYPEFACE.get(), face, style, size));
+    return reinterpret_cast<jlong>(new Font(DEFAULT_TYPEFACE, face, style, size));
 }
 
 static jint NativeFont_GetHeight(JNIEnv *, jclass, jlong handle) {
@@ -74,6 +78,6 @@ extern "C" int register_m2g_Font(JNIEnv *env) {
     };
 
     const auto clazz = jniFindClass(env, "iml/m2g/NativeFont");
-    return clazz ? jniRegisterNatives(env, clazz, methods, std::size(methods))
-           : JNI_ERR;
+    jint res = jniRegisterNatives(env, clazz, methods, std::size(methods));
+    return clazz ? res: JNI_ERR;
 }

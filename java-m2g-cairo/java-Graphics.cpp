@@ -5,7 +5,6 @@
 
 #include <array>
 #include "jni_def.h"
-#include "JNI_OnLoad.h"
 #include "java-Objects.h"
 
 #include "Image.h"
