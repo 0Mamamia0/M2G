@@ -5,8 +5,6 @@
 #include <vector>
 
 
-
-
 std::shared_ptr<Typeface> Typeface::makeFormFile(const char *fileName) {
     std::ifstream file(fileName, std::ios::binary);
     if(file.is_open()) {
@@ -29,8 +27,8 @@ std::shared_ptr<Typeface> Typeface::makeFormFile(const char *fileName) {
 }
 
 Typeface::Typeface(const stbtt_fontinfo &info)
-    : fontInfo{} {
-    memcpy(&fontInfo, &info, sizeof(stbtt_fontinfo));
+    : fontInfo{info} {
+//    memcpy(&fontInfo, &info, sizeof(stbtt_fontinfo));
 }
 
 Typeface::~Typeface() {
