@@ -9,6 +9,9 @@
 #include <iostream>
 #include <cstring>
 
+
+// TODO Fixed me
+#define CAIRO_HAS_FT_FONT 1
 #include "cairo/cairo.h"
 #include "Image.h"
 #include "Font.h"

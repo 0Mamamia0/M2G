@@ -153,7 +153,6 @@ namespace m2g {
             return;
         }
         std::vector<const Glyph *> glyphs;
-
         int codepoint;
         UTFIterator iterator(str, len);
         while ((codepoint = iterator.next()) != -1) {

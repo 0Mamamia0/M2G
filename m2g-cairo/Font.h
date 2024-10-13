@@ -4,6 +4,7 @@
 
 #ifndef CAIROFONT_H
 #define CAIROFONT_H
+#include "cairo/cairo-features.h"
 #include "cairo/cairo-ft.h"
 
 

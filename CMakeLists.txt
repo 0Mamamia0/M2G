@@ -47,6 +47,8 @@ target_compile_definitions(m2g PRIVATE -D_USE_MATH_DEFINES)
 target_compile_definitions(m2g-cairo PRIVATE -D_USE_MATH_DEFINES)
 
 
+target_link_libraries(java-m2g PRIVATE m2g)
+
 if(M2G_STB_IMAGE_IMPL)
     target_compile_definitions(m2g PRIVATE -DM2G_USE_STB_IMAGE_IMPL)
     target_compile_definitions(m2g-cairo PRIVATE -DM2G_USE_STB_IMAGE_IMPL)
