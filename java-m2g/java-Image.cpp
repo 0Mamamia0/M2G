@@ -1,7 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/27.
-//
-
+﻿
 #include "jni_def.h"
 #include "java-Objects.h"
 #include "Image.h"

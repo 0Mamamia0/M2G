@@ -18,6 +18,9 @@ static jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
     return 0;
 }
 
+
+
+
 static void NativeGraphics_Release(JNIEnv *, jclass, jlong handle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     delete graphics;
