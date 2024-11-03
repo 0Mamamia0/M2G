@@ -1,10 +1,4 @@
-//
-// Created by Admin on 2023/5/23.
-//
-
-#ifndef M2G_FONT_H
-#define M2G_FONT_H
-
+#pragma once
 #include <string>
 #include <cstdint>
 #include <array>
@@ -34,7 +28,7 @@ namespace m2g {
         Glyph() : Glyph(0, 0, 0, 0, 0, {}, nullptr) {
         }
 
-        Glyph(const Glyph&other) : Glyph(other.id, other.advance, other.bearing, other.width, other.height,
+        Glyph(const Glyph& other) : Glyph(other.id, other.advance, other.bearing, other.width, other.height,
                                          other.bounds, other.bitmap) {
         }
 
@@ -64,7 +58,6 @@ namespace m2g {
         }
 
         bool empty() const {
-            // return this == nullptr || id == 0;
             return id == 0;
         }
     };
@@ -104,11 +97,12 @@ namespace m2g {
 
         const Glyph* getGlyph(int codepoint) const;
 
+        std::vector<const Glyph*> findGlyphs(const char* str, size_t len) const;
+
         float getAdvance(const Glyph* g1, const Glyph* g2) const;
 
         const FontMetrics& getFontMetrics() const;
 
-        static const Font& getDefaultFont();
 
     private:
         Glyph* loadGlyph(int codepoint) const;
@@ -126,4 +120,3 @@ namespace m2g {
 }
 
 
-#endif //M2G_FONT_H

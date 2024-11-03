@@ -1,10 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/30.
-//
-
-#ifndef M2G_TYPEFACE_H
-#define M2G_TYPEFACE_H
-
+﻿#pragma once
 #include <memory>
 #include "stb_truetype.h"
 
@@ -23,10 +17,6 @@ public:
 
 
 private:
-    // char* data;
     stbtt_fontinfo fontInfo;
-
 };
 
-
-#endif //M2G_TYPEFACE_H

@@ -11,7 +11,6 @@ using namespace m2g;
 static jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         if(image->isMutable()) {
-            objects::increase();
             return reinterpret_cast<jlong>(new Graphics(image));
         }
     }
@@ -21,7 +20,6 @@ static jlong NativeGraphics_CreateFormImage(JNIEnv *, jclass, jlong handle) {
 static void NativeGraphics_Release(JNIEnv *, jclass, jlong handle) {
     auto* graphics = reinterpret_cast<Graphics*>(handle);
     delete graphics;
-    objects::decrease();
 }
 
 

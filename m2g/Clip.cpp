@@ -1,7 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/27.
-//
-
+﻿
 
 #include <algorithm>
 #include "Clip.h"
@@ -10,18 +7,16 @@
 namespace m2g {
 
 
-    static int code(const Rect& rect, int x, int y) {
+    static int code(const Rect &rect, int x, int y) {
         int code = CLIP_INSIDE;
         if (x < rect.left) {
             code |= CLIP_LEFT;
-        }
-        else if (x >= rect.right) {
+        } else if (x >= rect.right) {
             code |= CLIP_RIGHT;
         }
         if (y < rect.top) {
             code |= CLIP_TOP;
-        }
-        else if (y >= rect.bottom) {
+        } else if (y >= rect.bottom) {
             code |= CLIP_BOTTOM;
         }
         return code;
@@ -32,7 +27,7 @@ namespace m2g {
     }
 
 
-    bool Clip::contain(const Point& point) const {
+    bool Clip::contain(const Point &point) const {
         return bounds.contain(point);
     }
 
@@ -41,7 +36,7 @@ namespace m2g {
     }
 
 
-    bool Clip::clipLineV(int x, int& y0, int& y1) const {
+    bool Clip::clipLineV(int x, int &y0, int &y1) const {
         Rect rect = getDeviceClipBounds();
         if (rect.isEmpty()) {
             return false;
@@ -56,7 +51,7 @@ namespace m2g {
         return true;
     }
 
-    bool Clip::clipLineH(int&x0, int&x1, int&y) const {
+    bool Clip::clipLineH(int &x0, int &x1, int &y) const {
         Rect rect = getDeviceClipBounds();
         if (rect.isEmpty()) {
             return false;
@@ -71,7 +66,7 @@ namespace m2g {
         return true;
     }
 
-    bool Clip::clipLineB(int& x0, int& y0, int& x1, int& y1) const {
+    bool Clip::clipLineB(int &x0, int &y0, int &x1, int &y1) const {
         Rect rect = getDeviceClipBounds();
         if (rect.isEmpty()) {
             return false;
@@ -101,18 +96,15 @@ namespace m2g {
                 // 点在上方区域外
                 new_x = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
                 new_y = y;
-            }
-            else if (codeOut & CLIP_BOTTOM) {
+            } else if (codeOut & CLIP_BOTTOM) {
                 // 点在下方区域外
                 new_x = x0 + (x1 - x0) * (y_max - y0) / (y1 - y0);
                 new_y = y_max;
-            }
-            else if (codeOut & CLIP_RIGHT) {
+            } else if (codeOut & CLIP_RIGHT) {
                 // 点在右侧区域外
                 new_y = y0 + (y1 - y0) * (x_max - x0) / (x1 - x0);
                 new_x = x_max;
-            }
-            else if (codeOut & CLIP_LEFT) {
+            } else if (codeOut & CLIP_LEFT) {
                 // 点在左侧区域外
                 new_y = y0 + (y1 - y0) * (x - x0) / (x1 - x0);
                 new_x = x;
@@ -122,8 +114,7 @@ namespace m2g {
                 x0 = new_x;
                 y0 = new_y;
                 code1 = code(rect, new_x, new_y);
-            }
-            else {
+            } else {
                 // 更新第二个端点
                 x1 = new_x;
                 y1 = new_y;
@@ -133,9 +124,7 @@ namespace m2g {
     }
 
     Clip::Clip(int width, int height)
-        : bounds{0, 0, width, height}
-          , maxWidth(width)
-          , maxHeight(height) {
+            : bounds{0, 0, width, height}, maxWidth(width), maxHeight(height) {
     }
 
     void Clip::setXYWH(int x, int y, int width, int height) {
@@ -162,7 +151,7 @@ namespace m2g {
         return bounds;
     }
 
-    Rect Clip::clipRect(const Rect& rect) const {
+    Rect Clip::clipRect(const Rect &rect) const {
         return bounds.intersect(rect);
     }
 
@@ -170,15 +159,15 @@ namespace m2g {
         return bounds.intersect(Rect::makeWH(maxWidth, maxHeight));
     }
 
-    void Clip::set(const Rect& rect) {
+    void Clip::set(const Rect &rect) {
         this->bounds = rect;
     }
 
-    Rect Clip::intersect(const Rect& rect) const {
+    Rect Clip::intersect(const Rect &rect) const {
         return bounds.intersect(rect);
     }
 
-    bool Clip::contain(const Rect& rect) const {
+    bool Clip::contain(const Rect &rect) const {
         return bounds.contain(rect);
     }
 }

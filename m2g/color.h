@@ -1,9 +1,8 @@
-﻿
+﻿#pragma once
 
-#ifndef M2G_COLOR_H
-#define M2G_COLOR_H
 
 #include <cstdint>
+
 #define R(argb) static_cast<uint8_t>((argb >> 16) & 0xFF)
 #define G(argb) static_cast<uint8_t>((argb >> 8) & 0xFF)
 #define B(argb) static_cast<uint8_t>(argb & 0xFF)
@@ -15,11 +14,11 @@ struct Color {
     uint8_t b;
     uint8_t a;
 
-    Color(): r(0), g(0), b(0), a(0){
+    Color() : r(0), g(0), b(0), a(0) {
 
     }
 
-    Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a): r(r), g(g), b(b), a(a){
+    Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : r(r), g(g), b(b), a(a) {
 
     }
 
@@ -27,7 +26,7 @@ struct Color {
     }
 
 
-    Color& operator = (int argb) {
+    Color &operator=(int argb) {
         r = R(argb);
         g = G(argb);
         b = B(argb);
@@ -35,8 +34,8 @@ struct Color {
         return *this;
     }
 
-    uint8_t* addr8() {
-        return (uint8_t*)this;
+    uint8_t *addr8() {
+        return (uint8_t *) this;
     }
 
     int ToARGB() const {
@@ -50,9 +49,8 @@ struct Color {
 };
 
 
-
 #undef A
 #undef R
 #undef G
 #undef B
-#endif
+

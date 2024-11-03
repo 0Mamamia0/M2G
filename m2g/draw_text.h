@@ -1,10 +1,4 @@
-//
-// Created by Admin on 2023/10/30.
-//
-
-#ifndef M2G_DRAW_TEXT_H__
-#define M2G_DRAW_TEXT_H__
-
+#pragma once
 
 #include <string>
 #include <vector>
@@ -15,8 +9,8 @@
 
 
 namespace m2g {
-    static void draw_glyph(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const Glyph* glyph, int x, int y,
-                           const Font&font, int color) {
+    static void draw_glyph(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, const Glyph *glyph, int x, int y,
+                           const Font &font, int color) {
         if (glyph != nullptr && glyph->bitmap) {
             x += glyph->bounds.left;
             y += glyph->bounds.top;
@@ -26,8 +20,8 @@ namespace m2g {
     }
 
 
-    static void draw_glyph(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const Glyph* glyph, int x, int y,
-                           const Rect&clip, const Font&font, int color) {
+    static void draw_glyph(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, const Glyph *glyph, int x, int y,
+                           const Rect &clip, const Font &font, int color) {
         if (glyph != nullptr && glyph->bitmap) {
             x += glyph->bounds.left;
             y += glyph->bounds.top;
@@ -37,29 +31,30 @@ namespace m2g {
     }
 
 
-    static void draw_char(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, char c, int x, int y, const Font&font,
+    static void draw_char(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, char c, int x, int y, const Font &font,
                           int color) {
         draw_glyph(dst, dst_stride, dst_format, font.getGlyph(c), x, y, font, color);
     }
 
 
-    static void draw_char(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, char c, int x, int y, const Rect&clip,
-                          const Font&font, int color) {
+    static void draw_char(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, char c, int x, int y, const Rect &clip,
+                          const Font &font, int color) {
         draw_glyph(dst, dst_stride, dst_format, font.getGlyph(c), x, y, clip, font, color);
     }
 
 
-    static void draw_glyphs(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const std::vector<const Glyph *>&glyphs,
-                            int x, int y, const Rect&clip, const Font&font, int color) {
+    static void
+    draw_glyphs(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, const std::vector<const Glyph *> &glyphs,
+                int x, int y, const Rect &clip, const Font &font, int color) {
         if (clip.isEmpty()) {
             return;
         }
-        const auto&metrics = font.getFontMetrics();
+        const auto &metrics = font.getFontMetrics();
 
         int x_offset = x;
         int y_offset = y;
-        int top = y_offset - (int)ceil(metrics.ascent);
-        int bottom = y_offset - (int)floor(metrics.descent);
+        int top = y_offset - (int) ceil(metrics.ascent);
+        int bottom = y_offset - (int) floor(metrics.descent);
 
         // const Glyph* invalid = font.getGlyph(65533); // �;
 
@@ -73,7 +68,7 @@ namespace m2g {
 
             //不需要绘制
             for (; iter != glyphs.end(); ++iter) {
-                const auto* current = *iter;
+                const auto *current = *iter;
                 if (current == nullptr || current->empty()) {
                     continue;
                 }
@@ -90,7 +85,7 @@ namespace m2g {
 
             // 绘制和 Left Clip相交的第一个字符
             for (; iter != glyphs.end(); ++iter) {
-                const auto* current = *iter;
+                const auto *current = *iter;
                 if (current == nullptr || current->empty()) {
                     continue;
                 }
@@ -105,7 +100,7 @@ namespace m2g {
 
             //绘制所有不与Clip相交的字符
             for (; iter != glyphs.end(); ++iter) {
-                const auto* current = *iter;
+                const auto *current = *iter;
                 if (current == nullptr || current->empty()) {
                     continue;
                 }
@@ -121,17 +116,16 @@ namespace m2g {
 
             // 绘制和 Left Clip相交的第一个字符
             for (; iter != glyphs.end(); ++iter) {
-                const auto* current = *iter;
+                const auto *current = *iter;
                 if (current == nullptr || current->empty()) {
                     continue;
                 }
                 draw_glyph(dst, dst_stride, dst_format, current, x_offset, y_offset, clip, font, color);
                 break;
             }
-        }
-        else {
+        } else {
             for (auto iter = glyphs.begin(); iter != glyphs.end(); ++iter) {
-                const auto* current = *iter;
+                const auto *current = *iter;
 
                 if (current == nullptr || current->empty()) {
                     continue;
@@ -147,26 +141,15 @@ namespace m2g {
         }
     }
 
-    static void draw_string(uint8_t* dst, ptrdiff_t dst_stride, int dst_format, const char* str, size_t len, int x,
-                            int y, const Rect&clip, const Font&font, int color) {
+    static void draw_string(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, const char *str, size_t len, int x,
+                            int y, const Rect &clip, const Font &font, int color) {
         if (str == nullptr || len == 0) {
             return;
         }
-        std::vector<const Glyph *> glyphs;
-
-        int codepoint;
-        UTFIterator iterator(str, len);
-        while ((codepoint = iterator.next()) != -1) {
-            glyphs.push_back(font.getGlyph(codepoint));
+        std::vector<const Glyph *> glyphs = font.findGlyphs(str, len);
+        if (!glyphs.empty()) {
+            draw_glyphs(dst, dst_stride, dst_format, glyphs, x, y, clip, font, color);
         }
-
-        if (glyphs.empty()) {
-            return;
-        }
-
-        draw_glyphs(dst, dst_stride, dst_format, glyphs, x, y, clip, font, color);
     }
 }
 
-
-#endif //M2G_DRAW_TEXT_H__

@@ -19,7 +19,6 @@ namespace {
 }
 
 static jlong NativeFont_Create(JNIEnv *, jclass, jint face, jint style, jint size) {
-    objects::increase();
     return reinterpret_cast<jlong>(new Font(DEFAULT_TYPEFACE, face, style, size));
 }
 
@@ -52,10 +51,7 @@ static jint NativeFont_StringWidth(JNIEnv* env, jclass, jlong handle, jstring st
 //jint NativeFont_CharsWidth(JNIEnv *, jclass, jlong font, jcharArray chars, jint offset, jint count);
 //jint NativeFont_SubstringWidth(JNIEnv *, jclass, jlong font, jstring str, jint offset, jint count);
 static void NativeFont_Release(JNIEnv *, jclass, jlong handle) {
-    if(auto* font = reinterpret_cast<Font *>(handle)) {
-        delete font;
-        objects::decrease();
-    }
+        delete reinterpret_cast<Font*>(handle);
 }
 
 

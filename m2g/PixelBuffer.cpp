@@ -1,13 +1,10 @@
 ﻿//
-// Created by Admin on 2023/5/26.
-//
 
 
 #include "PixelBuffer.h"
 
 #include <memory>
 #include <cstring>
-#include <iostream>
 #include "PixelFormat.h"
 
 static void Release(m2g::PixelBuffer* buffer, void* pixels) {
@@ -18,12 +15,11 @@ namespace m2g {
     std::shared_ptr<PixelBuffer> PixelBuffer::allocate(int width, int height, int format) {
         int bpp = PixelFormat::getBytePerPixel(format);
         auto* data = new uint8_t[width * height * bpp];
-
         return std::make_shared<PixelBuffer>(data, width, height, format, Release);
     }
 
     std::shared_ptr<PixelBuffer> PixelBuffer::wrap(uint8_t* data, int width, int height, int format, ReleaseFun* fun) {
-        return std::make_shared<PixelBuffer>(data, width, height, format, nullptr);
+        return std::make_shared<PixelBuffer>(data, width, height, format, fun);
     }
 
     std::shared_ptr<PixelBuffer> PixelBuffer::wrap(uint8_t* data, int width, int height, int format, int rowByte,

@@ -1,10 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/27.
-//
-
-#ifndef M2G_RECT_H
-#define M2G_RECT_H
-
+﻿#pragma once
 namespace m2g {
     class Point;
     class Rect {
@@ -47,4 +41,4 @@ namespace m2g {
 }
 
 
-#endif //M2G_RECT_H
+

@@ -1,8 +1,8 @@
 
 
+#include <cstdint>
+#include "draw.h"
 #include "Image.h"
-
-#include <stdint.h>
 #include "Graphics.h"
 #include "PixelBuffer.h"
 
@@ -45,6 +45,7 @@ namespace m2g {
         int image_width = getWidth();
         auto* rgba = pixel->addr<Color*>(x_, y_);
         while (height_ > 0) {
+            piv::pix_copy<piv::pix_order::ARGB>(argb + offset, (uint8_t*)rgba, width_);
             auto* tmp = rgba;
             for (int i = 0; i < width_; i ++) {
                 int value = 0;

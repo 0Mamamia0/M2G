@@ -1,7 +1,4 @@
-﻿
-
-#ifndef M2G_PIXELFORMAT_H
-#define M2G_PIXELFORMAT_H
+﻿#pragma once
 
 enum PixelFormatType {
     GREY       = 0,
@@ -23,4 +20,4 @@ public:
 };
 
 
-#endif //M2G_PIXELFORMAT_H
+

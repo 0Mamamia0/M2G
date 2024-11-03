@@ -1,9 +1,6 @@
-﻿//
-// Created by Admin on 2023/5/27.
-//
+﻿
 
-#ifndef M2G_CLIP_H
-#define M2G_CLIP_H
+#pragma once
 
 #include "Rect.h"
 
@@ -67,4 +64,4 @@ namespace m2g {
 
 
 
-#endif //M2G_CLIP_H
+

@@ -1,9 +1,5 @@
-﻿//
-// Created by Admin on 2023/12/3.
-//
-
-#ifndef M2G_H__
-#define M2G_H__
+﻿
+#pragma once
 
 #include "m2g-def.h"
 #include "Clip.h"
@@ -19,4 +15,3 @@
 #include "UTF8Iterator.h"
 
 
-#endif //M2G_H__

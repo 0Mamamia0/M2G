@@ -1,7 +1,4 @@
-﻿//
-// Created by Admin on 2023/12/3.
-//
-
+﻿
 #ifndef JNI_DEF_H__
 #define JNI_DEF_H__
 

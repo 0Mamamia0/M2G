@@ -1,10 +1,4 @@
-//
-// Created by Admin on 2023/5/23.
-//
-
-#ifndef M2G_GRAPHICS_H
-#define M2G_GRAPHICS_H
-
+#pragma once
 #include <stack>
 #include <memory>
 #include <string>
@@ -31,11 +25,7 @@ namespace m2g {
                 : translate(translate), clip(clip), paintColor(paintColor) {
             }
 
-            State(const State&other)
-                : translate(other.translate)
-                  , clip(other.clip)
-                  , paintColor(other.paintColor) {
-            }
+            State(const State&other) = default;
 
             State(State&&other) noexcept
                 : translate(other.translate)
@@ -151,7 +141,7 @@ namespace m2g {
         void copyArea(int x_src, int y_src, int width_, int height_, int x_dst, int y_dst, int anchor);
 
     private:
-        void translatePoint(int&x, int&y);
+        void translatePoint(int&x, int&y) const;
 
         void translatePoint(int&x, int&y, int width, int height, int anchor);
 
@@ -169,9 +159,12 @@ namespace m2g {
 
         void drawLineAA(int x0, int y0, int x1, int y1);
 
+
+
+
+
         void fillTriangleA(int x0, int y0, int x1, int x2, int y_base);
 
-        void fillTriangleV(int x0, int y0, int x1, int x2, int y_base);
 
     private:
         int width;
@@ -185,4 +178,4 @@ namespace m2g {
 }
 
 
-#endif //M2G_GRAPHICS_H
+

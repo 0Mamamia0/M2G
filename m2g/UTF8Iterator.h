@@ -1,11 +1,4 @@
-//
-// Created by Admin on 2023/10/30.
-//
-
-#ifndef UTF8ITERATOR_H__
-#define UTF8ITERATOR_H__
-
-
+#pragma once
 #include <cstddef>
 #include "strConver.h"
 
@@ -29,8 +22,7 @@ private:
     const char* str;
     size_t len;
     size_t pos;
-
 };
 
 
-#endif //UTF8ITERATOR_H__
+

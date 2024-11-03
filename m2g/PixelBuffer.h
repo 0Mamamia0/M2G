@@ -1,34 +1,55 @@
-﻿#ifndef M2G_PIXELBUFFER_H
-#define M2G_PIXELBUFFER_H
+﻿#pragma once
 
 #include <cstdint>
 #include <memory>
 
 namespace m2g {
     class PixelBuffer {
-        using ReleaseFun =  void(PixelBuffer*, void*);
+        using ReleaseFun = void(PixelBuffer *, void *);
 
     public:
-        static std::shared_ptr<PixelBuffer> allocate(int width, int height, int format);
-        static std::shared_ptr<PixelBuffer> wrap(uint8_t *data, int width, int height, int format, ReleaseFun* fun);
-        static std::shared_ptr<PixelBuffer> wrap(uint8_t *data, int width, int height, int format, int rowByte, ReleaseFun* fun);
+        static std::shared_ptr<PixelBuffer>
+        allocate(int width, int height, int format);
 
+        static std::shared_ptr<PixelBuffer>
+        wrap(uint8_t *data, int width, int height, int format, ReleaseFun *fun = nullptr);
+
+        static std::shared_ptr<PixelBuffer>
+        wrap(uint8_t *data, int width, int height, int format, int rowByte, ReleaseFun *fun = nullptr);
+
+
+
+    public:
         PixelBuffer(const PixelBuffer &other);
+
         PixelBuffer(PixelBuffer &&other) noexcept;
-        PixelBuffer(uint8_t* pixels, int width, int height, int format, ReleaseFun* fun);
-        PixelBuffer(uint8_t* pixels, int width, int height, int format, int rowBytes, ReleaseFun* fun);
+
+        PixelBuffer(uint8_t *pixels, int width, int height, int format, ReleaseFun *fun);
+
+        PixelBuffer(uint8_t *pixels, int width, int height, int format, int rowBytes, ReleaseFun *fun);
+
         ~PixelBuffer();
 
         int getWidth() const;
+
         int getHeight() const;
+
         int getFormat() const;
+
         int getBytePerPixel() const;
+
         int getShiftPerPixel() const;
+
         int getStride() const;
+
         int getRowBytes() const;
+
         int getPaddedRowByte() const;
+
         void erase(int i);
+
         bool hasAlpha() const;
+
         bool isColor() const;
 
 
@@ -60,5 +81,3 @@ namespace m2g {
 
 
 
-
-#endif //M2G_PIXELBUFFER_H

@@ -1,13 +1,9 @@
-//
-// Created by Admin on 2023/5/2.
-//
 
 #include "ImageCodec.h"
 
 
 #include <cstring>
 #include <cassert>
-#include <cstdio>
 #include "stb_image.h"
 #include "m2g-def.h"
 #include "Image.h"
@@ -59,11 +55,11 @@ namespace m2g {
 
     Image* ImageCodec::createImage(Image* src) {
         if (!src->isMutable()) {
-            Image* result = new Image(src->getPixelBuffer(), false);
+            auto* result = new Image(src->getPixelBuffer(), false);
             return result;
         }
         std::shared_ptr<PixelBuffer> copy = std::make_shared<PixelBuffer>(src->getPixelBufferRef());
-        Image* result = new Image(std::move(copy), false);
+        auto* result = new Image(std::move(copy), false);
         return result;
     }
 
@@ -88,10 +84,10 @@ namespace m2g {
     }
 
     Image* ImageCodec::createRGBImage(int32_t* argbData, int width, int height, bool processAlpha) {
-        Image* image = createEmptyImage(width, height, false);
+//        Image* image = createEmptyImage(width, height, false);
         try {
             auto pixel = PixelBuffer::allocate(width, height, PixelFormatType::RGBA_8888);
-            uint8_t* pixels = pixel->addr<uint8_t *>();
+            auto* pixels = pixel->addr<uint8_t *>();
             int pixelsCount = width * height;
             while (pixelsCount-- > 0) {
                 int32_t argb = *argbData++;
@@ -128,7 +124,7 @@ namespace m2g {
     Image* ImageCodec::createImage(int width, int height) {
         Image* image = createEmptyImage(width, height, true);
         if (image != nullptr) {
-            PixelBuffer&pixel = image->getPixelBufferRef();
+            PixelBuffer &pixel = image->getPixelBufferRef();
             pixel.erase(0xFF);
         }
         return image;
@@ -143,8 +139,8 @@ namespace m2g {
 
     static void RTL(uint8_t* dst, uint8_t* rgba, int pixel, ptrdiff_t src_stride) {
         assert(pixel > 0);
-        uint32_t* dst32 = (uint32_t *)dst;
-        uint32_t* src32 = (uint32_t *)rgba;
+        auto* dst32 = (uint32_t *)dst;
+        auto* src32 = (uint32_t *)rgba;
         while (pixel-- > 0) {
             *dst32++ = *src32--;
         }
@@ -153,8 +149,8 @@ namespace m2g {
 
     static void TTB(uint8_t* dst, uint8_t* src, int pixel, ptrdiff_t src_stride) {
         assert(pixel > 0);
-        uint32_t* dst32 = (uint32_t *)dst;
-        uint32_t* src32 = (uint32_t *)src;
+        auto* dst32 = (uint32_t *)dst;
+        auto* src32 = (uint32_t *)src;
 
         ptrdiff_t row_step = src_stride >> 2;
         while (pixel-- > 0) {
@@ -165,8 +161,8 @@ namespace m2g {
 
     static void BTT(uint8_t* dst, uint8_t* src, int pixel, ptrdiff_t src_stride) {
         assert(pixel > 0);
-        uint32_t* dst32 = (uint32_t *)dst;
-        uint32_t* src32 = (uint32_t *)src;
+        auto* dst32 = (uint32_t *)dst;
+        auto* src32 = (uint32_t *)src;
 
         ptrdiff_t row_step = src_stride >> 2;
         while (pixel-- > 0) {
@@ -199,9 +195,8 @@ namespace m2g {
             return nullptr;
         }
 
-        auto&dst_buffer = image->getPixelBufferRef();
-
-        auto&src_buffer = src->getPixelBufferRef();
+        auto &dst_buffer = image->getPixelBufferRef();
+        auto &src_buffer = src->getPixelBufferRef();
         int dst_stride = dst_buffer.getRowBytes();
         int src_stride = src_buffer.getRowBytes();
 
@@ -291,8 +286,8 @@ namespace m2g {
         }
 
 
-        uint8_t* dst_pixels = dst_buffer.addr<uint8_t *>();
-        uint8_t* src_pixels = src_buffer.addr<uint8_t *>(src_x, src_y);
+        auto* dst_pixels = dst_buffer.addr<uint8_t *>();
+        auto* src_pixels = src_buffer.addr<uint8_t *>(src_x, src_y);
 
         while (dst_height-- > 0) {
             opt(dst_pixels, src_pixels, dst_width, src_stride);
