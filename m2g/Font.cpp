@@ -34,7 +34,7 @@ namespace m2g {
         , size(size)
         , typeface(std::move(typeface))
         , metrics{}
-        , ascii_glyph_cache{} {
+        , ascii_glyph_cache{nullptr} {
 
         const stbtt_fontinfo& fontInfo = this->typeface->getFontInfo();
         int ascent, descent, lineGap;
@@ -47,27 +47,29 @@ namespace m2g {
         this->metrics.lineGap = (float)lineGap * scale;
         this->metrics.baseline = metrics.ascent;
 
-        //TODO check this 行高通常通过 ascent + descent + lineGap 来计算
+
         this->metrics.height = metrics.ascent - metrics.descent + metrics.lineGap;
 
 
+
+
         for (int i = 0; i < ascii_glyph_cache.size(); ++i) {
-            auto* glyph = loadGlyph(i + 32);
-            this->ascii_glyph_cache[i] = glyph ? glyph : nullptr;
+            this->ascii_glyph_cache[i] = loadGlyph(i + 32);
         }
     }
 
 
     Font::~Font() {
-        for (int i = 0; i < ascii_glyph_cache.size(); ++i) {
-            auto* glyph = ascii_glyph_cache[i];
+        for (auto* glyph : ascii_glyph_cache) {
             if (glyph != nullptr) {
                 if (glyph->bitmap != nullptr) {
                     stbtt_FreeBitmap(glyph->bitmap, nullptr);
                 }
-                delete glyph;
-                ascii_glyph_cache[i] = nullptr;
             }
+        }
+
+        for (auto* glyph : ascii_glyph_cache) {
+            delete glyph;
         }
 
         for (auto& [fst, glyph] : glyph_cache) {
@@ -75,8 +77,11 @@ namespace m2g {
                 if (glyph->bitmap != nullptr) {
                     stbtt_FreeBitmap(glyph->bitmap, nullptr);
                 }
-                delete glyph;
             }
+        }
+
+        for (auto& [fst, glyph] : glyph_cache) {
+            delete glyph;
         }
         glyph_cache.clear();
     }
@@ -220,16 +225,23 @@ namespace m2g {
     }
 
     int Font::stringWidth(const std::string& str) const {
-        return this->charsWidth(str.c_str(), str.length());
+        return this->charsWidth(str.c_str(), (int)str.length());
     }
 
-    const Font& Font::getDefaultFont() {
-        static std::shared_ptr<Typeface> typeface = Typeface::makeFormFile("/simkai.ttf");
-        static Font font(typeface, FontFace::SYSTEM, FontStyle::BOLD, FontSize::MEDIUM);
-        return font;
-    }
 
     const FontMetrics& Font::getFontMetrics() const {
         return metrics;
+    }
+
+    std::vector<const Glyph*> Font::findGlyphs(const char *str, size_t len) const {
+        std::vector<const Glyph*> glyphs;
+        glyphs.reserve(len * 2);
+        int codepoint;
+
+        UTFIterator iterator(str, len);
+        while ((codepoint = iterator.next()) != -1) {
+            glyphs.push_back(getGlyph(codepoint));
+        }
+        return glyphs;
     }
 }

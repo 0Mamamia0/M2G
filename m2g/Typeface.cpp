@@ -5,8 +5,6 @@
 #include <vector>
 
 
-
-
 std::shared_ptr<Typeface> Typeface::makeFormFile(const char *fileName) {
     std::ifstream file(fileName, std::ios::binary);
     if(file.is_open()) {

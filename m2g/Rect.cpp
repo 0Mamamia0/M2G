@@ -1,11 +1,9 @@
-﻿//
-// Created by Admin on 2023/5/27.
-//
+﻿
 
-#include "Rect.h"
 
 #include <cmath>
 #include "Point.h"
+#include "Rect.h"
 
 namespace m2g {
     template<typename NUM>

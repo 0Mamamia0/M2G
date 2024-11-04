@@ -7,8 +7,11 @@
 #include "draw_image.h"
 #include "draw_text.h"
 #include "color.h"
-#include "m2g.h"
+
 #include "m2g-def.h"
+#include "Image.h"
+#include "Font.h"
+#include "PixelBuffer.h"
 #include "Graphics.h"
 
 namespace {
@@ -39,7 +42,7 @@ namespace {
         }
     }
 
-    int anchorTextX(int anchor, int x, int width, const Font&font) {
+    int anchorTextX(int anchor, int x, int width, const Font &font) {
         switch (anchor & (LEFT | RIGHT | HCENTER)) {
             case RIGHT:
                 return x - width;
@@ -51,23 +54,23 @@ namespace {
         }
     }
 
-    int anchorTextY(int anchor, int y, const Font& font) {
-        const FontMetrics& metrics = font.getFontMetrics();
+    int anchorTextY(int anchor, int y, const Font &font) {
+        const FontMetrics &metrics = font.getFontMetrics();
         switch (anchor & (TOP | BOTTOM | BASELINE | VCENTER)) {
             case BOTTOM:
                 // TODO check
-                y -= (int)(metrics.height / 2.f);
+                y -= (int) (metrics.height / 2.f);
             case VCENTER:
-                y += (int)((metrics.ascent + metrics.descent) / 2.f);
+                y += (int) ((metrics.ascent + metrics.descent) / 2.f);
             case BASELINE:
                 return y;
             case TOP:
             default:
-                return y + (int)metrics.ascent;
+                return y + (int) metrics.ascent;
         }
     }
 
-    bool ValidImage(Image* image, int x, int y, int w, int h) {
+    bool ValidImage(Image *image, int x, int y, int w, int h) {
         return image != nullptr
                && x >= 0
                && y >= 0
@@ -80,53 +83,41 @@ namespace {
 
 
 namespace m2g {
-    Graphics::Graphics(Image* image)
-        : Graphics(image->getPixelBuffer()) {
+    Graphics::Graphics(Image *image)
+            : Graphics(image->getPixelBuffer()) {
     }
 
 
     Graphics::Graphics(std::shared_ptr<PixelBuffer> buffer)
-        :   width(buffer->getWidth())
-          , height(buffer->getHeight())
-          , clip {width, height}
-          , translation{0, 0}
-          , paintColor{0xFF, 0xFF, 0xFF, 0xFF}
-          , buffer(std::move(buffer)) {
+            : width(buffer->getWidth()), height(buffer->getHeight()), clip{width, height}, translation{0, 0},
+              paintColor{0xFF, 0xFF, 0xFF, 0xFF}, buffer(std::move(buffer)) {
     }
 
-    Graphics::Graphics(Image* image, int width, int height)
-        : Graphics(image->getPixelBuffer(), width, height) {
+    Graphics::Graphics(Image *image, int width, int height)
+            : Graphics(image->getPixelBuffer(), width, height) {
     }
 
 
     // TODO Fixed clip to max
     Graphics::Graphics(std::shared_ptr<PixelBuffer> buffer, int width_, int height_)
-        : Graphics(std::move(buffer)) {
+            : Graphics(std::move(buffer)) {
         setClip(0, 0, width_, height_);
     }
 
 
-    Graphics::Graphics(const Graphics& other)
-        :  width(other.width)
-          , height(other.height)
-          , clip(other.clip)
-          , translation(other.translation)
-          , paintColor(other.paintColor)
-          , buffer(other.buffer) {
+    Graphics::Graphics(const Graphics &other)
+            : width(other.width), height(other.height), clip(other.clip), translation(other.translation),
+              paintColor(other.paintColor), buffer(other.buffer) {
     }
 
 
-    Graphics::Graphics(Graphics&& other) noexcept
-        :  width(other.width)
-          , height(other.height)
-          , clip(other.clip)
-          , translation(other.translation)
-          , paintColor(other.paintColor)
-          , buffer(std::move(other.buffer)) {
+    Graphics::Graphics(Graphics &&other) noexcept
+            : width(other.width), height(other.height), clip(other.clip), translation(other.translation),
+              paintColor(other.paintColor), buffer(std::move(other.buffer)) {
     }
 
 
-    void Graphics::setColor(const Color& color) {
+    void Graphics::setColor(const Color &color) {
         this->paintColor = color;
     }
 
@@ -181,8 +172,7 @@ namespace m2g {
 
         if ((x1 >= this->width) || (y1 >= this->height)) {
             clip.setZero();
-        }
-        else {
+        } else {
             int cw = std::clamp(x2 - x1, 0, this->width);
             int ch = std::clamp(y2 - y1, 0, this->height);
             clip.setXYWH(x1, y1, cw, ch);
@@ -227,12 +217,10 @@ namespace m2g {
             Rect rect = clip.intersect(tmp);
             if (rect.isEmpty()) {
                 clip.setZero();
-            }
-            else {
+            } else {
                 clip.set(rect);
             }
-        }
-        else {
+        } else {
             clip.setZero();
         }
     }
@@ -261,24 +249,26 @@ namespace m2g {
     }
 
     void Graphics::setPixel(int x, int y, Color color) {
-        *buffer->addr<Color*>(x, y) = color;
+        *buffer->addr<Color *>(x, y) = color;
     }
 
 
-    void Graphics::drawImage(Image* image, int x, int y, int anchor) {
+    void Graphics::drawImage(Image *image, int x, int y, int anchor) {
         drawImage(image, 0, 0, image->getWidth(), image->getHeight(), x, y, anchor);
     }
 
 
-    void Graphics::drawImage(Image* image, int x_src, int y_src, int w_src, int h_src, int x_dst, int y_dst,
+    void Graphics::drawImage(Image *image, int x_src, int y_src, int w_src, int h_src, int x_dst, int y_dst,
                              int anchor) {
         if (!ValidImage(image, x_src, y_src, w_src, h_src)) {
             return;
         }
         translatePoint(x_dst, y_dst, w_src, h_src, anchor);
-        PixelBuffer&dst_buffer = *buffer;
-        PixelBuffer&src_buffer = image->getPixelBufferRef();
-        drawPixels(dst_buffer.addr<uint8_t *>(), src_buffer.addr<uint8_t *>(), dst_buffer.getRowBytes(),
+        PixelBuffer &dst_buffer = *buffer;
+        PixelBuffer &src_buffer = image->getPixelBufferRef();
+        drawPixels(dst_buffer.addr<uint8_t *>(),
+                   src_buffer.addr<uint8_t *>(),
+                   dst_buffer.getRowBytes(),
                    src_buffer.getRowBytes(),
                    x_dst, y_dst,
                    Rect::makeXYWH(x_src, y_src, w_src, h_src), clip.getDeviceClipBounds(), dst_buffer.getFormat(),
@@ -286,12 +276,11 @@ namespace m2g {
     }
 
 
-    void Graphics::drawRegion(Image* image, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst,
+    void Graphics::drawRegion(Image *image, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst,
                               int y_dst, int anchor) {
         if (transform == 0) {
             drawImage(image, x_src, y_src, w_src, h_src, x_dst, y_dst, anchor);
-        }
-        else {
+        } else {
             int x0 = 0;
             int y0 = 0;
 
@@ -312,15 +301,14 @@ namespace m2g {
                 return;
             }
 
-            auto&src_pixels = image->getPixelBufferRef();
+            auto &src_pixels = image->getPixelBufferRef();
             int src_stride = src_pixels.getStride();
             int dst_stride = buffer->getStride();
 
             if (transform & TRANSFORM_INVERTED_AXES) {
                 w_dst = h_src;
                 h_dst = w_src;
-            }
-            else {
+            } else {
                 w_dst = w_src;
                 h_dst = h_src;
             }
@@ -412,7 +400,7 @@ namespace m2g {
             int h = dst_rect_clip.getHeight();
 
             if (image->getFormat() == RGBA_8888) {
-                auto fun = [](uint32_t* dst, uint32_t* src, int w, int x_step) {
+                auto fun = [](uint32_t *dst, uint32_t *src, int w, int x_step) {
                     while (w-- > 0) {
                         blend1px(dst, src);
                         dst += 1;
@@ -420,16 +408,15 @@ namespace m2g {
                     }
                 };
 
-                uint32_t* src = src_pixels.addr<uint32_t *>(x0, y0);
-                uint32_t* dst = buffer->addr<uint32_t *>(dst_rect_clip.left, dst_rect_clip.top);
+                auto *src = src_pixels.addr<uint32_t *>(x0, y0);
+                auto *dst = buffer->addr<uint32_t *>(dst_rect_clip.left, dst_rect_clip.top);
                 while (h-- > 0) {
                     fun(dst, src, w, x_step);
                     dst += dst_stride;
                     src += y_step;
                 }
-            }
-            else if (image->getFormat() == RGB_888X) {
-                auto fun = [](uint32_t* dst, uint32_t* src, int w, int x_step) {
+            } else if (image->getFormat() == RGB_888X) {
+                auto fun = [](uint32_t *dst, uint32_t *src, int w, int x_step) {
                     while (w-- > 0) {
                         *dst = *src;
                         dst += 1;
@@ -437,8 +424,8 @@ namespace m2g {
                     }
                 };
 
-                uint32_t* src = src_pixels.addr<uint32_t *>(x0, y0);
-                uint32_t* dst = buffer->addr<uint32_t *>(dst_rect_clip.left, dst_rect_clip.top);
+                auto *src = src_pixels.addr<uint32_t *>(x0, y0);
+                auto *dst = buffer->addr<uint32_t *>(dst_rect_clip.left, dst_rect_clip.top);
                 while (h-- > 0) {
                     fun(dst, src, w, x_step);
                     dst += dst_stride;
@@ -449,7 +436,7 @@ namespace m2g {
     }
 
 
-    void Graphics::drawImage(Image* src, int x_dst, int y_dst, int dst_width, int dst_height, int anchor) {
+    void Graphics::drawImage(Image *src, int x_dst, int y_dst, int dst_width, int dst_height, int anchor) {
         if (src == nullptr || dst_width <= 0 || dst_height <= 0) {
             return;
         }
@@ -464,8 +451,8 @@ namespace m2g {
 
         translatePoint(x_dst, y_dst, src_width, src_height, anchor);
 
-        PixelBuffer&dst_buffer = *buffer;
-        PixelBuffer&src_buffer = src->getPixelBufferRef();
+        PixelBuffer &dst_buffer = *buffer;
+        PixelBuffer &src_buffer = src->getPixelBufferRef();
         drawPixelsScale(dst_buffer.addr<uint8_t *>(), src_buffer.addr<uint8_t *>(), dst_buffer.getRowBytes(),
                         src_buffer.getRowBytes(),
                         Rect::makeXYWH(x_dst, y_dst, dst_width, dst_height), Rect::makeWH(src_width, src_height),
@@ -475,32 +462,20 @@ namespace m2g {
 
     inline void Graphics::drawLineV(int x, int y0, int y1) {
         if (clip.clipLineV(x, y0, y1)) {
-            if (y0 == y1) {
-                drawPixel(x, y0);
-                return;
-            }
-            else if (y0 > y1) {
-                std::swap(y0, y1);
-            }
-            do {
-                drawPixel(x, y0);
-                y0++;
-            }
-            while (y0 != y1);
+            int count = y1 - y0;
+            count += count < 0 ? -1 : 1;
+            auto *begin = buffer->addr<uint8_t *>(x, y0);
+            auto stride = buffer->getPaddedRowByte();
+            blitLineV(begin, count, stride, paintColor.addr8());
         }
     }
 
     inline void Graphics::drawLineH(int x0, int x1, int y) {
         if (clip.clipLineH(x0, x1, y)) {
-            if (x0 == x1) {
-                drawPixel(x0, x1);
-                return;
-            }
-            else if (x0 > x1) {
-                std::swap(x0, x1);
-            }
-            auto* start = buffer->addr<uint8_t *>(x0, y);
-            blitH(start, x1 - x0 + 1, (uint8_t *)&paintColor);
+            int count = x1 - x0;
+            count += count < 0 ? -1 : 1;
+            auto *begin = buffer->addr<uint8_t *>(x0, y);
+            blitLineH(begin, count, paintColor.addr8());
         }
     }
 
@@ -508,9 +483,9 @@ namespace m2g {
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
         int err = dx - dy, e2, x2; /* error value e_xy */
-        int ed = dx + dy == 0 ? 1 : std::sqrt((float)dx * dx + (float)dy * dy);
+        int ed = dx + dy == 0 ? 1 : std::sqrt((float) dx * dx + (float) dy * dy);
 
-        for (; ;) {
+        for (;;) {
             /* pixel loop */
             drawPixelAlpha(x0, y0, 255 - (255 * abs(err - dx + dy) / ed));
             e2 = err;
@@ -564,26 +539,25 @@ namespace m2g {
         // }
 
 
-        if(clip.clipLineB(x0, y0, x1, y1)) {
+        if (clip.clipLineB(x0, y0, x1, y1)) {
             drawLineAA(x0, y0, x1, y1);
         }
     }
 
 
     void Graphics::drawRect(int x, int y, int w, int h) {
-        // TODO FIXME
 
         if (clip.isEmpty() || w < 0 || h < 0)
             return;
-        translatePoint(x, y);
-
-        int x1 = x + w;
-        int y1 = y + h;
 
         if (w == 0 && h == 0) {
             drawPoint(x, y);
             return;
         }
+
+        translatePoint(x, y);
+        int x1 = x + w;
+        int y1 = y + h;
 
         drawLineH(x, x1, y);
         drawLineV(x, y, y1);
@@ -605,26 +579,21 @@ namespace m2g {
         bool xe = x0 == x1;
         bool ye = y0 == y1;
         if (xe && ye) {
-            drawPoint(x0, y0);
-        }
-        else if (xe) {
+            drawPixel(x0, y0);
+        } else if (xe) {
             drawLineV(x0, y0, y1);
-        }
-        else if (ye) {
+        } else if (ye) {
             drawLineH(x0, x1, y0);
-        }
-        else {
+        } else {
             drawLineB(x0, y0, x1, y1);
         }
     }
 
 
-    // TODO fixe tx ty
     void Graphics::drawPoint(int x, int y) {
         drawPoint({x, y});
     }
 
-    // TODO fixe tx ty
     void Graphics::drawPoint(Point point) {
         if (clip.contain(point)) {
             drawPixel(point.x, point.y);
@@ -636,19 +605,18 @@ namespace m2g {
     }
 
 
-    void Graphics::clear(const Color& color) {
-        auto* pixel = buffer->addr<uint8_t *>();
+    void Graphics::clear(const Color &color) {
+        auto *pixel = buffer->addr<uint8_t *>();
         ptrdiff_t stride_ = buffer->getRowBytes();
 
         if (stride_ == width * 4) {
-            blitH(pixel, width * height, (uint8_t *)&color);
-        }
-        else {
-            blitRect(pixel, width, height, stride_, (uint8_t *)&color);
+            blitH(pixel, width * height, (uint8_t *) &color);
+        } else {
+            blitRect(pixel, width, height, stride_, (uint8_t *) &color);
         }
     }
 
-    void Graphics::drawRect(const Rect&rect) {
+    void Graphics::drawRect(const Rect &rect) {
         drawRect(rect.left, rect.top, rect.getWidth(), rect.getHeight());
     }
 
@@ -661,8 +629,7 @@ namespace m2g {
         if (w == 1) {
             drawLineV(x, y, y + h - 1);
             return;
-        }
-        else if (h == 1) {
+        } else if (h == 1) {
             drawLineH(x, x + w - 1, y);
             return;
         }
@@ -670,7 +637,7 @@ namespace m2g {
     }
 
 
-    void Graphics::fillRect(const Rect&rect) {
+    void Graphics::fillRect(const Rect &rect) {
         if (rect.isEmpty())
             return;
 
@@ -688,10 +655,10 @@ namespace m2g {
         int w = bound.getWidth();
         int h = bound.getHeight();
 
-        auto* pixel = buffer->addr<uint8_t *>(x, y);
+        auto *pixel = buffer->addr<uint8_t *>(x, y);
         ptrdiff_t stride_ = buffer->getRowBytes();
 
-        blitRect(pixel, w, h, stride_, (uint8_t *)&paintColor);
+        blitRect(pixel, w, h, stride_, (uint8_t *) &paintColor);
     }
 
     void Graphics::drawCircle(int centerX, int centerY, int r) {
@@ -730,8 +697,7 @@ namespace m2g {
                 }
                 err += ++y * 2 + 1;
             }
-        }
-        while (x < 0);
+        } while (x < 0);
 
 
         //    int y = r;
@@ -775,8 +741,7 @@ namespace m2g {
             if (p < 0) {
                 // 中点在园内
                 p += 2 * x + 1;
-            }
-            else {
+            } else {
                 // 中点在圆外或圆上
                 y -= 1;
                 p += 2 * (x - y) + 1;
@@ -797,7 +762,7 @@ namespace m2g {
 
         Rect src_area = Rect::makeXYWH(x_src, y_src, width_, height_);
         if (src_area.isEmpty() || src_area.left < 0 || src_area.top < 0 || src_area.right > width || src_area.bottom >
-            height)
+                                                                                                     height)
             return;
 
         Rect dst_area = Rect::makeXYWH(x_dst, y_dst, width_, height_);
@@ -813,19 +778,19 @@ namespace m2g {
         src_area = Rect::makeXYWH(x_src + cx, y_src + cy, cw, ch);
 
 
-        auto* pixel = buffer->addr<uint8_t *>();
+        auto *pixel = buffer->addr<uint8_t *>();
         ptrdiff_t stride_ = buffer->getRowBytes();
         ::copyArea(pixel, stride_, dst_area, src_area);
     }
 
     void Graphics::drawPixelAlpha(int x, int y, int alpha) {
-        uint8_t* pixels = buffer->addr<uint8_t *>(x, y);
-        blendA8(pixels, alpha, (uint8_t *)&paintColor);
+        auto *pixels = buffer->addr<uint8_t *>(x, y);
+        blendA8(pixels, alpha, (uint8_t *) &paintColor);
     }
 
 
-    void Graphics::drawChar(char c, int x, int y, int anchor, const Font&font) {
-        auto* pixel = buffer->addr<uint8_t *>();
+    void Graphics::drawChar(char c, int x, int y, int anchor, const Font &font) {
+        auto *pixel = buffer->addr<uint8_t *>();
         ptrdiff_t stride = buffer->getRowBytes();
         int format = buffer->getFormat();
         translatePoint(x, y);
@@ -835,19 +800,19 @@ namespace m2g {
         draw_char(pixel, stride, format, c, x, y, clip.getDeviceClipBounds(), font, paintColor.ToARGB());
     }
 
-    void Graphics::drawString(const std::string& str, int x, int y, int anchor, const Font& font) {
+    void Graphics::drawString(const std::string &str, int x, int y, int anchor, const Font &font) {
         this->drawString(str.c_str(), str.length(), x, y, anchor, font);
     }
 
 
-    void Graphics::drawString(const char* str, int x, int y, int anchor, const Font& font) {
-        if(str != nullptr) {
+    void Graphics::drawString(const char *str, int x, int y, int anchor, const Font &font) {
+        if (str != nullptr) {
             this->drawString(str, strlen(str), x, y, anchor, font);
         }
     }
 
 
-    void Graphics::drawString(const char* str, size_t len, int x, int y, int anchor, const Font& font) {
+    void Graphics::drawString(const char *str, size_t len, int x, int y, int anchor, const Font &font) {
         if (str == nullptr) {
             return;
         }
@@ -861,7 +826,7 @@ namespace m2g {
         int y_offset = y;
 
         translatePoint(x_offset, y_offset);
-        x_offset = anchorTextX(anchor, x_offset, font.charsWidth(str, (int)len), font);
+        x_offset = anchorTextX(anchor, x_offset, font.charsWidth(str, (int) len), font);
         y_offset = anchorTextY(anchor, y_offset, font);
 
 
@@ -876,50 +841,26 @@ namespace m2g {
         drawLine(x1, y1, x2, y2);
     }
 
+
     void Graphics::fillTriangleA(int x0, int y0, int x1, int x2, int y_base) {
         int dx1 = x1 - x0;
         int dx2 = x2 - x0;
         int dy = abs(y_base - y0);
 
-
-        float k1 = dy / (float)dx1;
-        float k2 = dy / (float)dx2;
-        int sy = 1;
-        float sx1 = 1 / k1;
-        float sx2 = 1 / k2;
-        float f1 = x0;
-        float f2 = x0;
-
-        while (y0 != y_base) {
-            f1 += sx1;
-            f2 += sx2;
-
-            y0 += sy;
-            drawLineH(round(f1), round(f2), y0);
-        }
-    }
-
-
-    void Graphics::fillTriangleV(int x0, int y0, int x1, int x2, int y_base) {
-        int dx1 = x1 - x0;
-        int dx2 = x2 - x0;
-        int dy = abs(y_base - y0);
-
-
-        float k1 = dy / (float)dx1;
-        float k2 = dy / (float)dx2;
-        int sy = 1;
+        int sy = y_base > y0 ? 1 : -1;
+        float k1 = (float) dy / (float) dx1;
+        float k2 = (float) dy / (float) dx2;
         float sx1 = -1 / k1;
         float sx2 = -1 / k2;
-        float f1 = x1;
-        float f2 = x2;
+        auto f1 = (float) x1;
+        auto f2 = (float) x2;
 
         while (y_base != y0) {
             f1 += sx1;
             f2 += sx2;
 
-            y_base += sy;
-            drawLineH(roundf(f1), roundf(f2), y_base);
+            y0 += sy;
+            drawLineH((int) roundf(f1), (int) roundf(f2), y0);
         }
     }
 
@@ -948,30 +889,27 @@ namespace m2g {
 
         if (y0 == y2) {
             return;
-        }
-        else if (y0 == y1) {
-            fillTriangleV(x2, y2, x0, x1, y0);
-        }
-        else if (y1 == y2) {
+        } else if (y0 == y1) {
+            fillTriangleA(x2, y2, x0, x1, y0);
+        } else if (y1 == y2) {
             fillTriangleA(x0, y0, x1, x2, y1);
-        }
-        else {
+        } else {
             int mid_x = static_cast<int>(x0 + (static_cast<double>(y1 - y0) / static_cast<double>(y2 - y0)) * (
-                                             x2 - x0));
+                    x2 - x0));
             int mid_y = y1;
 
             fillTriangleA(x0, y0, x1, mid_x, mid_y);
-            fillTriangleV(x2, y2, x1, mid_x, mid_y);
+            fillTriangleA(x2, y2, x1, mid_x, mid_y);
         }
     }
 
 
-    void Graphics::translatePoint(int&x, int&y) {
+    void Graphics::translatePoint(int &x, int &y) const {
         x += translation.x;
         y += translation.y;
     }
 
-    void Graphics::translatePoint(int&x, int&y, int width_, int height_, int anchor) {
+    void Graphics::translatePoint(int &x, int &y, int width_, int height_, int anchor) {
         translatePoint(x, y);
         x = anchorX(anchor, x, width_);
         y = anchorY(anchor, y, height_);
@@ -979,19 +917,6 @@ namespace m2g {
 
     int Graphics::getColor() {
         return paintColor.ToARGB();
-    }
-
-    static void ellipsePlotPoints(Graphics* graphics, double centerX, double centerY, int x, int y) {
-        graphics->drawPoint(centerX + x, centerY + y);
-        // 对称点
-        graphics->drawPoint(centerX - x, centerY + y);
-
-        graphics->drawPoint(centerX + x, centerY - y);
-        graphics->drawPoint(centerX - x, centerY - y);
-
-
-        graphics->drawLine(centerX + x, centerY + y, centerX - x, centerY + y);
-        graphics->drawLine(centerX + x, centerY - y, centerX - x, centerY - y);
     }
 
 
@@ -1015,8 +940,7 @@ namespace m2g {
                 if (!fill) {
                     fun(cx, cy, x, y);
                 }
-            }
-            else {
+            } else {
                 y--;
                 py -= 2 * rx2;
                 p += ry2 + px - py;
@@ -1031,8 +955,7 @@ namespace m2g {
             py -= 2 * rx2;
             if (p > 0) {
                 p += rx2 - py;
-            }
-            else {
+            } else {
                 x++;
                 px += 2 * ry2;
                 p += rx2 - py + px;
@@ -1044,42 +967,48 @@ namespace m2g {
     void Graphics::drawArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
         translatePoint(x_, y_);
 
-        int radiusX = w / 2;
-        int radiusY = h / 2;
-        double centerX = x_ + radiusX;
-        double centerY = y_ + radiusY;
+        float radiusX = (float) w / 2.f;
+        float radiusY = (float) h / 2.f;
+        float centerX = (float) x_ + radiusX;
+        float centerY = (float) y_ + radiusY;
+        auto cx = static_cast<int>(std::roundf(centerX));
+        auto cy = static_cast<int>(std::roundf(centerY));
+        auto rx = static_cast<int>(std::roundf(radiusX));
+        auto ry = static_cast<int>(std::roundf(radiusY));
 
-        auto fun = [this](double centerX, double centerY, int x, int y) {
-            this->drawPoint(centerX + x, centerY + y);
-            this->drawPoint(centerX - x, centerY + y);
-            this->drawPoint(centerX + x, centerY - y);
-            this->drawPoint(centerX - x, centerY - y);
+        auto fun = [this](int cx, int cy, int x, int y) {
+            this->drawPoint(cx + x, cy + y);
+            this->drawPoint(cx - x, cy + y);
+            this->drawPoint(cx + x, cy - y);
+            this->drawPoint(cx - x, cy - y);
         };
-
-        arcRun<false>(centerX, centerY, radiusX, radiusY, fun);
+        arcRun<false>(cx, cy, rx, ry, fun);
     }
 
     void Graphics::fillArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
         translatePoint(x_, y_);
 
-        int radiusX = w / 2;
-        int radiusY = h / 2;
-        double centerX = x_ + radiusX;
-        double centerY = y_ + radiusY;
+        float radiusX = (float) w / 2.f;
+        float radiusY = (float) h / 2.f;
+        float centerX = (float) x_ + radiusX;
+        float centerY = (float) y_ + radiusY;
+        auto cx = static_cast<int>(std::roundf(centerX));
+        auto cy = static_cast<int>(std::roundf(centerY));
+        auto rx = static_cast<int>(std::roundf(radiusX));
+        auto ry = static_cast<int>(std::roundf(radiusY));
 
-        auto fun = [this](double centerX, double centerY, int x, int y) {
-            this->drawLineH(centerX - x, centerX + x, centerY - y);
-            this->drawLineH(centerX - x, centerX + x, centerY + y);
+        auto fun = [this](int cx, int cy, int x, int y) {
+            this->drawLineH(cx - x, cx + x, cy - y);
+            this->drawLineH(cx - x, cx + x, cy + y);
         };
-
-        arcRun<true>(centerX, centerY, radiusX, radiusY, fun);
+        arcRun<false>(cx, cy, rx, ry, fun);
     }
 
     int Graphics::save() {
         states.emplace(
-            translation,
-            clip.getClipBounds(),
-            paintColor
+                translation,
+                clip.getClipBounds(),
+                paintColor
         );
         return states.size() - 1;
     }
@@ -1096,7 +1025,7 @@ namespace m2g {
         while (states.size() > count + 1) {
             states.pop();
         }
-        auto& state = states.top();
+        auto &state = states.top();
         this->translation = state.translate;
         this->clip.set(state.clip);
         this->paintColor = state.paintColor;
@@ -1105,7 +1034,7 @@ namespace m2g {
     }
 
 
-    void Graphics::drawRGB(int* rgbData, int dataLength, int offset, int scanLength,
+    void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
                            int x, int y, int width_, int height_,
                            bool processAlpha) {
         if (clip.isEmpty() || width <= 0 || height <= 0) {
@@ -1122,11 +1051,9 @@ namespace m2g {
 
         if constexpr (std::endian::native == std::endian::little) {
             src_format = processAlpha ? BGRA_8888 : BGRX_8888;
-        }
-        else if constexpr (std::endian::native == std::endian::big) {
+        } else if constexpr (std::endian::native == std::endian::big) {
             src_format = processAlpha ? ARGB_8888 : XRGB_8888;
-        }
-        else {
+        } else {
             // assert(false);
         }
 
@@ -1137,8 +1064,8 @@ namespace m2g {
         int x0 = dst_rect_clip.left - x;
         int y0 = dst_rect_clip.top - y;
 
-        auto* dst_pixels = buffer->addr<uint8_t *>(dst_rect_clip.left, dst_rect_clip.top);
-        auto* src_pixels = reinterpret_cast<uint8_t *>(rgbData) + (y0 * scanLength) + x0 * bpp;
+        auto *dst_pixels = buffer->addr<uint8_t *>(dst_rect_clip.left, dst_rect_clip.top);
+        auto *src_pixels = reinterpret_cast<uint8_t *>(rgbData) + (y0 * scanLength) + x0 * bpp;
         drawPixels(dst_pixels, src_pixels, buffer->getRowBytes(), scanLength * bpp, width_ - x0, height_ - y0,
                    RGBA_8888, src_format);
     }

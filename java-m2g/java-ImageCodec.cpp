@@ -1,6 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/28.
-//
+﻿
 
 #include <array>
 #include "jni_def.h"
@@ -14,7 +12,6 @@ using namespace m2g;
 
 jlong NativeImageCodec_CreateImageWH(JNIEnv *, jclass, jint width, jint height) {
     if(auto* image = ImageCodec::createImage(width, height)) {
-        objects::increase();
         return reinterpret_cast<jlong>(image);
     }
     return 0;
@@ -22,14 +19,12 @@ jlong NativeImageCodec_CreateImageWH(JNIEnv *, jclass, jint width, jint height) 
 
 jlong NativeImageCodec_CreateImageFormImage(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
-        objects::increase();
         return reinterpret_cast<jlong>(ImageCodec::createImage(image));
     }
     return 0;
 }
 
 jlong NativeImageCodec_CreateImageFromData(JNIEnv *env, jclass, jbyteArray imageData, jint imageOffset, jint imageLength) {
-    objects::increase();
     jbyte* data = jniGetByteArrayElements(env, imageData, nullptr);
     Image* image = ImageCodec::loadImage(reinterpret_cast<unsigned char *> (data), imageOffset, imageLength);
     jniReleaseByteArrayElements(env, imageData, data, JNI_ABORT);
@@ -47,7 +42,6 @@ jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint w
 
 jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
-        objects::increase();
         return reinterpret_cast<jlong>(ImageCodec::createImage(image, x, y, width, height, transform));
     }
     return 0L;

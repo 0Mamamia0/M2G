@@ -1,6 +1,4 @@
-//
-// Created by Admin on 2024/9/10.
-//
+
 
 #include "M2G_OnLoad.h"
 

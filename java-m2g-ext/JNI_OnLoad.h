@@ -1,6 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/28.
-//
+﻿
 
 #ifndef JNI_ONLOAD_H
 #define JNI_ONLOAD_H

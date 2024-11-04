@@ -1,6 +1,4 @@
-//
-// Created by Admin on 2023/12/1.
-//
+
 
 #include "jni_def.h"
 #include <array>
@@ -19,12 +17,10 @@ namespace {
 #else
     std::shared_ptr<Typeface> DEFAULT_TYPEFACE = Typeface::makeFormFile("D:\\Project\\C\\SimpleM2G\\bin\\simkai.ttf");
 #endif
-
 }
 
 
 static jlong NativeFont_Create(JNIEnv *, jclass, jint face, jint style, jint size) {
-    objects::increase();
     return reinterpret_cast<jlong>(new Font(DEFAULT_TYPEFACE, face, style, size));
 }
 
@@ -59,7 +55,6 @@ static jint NativeFont_StringWidth(JNIEnv* env, jclass, jlong handle, jstring st
 static void NativeFont_Release(JNIEnv *, jclass, jlong handle) {
     if(auto* font = reinterpret_cast<Font *>(handle)) {
         delete font;
-        objects::decrease();
     }
 }
 

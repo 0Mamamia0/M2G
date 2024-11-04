@@ -1,9 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/30.
-//
-
-#include "PixelFormat.h"
-
+﻿#include "PixelFormat.h"
 
 int PixelFormat::getBytePerPixel(int format) {
     switch (format) {
@@ -27,11 +22,20 @@ int PixelFormat::getBytePerPixel(int format) {
 
 int PixelFormat::shiftPerPixel(int format) {
     switch (format) {
-        case GREY:       return 0;
-        case GREY_ALPHA: return 1;
-        case ALPHA_8:    return 0;
-        case RGB_888X:   return 2;
-        case RGBA_8888:  return 2;
-        default:         return 0;
+        case GREY:
+            return 0;
+        case GREY_ALPHA:
+            return 1;
+        case ALPHA_8:
+            return 0;
+        case RGB_888X:
+        case RGBA_8888:
+        case ARGB_8888:
+        case XRGB_8888:
+        case BGRA_8888:
+        case BGRX_8888:
+            return 2;
+        default:
+            return 0;
     }
 }

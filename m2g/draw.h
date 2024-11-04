@@ -1,61 +1,39 @@
-﻿//
-// Created by Admin on 2023/10/16.
-//
+﻿#pragma once
+#include <bit>
+#include <cstring>
 
-#ifndef M2G_DRAW_H
-#define M2G_DRAW_H
-
-
+#include "blit.h"
 #include "color.h"
 #include "Rect.h"
 #include "PixelFormat.h"
 
 
 namespace m2g {
-    inline void blitV(uint8_t* begin, int height, ptrdiff_t stride, uint8_t* rgba) {
-        while (height-- > 0) {
-            memcpy(begin, rgba, 4);
-            begin += stride;
-        }
-    }
-
-    inline void blitH(uint8_t* begin, int width, uint8_t* rgba) {
-        while (width-- > 0) {
-            memcpy(begin, rgba, 4);
-            begin += 4;
-        }
-    }
-
-    inline void blitRect(uint8_t* begin, int width, int height, ptrdiff_t stride, uint8_t* rgba) {
-        while (height-- > 0) {
-            blitH(begin, width, rgba);
-            begin += stride;
-        }
-    }
 
 
-    inline void copyLTR(uint8_t* dst, uint8_t* src, int pixel) {
+
+    inline void copyLTR(uint8_t *dst, uint8_t *src, int pixel) {
         memcpy(dst, src, pixel << 2);
     }
 
 
-    inline void copyRTL(uint8_t* dst, uint8_t* rgba, int pixel) {
-        uint32_t* begin32 = (uint32_t *)dst;
-        uint32_t* rgba32 = (uint32_t *)rgba;
+    inline void copyRTL(uint8_t *dst, uint8_t *rgba, int pixel) {
+        auto *begin32 = (uint32_t *) dst;
+        auto *rgba32 = (uint32_t *) rgba;
         while (pixel-- > 0) {
             *begin32++ = *rgba32--;
         }
     }
 
 
-    inline void copyTTB(uint32_t* begin, int width, int step, uint32_t* rgba) {
+    inline void copyTTB(uint32_t *begin, int width, int step, uint32_t *rgba) {
         while (width-- > 0) {
             *begin++ = *rgba;
             rgba += step;
         }
     }
 
-    inline void copyBTT(uint32_t* begin, int width, int step, uint32_t* rgba) {
+    inline void copyBTT(uint32_t *begin, int width, int step, uint32_t *rgba) {
         while (width-- > 0) {
             *begin++ = *rgba;
             rgba -= step;
@@ -63,7 +41,8 @@ namespace m2g {
     }
 
 
-    inline void copyRect(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width,
+    inline void copyRect(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
+                         int width,
                          int height) {
         while (height-- > 0) {
             copyLTR(dst, src, width);
@@ -74,14 +53,47 @@ namespace m2g {
 
 
     namespace piv {
+
+
+        enum pix_order {
+            ARGB,
+            RGBA,
+            BGRA
+        };
+
+        template<int R, int G, int B, int A>
+        void pix_copy(uint8_t *dst, const uint8_t *src, int n) {
+            while (n-- > 0) {
+                dst[0] = src[R];
+                dst[1] = src[G];
+                dst[2] = src[B];
+                dst[3] = 0xFF;
+                dst += 4;
+                src += 4;
+            }
+        }
+
+        template<int order>
+        void pix_copy(int32_t *dst, const uint8_t *src, int n) {
+
+            if constexpr (order == pix_order::ARGB) {
+                if constexpr (std::endian::native == std::endian::little) {
+                    pix_copy<0, 1, 2, 3>((uint8_t *) dst, src, n);
+                } else {
+                    pix_copy<3, 2, 1, 0>((uint8_t *) dst, src, n);
+                }
+            } 
+
+        }
+
+
         template<bool flip>
-        void line_copy(uint8_t* dst, uint8_t* src, int pixel) {
+        void line_copy(uint8_t *dst, uint8_t *src, int pixel) {
             if (!flip) {
                 memcpy(dst, src, pixel << 2);
-            }
-            else {
-                uint32_t* dst32 = (uint32_t *)dst;
-                uint32_t* src32 = (uint32_t *)src + pixel;
+            } else {
+                auto *dst32 = (uint32_t *) dst;
+                auto *src32 = (uint32_t *) src + pixel;
                 while (pixel-- > 0) {
                     *dst32++ = *--src32;
                 }
@@ -89,9 +101,8 @@ namespace m2g {
         }
 
 
-
         template<bool x_flip, bool y_flip>
-        void rect_copy(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
+        void rect_copy(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width, int height) {
             if (y_flip) {
                 src = src + (height - 1) * src_stride;
                 src_stride = -src_stride;
@@ -105,11 +116,11 @@ namespace m2g {
         }
 
 
-        inline void line_move(uint8_t* dst, uint8_t* src, int pixel) {
+        inline void line_move(uint8_t *dst, uint8_t *src, int pixel) {
             memmove(dst, src, pixel << 2);
         }
 
-        inline void rect_move(uint8_t* dst, uint8_t* src, ptrdiff_t stride, int width, int height) {
+        inline void rect_move(uint8_t *dst, uint8_t *src, ptrdiff_t stride, int width, int height) {
             while (height-- > 0) {
                 line_move(dst, src, width);
                 dst += stride;
@@ -119,7 +130,7 @@ namespace m2g {
     }
 
 
-    inline void copyArea(uint8_t* pixels, ptrdiff_t stride, const m2g::Rect&dst_area, const m2g::Rect&src_area) {
+    inline void copyArea(uint8_t *pixels, ptrdiff_t stride, const m2g::Rect &dst_area, const m2g::Rect &src_area) {
         // assert(dst_area.getWidth() == src_area.getWidth());
         // assert(dst_area.getHeight() == src_area.getHeight());
         // assert(dst_area.getWidth() > 0 && dst_area.getHeight() > 0);
@@ -128,33 +139,30 @@ namespace m2g {
         int height = dst_area.getHeight();
         ptrdiff_t src_offset = (src_area.top * stride) + (src_area.left * 4);
         ptrdiff_t dst_offset = (dst_area.top * stride) + (dst_area.left * 4);
-        uint8_t* dst = pixels + dst_offset;
-        uint8_t* src = pixels + src_offset;
+        uint8_t *dst = pixels + dst_offset;
+        uint8_t *src = pixels + src_offset;
 
 
         if (src_area.contain(dst_area)) {
             if (src_area.top == dst_area.top) {
                 piv::rect_move(dst, src, stride, width, height);
-            }
-            else if (src_area.top < dst_area.top) {
+            } else if (src_area.top < dst_area.top) {
                 dst = dst + (height - 1) * stride;
                 src = src + (height - 1) * stride;
                 stride = -stride;
                 piv::rect_copy<false, false>(dst, src, stride, stride, width, height);
-            }
-            else {
+            } else {
                 piv::rect_copy<false, false>(dst, src, stride, stride, width, height);
             }
-        }
-        else {
+        } else {
             piv::rect_copy<false, false>(dst, src, stride, stride, width, height);
         }
     }
 
 
-    inline void blend1px(void* dst_, void* src_) {
-        uint8_t* dst = (uint8_t *)dst_;
-        uint8_t* src = (uint8_t *)src_;
+    inline void blend1px(void *dst_, void *src_) {
+        auto *dst = (uint8_t *) dst_;
+        auto *src = (uint8_t *) src_;
 
 
         int alpha = src[3];
@@ -176,54 +184,55 @@ namespace m2g {
     }
 
 
-    inline void blend_n(void* dst_, void* src_, int count) {
-        uint32_t* dst = (uint32_t *)dst_;
-        uint32_t* src = (uint32_t *)src_;
+    inline void blend_n(void *dst_, void *src_, int count) {
+        auto *dst = (uint32_t *) dst_;
+        auto *src = (uint32_t *) src_;
 
         if (count > 0) {
             int time = count / 8;
             int c = count % 8;
             switch (c) {
-                    do {
-                    case 8: blend1px(dst++, src++); // 0
-                    case 7: blend1px(dst++, src++);
-                    case 6: blend1px(dst++, src++);
-                    case 5: blend1px(dst++, src++);
-                    case 4: blend1px(dst++, src++);
-                    case 3: blend1px(dst++, src++);
-                    case 2: blend1px(dst++, src++);
-                    case 1: blend1px(dst++, src++);
-                    default: ;
-                    }
-                    while (time-- > 0);
+                do {
+                    case 8:
+                        blend1px(dst++, src++); // 0
+                    case 7:
+                        blend1px(dst++, src++);
+                    case 6:
+                        blend1px(dst++, src++);
+                    case 5:
+                        blend1px(dst++, src++);
+                    case 4:
+                        blend1px(dst++, src++);
+                    case 3:
+                        blend1px(dst++, src++);
+                    case 2:
+                        blend1px(dst++, src++);
+                    case 1:
+                        blend1px(dst++, src++);
+                    default:;
+                } while (time-- > 0);
             }
         }
 
-
-        //    for (int i = 0 ; i  < count; i++ ) {
-        //        blend1px(dst, src);
-        //        dst += 4;
-        //        src += 4;
-        //    }
     }
 
 
-    inline void blendA8(uint8_t* dst, uint8_t a8, uint8_t* rgba) {
+    inline void blendA8(uint8_t *dst, uint8_t a8, uint8_t *rgba) {
         if (a8 == 0xFF) {
             memcpy(dst, rgba, 4);
         } else if (a8 != 0x0) {
-            int alpha = (int)a8;
+            int alpha = (int) a8;
             int invAlpha = 0xFF - alpha;
 
-            dst[0] = (uint8_t)((rgba[0] * alpha + dst[0] * invAlpha) >> 8);
-            dst[1] = (uint8_t)((rgba[1] * alpha + dst[1] * invAlpha) >> 8);
-            dst[2] = (uint8_t)((rgba[2] * alpha + dst[2] * invAlpha) >> 8);
+            dst[0] = (uint8_t) ((rgba[0] * alpha + dst[0] * invAlpha) >> 8);
+            dst[1] = (uint8_t) ((rgba[1] * alpha + dst[1] * invAlpha) >> 8);
+            dst[2] = (uint8_t) ((rgba[2] * alpha + dst[2] * invAlpha) >> 8);
             dst[3] = 0xFF;
         }
     }
 
 
-    inline void blendA8_span(uint8_t* dst, const uint8_t* src, uint8_t* rgba, int count) {
+    inline void blendA8_span(uint8_t *dst, const uint8_t *src, uint8_t *rgba, int count) {
         for (int i = 0; i < count; ++i) {
             blendA8(dst, *src, rgba);
             src++;
@@ -231,11 +240,11 @@ namespace m2g {
         }
     }
 
-    static void blendA8_8(uint8_t* dst, const uint8_t* src, uint8_t* rgba) {
-        uint64_t s = *(uint64_t *)src;
+    static void blendA8_8(uint8_t *dst, const uint8_t *src, uint8_t *rgba) {
+        uint64_t s = *(uint64_t *) src;
         if (s == 0xFFFFFFFFFFFFFFFF) {
-            uint32_t* d = (uint32_t *)(dst);
-            uint32_t color = *(uint32_t *)(rgba);
+            uint32_t *d = (uint32_t *) (dst);
+            uint32_t color = *(uint32_t *) (rgba);
 
 
             *d++ = color;
@@ -247,8 +256,7 @@ namespace m2g {
             *d++ = color;
             *d++ = color;
             *d++ = color;
-        }
-        else if (s != 0) {
+        } else if (s != 0) {
             blendA8(dst, *src++, rgba);
             blendA8(dst + 4, *src++, rgba);
             blendA8(dst + 8, *src++, rgba);
@@ -261,9 +269,6 @@ namespace m2g {
             // blendA8_span(dst, src, rgba, 8);
         }
     }
-
-
-
 
 
 #ifdef __SWITCH__
@@ -367,7 +372,7 @@ namespace m2g {
 
 #else
 
-    inline void blendA8(uint8_t* dst, uint8_t* src, uint8_t* rgba, int count) {
+    inline void blendA8(uint8_t *dst, uint8_t *src, uint8_t *rgba, int count) {
         int e_c = count / 8;
         int r_c = count % 8;
         for (int i = 0; i < e_c; ++i) {
@@ -379,14 +384,14 @@ namespace m2g {
     }
 
 
-    inline void blend(uint8_t* dst, uint8_t* src, int count) {
+    inline void blend(uint8_t *dst, uint8_t *src, int count) {
         blend_n(dst, src, count);
     }
 
 #endif
 
 
-    static inline void blendRect(uint8_t* dst, uint8_t* src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width,
+    static inline void blendRect(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride, int width,
                                  int height) {
         while (height-- > 0) {
             blend(dst, src, width);
@@ -426,4 +431,4 @@ namespace m2g {
     //}
 }
 
-#endif //M2G__DRAW_H
+

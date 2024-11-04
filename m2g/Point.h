@@ -1,10 +1,5 @@
-﻿//
-// Created by Admin on 2023/5/27.
-//
-
-#ifndef M2G_POINT_H
-#define M2G_POINT_H
-
+﻿
+#pragma once
 
 namespace m2g{
     class Point {
@@ -25,5 +20,3 @@ namespace m2g{
 
 
 
-
-#endif //M2G_POINT_H

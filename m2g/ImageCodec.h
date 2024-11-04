@@ -1,13 +1,6 @@
-//
-// Created by Admin on 2023/5/2.
-//
 
-#ifndef M2G_IMAGECODEC_H
-#define M2G_IMAGECODEC_H
-
+#pragma once
 #include <cstdint>
-
-
 
 namespace m2g {
     class Image;
@@ -24,4 +17,4 @@ namespace m2g {
     };
 }
 
-#endif //M2G_IMAGECODEC_H
+

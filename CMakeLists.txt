@@ -10,9 +10,9 @@ option(M2G_STB_IMAGE_IMPL "Use stb_image_impl" ON)
 
 
 if(MSVC)
-    add_compile_options(/W0 /permissive)
+#    add_compile_options(/W0 /permissive)
 else()
-    add_compile_options(-w)
+#    add_compile_options(-w)
 endif()
 
 

@@ -54,7 +54,6 @@ static jint NativeImage_GetChannels(JNIEnv *, jclass, jlong handle) {
 static void NativeImage_Release(JNIEnv *, jclass, jlong handle) {
     auto* image = reinterpret_cast<Image*>(handle);
     delete image;
-    objects::decrease();
 }
 
 
