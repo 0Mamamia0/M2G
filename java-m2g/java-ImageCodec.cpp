@@ -32,7 +32,6 @@ jlong NativeImageCodec_CreateImageFromData(JNIEnv *env, jclass, jbyteArray image
 }
 
 jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint width, jint height, jboolean processAlpha) {
-    objects::increase();
     jint* rgbData = jniGetIntArrayElements(env, rgb, nullptr);
     Image* image = ImageCodec::createRGBImage(rgbData, width, height, processAlpha);
     jniReleaseIntArrayElements(env, rgb, rgbData, JNI_ABORT);

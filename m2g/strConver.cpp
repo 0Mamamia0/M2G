@@ -2,7 +2,7 @@
 
 
 #include <cstdint>
-
+#include <cstddef>
 
 
 extern int utf8_to_unicode(const char* str, wchar_t * codepoint) {

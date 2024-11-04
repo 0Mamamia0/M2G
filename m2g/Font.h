@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdint>
 #include <array>
+#include <vector>
 #include <unordered_map>
 #include "Typeface.h"
 #include "Rect.h"

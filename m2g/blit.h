@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdlib>
+
 namespace m2g {
 
     inline uint32_t load_32(void* addr) {
