@@ -93,9 +93,13 @@ namespace m2g {
 
         void drawPoint(Point point);
 
+        void drawLine(Point p1, Point p2);
+
         void drawLine(int x0, int y0, int x1, int y1);
 
         void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2);
+
+        void drawTriangle(Point p1, Point p2, Point p3);
 
         void drawRect(int x, int y, int w, int h);
 
@@ -141,6 +145,8 @@ namespace m2g {
 
         void fillCircle(int centerX, int centerY, int r);
 
+        void fillTriangle(Point p1, Point p2, Point p3);
+
         void fillTriangle(int x0, int y0, int x1, int y1, int x2, int y2);
 
         void copyArea(int x_src, int y_src, int width_, int height_, int x_dst, int y_dst, int anchor);
@@ -156,6 +162,8 @@ namespace m2g {
 
         void drawPixelAlpha(int x, int y, int alpha);
 
+        void drawPointT(Point point);
+
         void drawLineH(int x0, int x1, int y);
 
         void drawLineV(int x, int y0, int y1);
@@ -165,6 +173,7 @@ namespace m2g {
         void drawLineAA(int x0, int y0, int x1, int y1);
 
         void fillTriangleA(int x0, int y0, int x1, int x2, int y_base);
+
 
 
     private:

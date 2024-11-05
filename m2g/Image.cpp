@@ -43,23 +43,35 @@ namespace m2g {
 
     void Image::getRGB(int* argb, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) const {
         int image_width = getWidth();
-        auto* rgba = pixel->addr<Color*>(x_, y_);
-        while (height_ > 0) {
-            piv::pix_copy_order<pix_order::ARGB>(argb + offset, (uint8_t*)rgba, width_);
-//            auto* tmp = rgba;
-//            for (int i = 0; i < width_; i ++) {
-//                int value = 0;
-//                value |= static_cast<int>(tmp->a) << 24;
-//                value |= static_cast<int>(tmp->r) << 16;
-//                value |= static_cast<int>(tmp->g) << 8;
-//                value |= static_cast<int>(tmp->b);
-//                argb[offset + i] = value;
-//                tmp ++;
-//            }
-            rgba += image_width;
-            offset += scanLength;
-            height_--;
+        int format = getFormat();
+        int stride = pixel->getRowBytes();
+
+        if(format != PixelFormatType::RGB_888X && format != PixelFormatType::RGBA_8888) {
+            return;
         }
+
+
+        auto* rgba = pixel->addr<Color*>(x_, y_);
+
+        piv::pix_copy_rect_order<pix_order::ARGB, pix_order::RGBA>((uint32_t*)argb + offset, (uint8_t*)rgba, scanLength * 4, stride, width_, height_);
+
+//        while (height_ > 0) {
+////            if constexpr ()
+//            piv::pix_copy_order<pix_order::RGBA>(argb + offset, (uint8_t*)rgba, width_);
+////            auto* tmp = rgba;
+////            for (int i = 0; i < width_; i ++) {
+////                int value = 0;
+////                value |= static_cast<int>(tmp->a) << 24;
+////                value |= static_cast<int>(tmp->r) << 16;
+////                value |= static_cast<int>(tmp->g) << 8;
+////                value |= static_cast<int>(tmp->b);
+////                argb[offset + i] = value;
+////                tmp ++;
+////            }
+//            rgba += image_width;
+//            offset += scanLength;
+//            height_--;
+//        }
     }
 
     PixelBuffer& Image::getPixelBufferRef() const {

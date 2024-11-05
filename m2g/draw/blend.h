@@ -95,7 +95,7 @@ static void blendA8_8(uint8_t *dst, const uint8_t *src, uint8_t *rgba) {
 
 namespace m2g::piv {
     template<int src_order>
-    void blend_rect_order(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
+    void blend_rect_order(uint8_t *dst, const uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
                           int width, int height) {
         while (height-- > 0) {
             pix_blend_order<src_order>(dst, src, width);

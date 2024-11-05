@@ -86,7 +86,9 @@ namespace m2g {
     Image* ImageCodec::createRGBImage(int32_t* argbData, int width, int height, bool processAlpha) {
 //        Image* image = createEmptyImage(width, height, false);
         try {
-            auto pixel = PixelBuffer::allocate(width, height, PixelFormatType::RGBA_8888);
+
+            int format = processAlpha ? PixelFormatType::RGBA_8888 : PixelFormatType::RGB_888X;
+            auto pixel = PixelBuffer::allocate(width, height, format);
             auto* pixels = pixel->addr<uint8_t *>();
             int pixelsCount = width * height;
             while (pixelsCount-- > 0) {

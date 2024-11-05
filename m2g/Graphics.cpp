@@ -563,16 +563,18 @@ namespace m2g {
         }
     }
 
+    void Graphics::drawLine(Point p1, Point p2) {
+        drawLine(p1.x, p1.y, p2.x, p2.y);
+    }
+
 
     void Graphics::drawPoint(int x, int y) {
         drawPoint({x, y});
     }
 
     void Graphics::drawPoint(Point point) {
-        Rect clip_ = clip.getDeviceClipBounds();
-        if (clip_.contain(point)) {
-            drawPixel(point.x, point.y);
-        }
+        point.offset(translation);
+        drawPointT(point);
     }
 
     void Graphics::clear(int color) {
@@ -596,12 +598,15 @@ namespace m2g {
 
         if (w < 0 || h < 0)
             return;
+
+        translatePoint(x, y);
+
         if (w == 0 && h == 0) {
-            drawPoint(x, y);
+            drawPointT( {x, y});
             return;
         }
 
-        translatePoint(x, y);
+
         int x1 = x + w;
         int y1 = y + h;
 
@@ -806,26 +811,49 @@ namespace m2g {
         drawLine(x1, y1, x2, y2);
     }
 
+    void Graphics::drawTriangle(Point p1, Point p2, Point p3) {
+        drawLine(p1, p2);
+        drawLine(p2, p3);
+        drawLine(p3, p1);
+    }
 
+
+    // ToDO 修复直角三角形 k1  k2 有一个为 0
     void Graphics::fillTriangleA(int x0, int y0, int x1, int x2, int y_base) {
         int dx1 = x1 - x0;
         int dx2 = x2 - x0;
         int dy = abs(y_base - y0);
 
-        int sy = y_base > y0 ? 1 : -1;
-        float k1 = (float) dy / (float) dx1;
-        float k2 = (float) dy / (float) dx2;
-        float sx1 = -1 / k1;
-        float sx2 = -1 / k2;
+        float sx1, sx2 = 0.f;
+        if(dx1 != 0) {
+            float k1 = (float) dy / (float) dx1;
+            sx1 = -1 / k1;
+        }
+
+        if(dx2 != 0) {
+            float k2 = (float) dy / (float) dx2;
+            sx2 = -1 / k2;
+        }
+
+
+
+        int sy = y_base > y0 ? -1 : 1;
+
+
         auto f1 = (float) x1;
         auto f2 = (float) x2;
 
         while (y_base != y0) {
-            f1 += sx1;
-            f2 += sx2;
+            if(dx1 != 0) {
+                f1 += sx1;
+            }
 
-            y0 += sy;
-            drawLineH((int) roundf(f1), (int) roundf(f2), y0);
+            if(dx2 != 0) {
+                f2 += sx2;
+            }
+
+            y_base += sy;
+            drawLineH((int) roundf(f1), (int) roundf(f2), y_base);
         }
     }
 
@@ -864,6 +892,7 @@ namespace m2g {
             int mid_y = y1;
 
             fillTriangleA(x0, y0, x1, mid_x, mid_y);
+            drawLineH(x1, mid_x, mid_y);
             fillTriangleA(x2, y2, x1, mid_x, mid_y);
         }
     }
@@ -885,46 +914,52 @@ namespace m2g {
     }
 
 
-    void Graphics::drawArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
+    void Graphics::drawArc(int x, int y, int w, int h, int startAngle, int arcAngle) {
 
 
-//        translatePoint(x_, y_);
 
-//        float radiusX = (float) w / 2.f;
-//        float radiusY = (float) h / 2.f;
-//        float centerX = (float) x_ + radiusX;
-//        float centerY = (float) y_ + radiusY;
-//        auto cx = static_cast<int>(std::roundf(centerX));
-//        auto cy = static_cast<int>(std::roundf(centerY));
-//        auto rx = static_cast<int>(std::roundf(radiusX));
-//        auto ry = static_cast<int>(std::roundf(radiusY));
 
-//        auto fun = [this](int cx, int cy, int x, int y) {
-//            this->drawPoint(cx + x, cy + y);
-//            this->drawPoint(cx - x, cy + y);
-//            this->drawPoint(cx + x, cy - y);
-//            this->drawPoint(cx - x, cy - y);
-//        };
-//        arcRun<false>(cx, cy, rx, ry, fun);
+
+        if ((w < 2) || (h < 2)) {
+            if (w < 0 || h < 0) {
+                return;
+            } else if (w == 0 && h == 0) {
+                drawPoint(x, y);
+            } else {
+                drawLine(x, y, x + w, y + h);
+            }
+        } else {
+            translatePoint(x, y);
+            int a = w / 2;
+            int b = h / 2;
+            int cx = x + a;
+            int cy = y + b;
+
+            double startRad = startAngle * M_PI / 180.0;
+            double endRad = (startAngle + arcAngle) * M_PI / 180.0;
+
+            // 遍历从起始角度到结束角度的每个角度
+            int numSteps = std::abs(arcAngle);  // 以角度变化为单位
+            for (int i = 0; i <= numSteps; ++i) {
+                // 当前角度
+                double angle = startRad + i * (endRad - startRad) / numSteps;
+
+                // 计算椭圆上的点
+                int px = cx + static_cast<int>(a * cos(angle));
+                int py = cy + static_cast<int>(b * sin(angle));
+
+
+                drawPointT({px, py});
+            }
+        }
+
+
+
+
     }
 
     void Graphics::fillArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
-//        translatePoint(x_, y_);
 
-//        float radiusX = (float) w / 2.f;
-//        float radiusY = (float) h / 2.f;
-//        float centerX = (float) x_ + radiusX;
-//        float centerY = (float) y_ + radiusY;
-//        auto cx = static_cast<int>(std::roundf(centerX));
-//        auto cy = static_cast<int>(std::roundf(centerY));
-//        auto rx = static_cast<int>(std::roundf(radiusX));
-//        auto ry = static_cast<int>(std::roundf(radiusY));
-
-        auto fun = [this](int cx, int cy, int x, int y) {
-            this->drawLineH(cx - x, cx + x, cy - y);
-            this->drawLineH(cx - x, cx + x, cy + y);
-        };
-//        arcRun<false>(cx, cy, rx, ry, fun);
     }
 
     int Graphics::save() {
@@ -1009,6 +1044,8 @@ namespace m2g {
             }
         } else {
             if (arcWidth > 0 || arcHeight > 0) {
+                translatePoint(x, y);
+
                 int rx = (arcWidth / 2);
                 int ry = (arcHeight / 2);
                 int tx1 = x + rx;
@@ -1017,15 +1054,15 @@ namespace m2g {
                 int ty2 = y + h - ry;
 
                 auto fun = [this, tx1, tx2, ty1, ty2](int ox, int oy) {
-                    this->drawPoint(tx1 - ox, ty1 - oy);
-                    this->drawPoint(tx2 + ox, ty1 - oy);
-                    this->drawPoint(tx1 - ox, ty2 + oy);
-                    this->drawPoint(tx2 + ox, ty2 + oy);
+                    this->drawPointT({tx1 - ox, ty1 - oy});
+                    this->drawPointT({tx2 + ox, ty1 - oy});
+                    this->drawPointT({tx1 - ox, ty2 + oy});
+                    this->drawPointT({tx2 + ox, ty2 + oy});
                 };
                 arcRun<false>(rx, ry, fun);
 
                 this->drawLineH(tx1, tx2, y);
-                this->drawLineH(tx2, tx2, y + h);
+                this->drawLineH(tx1, tx2, y + h);
                 this->drawLineV(x, ty1, ty2);
                 this->drawLineV(x + w, ty1, ty2);
             } else {
@@ -1045,7 +1082,7 @@ namespace m2g {
             }
         } else {
             if (arcWidth > 0 || arcHeight > 0) {
-
+                translatePoint(x, y);
                 int rx = (arcWidth / 2);
                 int ry = (arcHeight / 2);
                 int tx1 = x + rx;
@@ -1053,13 +1090,18 @@ namespace m2g {
                 int ty1 = y + ry;
                 int ty2 = y + h - ry;
 
-//                auto fun = [this, tx1, tx2, ty1, ty2](int ox, int oy) {
-//                    this->drawLineH(tx1 - ox, tx2 + ox, ty1 - oy);
-//                    this->drawLineH(tx1 - ox, tx2 + ox, ty2 + oy);
-//                };
-//                arcRun<true>(rx, ry, fun);
+                auto fun = [this, tx1, tx2, ty1, ty2](int ox, int oy) {
+                    this->drawLineH(tx1 - ox, tx2 + ox, ty1 - oy);
+                    this->drawLineH(tx1 - ox, tx2 + ox, ty2 + oy);
+                };
+                arcRun<true>(rx, ry, fun);
 
-                fillRect(x, ty1, w, ty2 - ty1);
+                // TODO fixed  translate
+
+                h = ty2 - ty1;
+                x = x - translation.x;
+                ty1 = ty1 - translation.y;
+                fillRect(x, ty1, w, h);
             } else {
                 fillRect(x, y, w, h);
             }
@@ -1067,9 +1109,58 @@ namespace m2g {
 
     }
 
+
+    // TODO 校验参数
     void Graphics::drawEllipse(int x, int y, int radiusX, int radiusY) {
+
+        translatePoint(x, y);
+        //        float radiusX = (float) w / 2.f;
+//        float radiusY = (float) h / 2.f;
+//        float centerX = (float) x_ + radiusX;
+//        float centerY = (float) y_ + radiusY;
+//        auto cx = static_cast<int>(std::roundf(centerX));
+//        auto cy = static_cast<int>(std::roundf(centerY));
+//        auto rx = static_cast<int>(std::roundf(radiusX));
+//        auto ry = static_cast<int>(std::roundf(radiusY));
+
+        auto fun = [this, x, y](int ox, int oy) {
+            this->drawPointT({x + ox, y + oy});
+            this->drawPointT({x - ox, y + oy});
+            this->drawPointT({x + ox, y - oy});
+            this->drawPointT({x - ox, y - oy});
+        };
+        arcRun<false>(radiusX, radiusY, fun);
+
     }
 
     void Graphics::fillEllipse(int x, int y, int radiusX, int radiusY) {
+
+          translatePoint(x, y);
+
+//        float radiusX = (float) w / 2.f;
+//        float radiusY = (float) h / 2.f;
+//        float centerX = (float) x_ + radiusX;
+//        float centerY = (float) y_ + radiusY;
+//        auto cx = static_cast<int>(std::roundf(centerX));
+//        auto cy = static_cast<int>(std::roundf(centerY));
+//        auto rx = static_cast<int>(std::roundf(radiusX));
+//        auto ry = static_cast<int>(std::roundf(radiusY));
+
+        auto fun = [this, x, y]( int ox, int oy) {
+            this->drawLineH(x - ox, x + ox, y - oy);
+            this->drawLineH(x - ox, x + ox, y + oy);
+        };
+        arcRun<true>(radiusX, radiusY, fun);
+    }
+
+    void Graphics::fillTriangle(Point p1, Point p2, Point p3) {
+        fillTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+    }
+
+    void Graphics::drawPointT(Point point) {
+        Rect clip_ = clip.getDeviceClipBounds();
+        if (clip_.contain(point)) {
+            drawPixel(point.x, point.y);
+        }
     }
 }
