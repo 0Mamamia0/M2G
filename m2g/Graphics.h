@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stack>
 #include <memory>
 #include <string>
@@ -8,10 +9,15 @@
 
 namespace m2g {
     struct Glyph;
+
     class Rect;
+
     class Font;
+
     class Image;
+
     class PixelBuffer;
+
 
     class Graphics {
         using Translate = Point;
@@ -22,36 +28,34 @@ namespace m2g {
             Color paintColor;
 
             State(Translate translate, Rect clip, Color paintColor)
-                : translate(translate), clip(clip), paintColor(paintColor) {
+                    : translate(translate), clip(clip), paintColor(paintColor) {
             }
 
-            State(const State&other) = default;
+            State(const State &other) = default;
 
-            State(State&&other) noexcept
-                : translate(other.translate)
-                  , clip(other.clip)
-                  , paintColor(other.paintColor) {
+            State(State &&other) noexcept
+                    : translate(other.translate), clip(other.clip), paintColor(other.paintColor) {
             }
         };
 
     public:
-        explicit Graphics(Image* image);
+        explicit Graphics(Image *image);
 
         explicit Graphics(std::shared_ptr<PixelBuffer> buffer);
 
-        Graphics(Image* image, int width, int height);
+        Graphics(Image *image, int width, int height);
 
         Graphics(std::shared_ptr<PixelBuffer> buffer, int width, int height);
 
-        Graphics(const Graphics&other);
+        Graphics(const Graphics &other);
 
-        Graphics(Graphics&&other) noexcept;
+        Graphics(Graphics &&other) noexcept;
 
-        Graphics& operator =(const Graphics&s) = delete;
+        Graphics &operator=(const Graphics &s) = delete;
 
-        Graphics& operator =(const Graphics&&s) = delete;
+        Graphics &operator=(const Graphics &&s) = delete;
 
-        void setColor(const Color&color);
+        void setColor(const Color &color);
 
         void setColor(int argb);
 
@@ -83,7 +87,7 @@ namespace m2g {
 
         void clear(int color);
 
-        void clear(const Color& color);
+        void clear(const Color &color);
 
         void drawPoint(int x, int y);
 
@@ -95,7 +99,7 @@ namespace m2g {
 
         void drawRect(int x, int y, int w, int h);
 
-        void drawRect(const Rect&rect);
+        void drawRect(const Rect &rect);
 
         void drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight);
 
@@ -105,30 +109,31 @@ namespace m2g {
 
         void drawCircle(int centerX, int centerY, int r);
 
-        void drawChar(char c, int x, int y, int anchor, const Font& font);
+        void drawChar(char c, int x, int y, int anchor, const Font &font);
 
-        void drawString(const char* str, int x, int y, int anchor, const Font& font);
-        void drawString(const char* str, size_t len, int x, int y, int anchor, const Font& font);
+        void drawString(const char *str, int x, int y, int anchor, const Font &font);
 
-        void drawString(const std::string& str, int x, int y, int anchor, const Font& font);
+        void drawString(const char *str, size_t len, int x, int y, int anchor, const Font &font);
 
-        void drawRGB(int* rgbData, int dataLength, int offset, int scanLength, int x, int y, int width, int height,
+        void drawString(const std::string &str, int x, int y, int anchor, const Font &font);
+
+        void drawRGB(int *rgbData, int dataLength, int offset, int scanLength, int x, int y, int width, int height,
                      bool processAlpha);
 
-        void drawImage(Image* image, int x, int y, int anchor = 0);
+        void drawImage(Image *image, int x, int y, int anchor = 0);
 
-        void drawImage(Image* src, int x, int y, int dst_width, int dst_height, int anchor = 0);
+        void drawImage(Image *src, int x, int y, int dst_width, int dst_height, int anchor = 0);
 
-        void drawImage(Image* image, int x_src, int y_src, int w_src, int h_src, int x_dst, int y_dst, int anchor = 0);
+        void drawImage(Image *image, int x_src, int y_src, int w_src, int h_src, int x_dst, int y_dst, int anchor = 0);
 
-        void drawRegion(Image* src, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst,
+        void drawRegion(Image *src, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst,
                         int anchor);
 
         void fillRect(int x, int y, int w, int h);
 
-        void fillRect(const Rect&rect);
+        void fillRect(const Rect &rect);
 
-        void fillRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight);
+        void fillRoundRect(int ox, int oy, int w, int h, int arcWidth, int arcHeight);
 
         void fillEllipse(int x, int y, int radiusX, int radiusY);
 
@@ -141,9 +146,9 @@ namespace m2g {
         void copyArea(int x_src, int y_src, int width_, int height_, int x_dst, int y_dst, int anchor);
 
     private:
-        void translatePoint(int&x, int&y) const;
+        void translatePoint(int &x, int &y) const;
 
-        void translatePoint(int&x, int&y, int width, int height, int anchor);
+        void translatePoint(int &x, int &y, int width, int height, int anchor);
 
         void setPixel(int x, int y, Color color);
 
@@ -158,10 +163,6 @@ namespace m2g {
         void drawLineB(int x0, int y0, int x1, int y1);
 
         void drawLineAA(int x0, int y0, int x1, int y1);
-
-
-
-
 
         void fillTriangleA(int x0, int y0, int x1, int x2, int y_base);
 

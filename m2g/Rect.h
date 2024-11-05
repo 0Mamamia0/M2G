@@ -21,6 +21,7 @@ namespace m2g {
         int getWidth() const;
         int getHeight() const;
 
+        Rect offset(int x, int y) const;
         Rect intersect(const Rect &rect) const;
 
     public:

@@ -114,7 +114,7 @@ namespace m2g {
 
         // void fillRect(const Rect&rect);
 
-        void fillRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight);
+        void fillRoundRect(int ox, int oy, int w, int h, int arcWidth, int arcHeight);
 
         // void fillEllipse(int x, int y, int radiusX, int radiusY);
         //

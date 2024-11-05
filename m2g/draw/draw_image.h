@@ -1,70 +1,15 @@
 #pragma once
 
-#include "draw.h"
 #include "Rect.h"
 #include "color.h"
 #include "PixelFormat.h"
-
+#include "copy.h"
+#include "blend.h"
 
 namespace m2g {
     static void drawPixelsAlpha8(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
                                  int width, int height) {
     }
-
-
-    static void drawPixelsRGB888X(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                  int width, int height) {
-        copyRect(dst, src, dst_stride, src_stride, width, height);
-    }
-
-
-    static void drawPixelsRGBA8888(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                   int width, int height) {
-        blendRect(dst, src, dst_stride, src_stride, width, height);
-    }
-
-
-    static void drawPixelsXRGB8888(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                   int width, int height) {
-        while (height-- > 0) {
-            piv::pix_copy<0, 1, 2, 3>(dst, src, width);
-            dst += dst_stride;
-            src += src_stride;
-        }
-    }
-
-    static void drawPixelsARGB8888(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                   int width, int height) {
-        while (height-- > 0) {
-            piv::pix_copy<3, 2, 1, 0>(dst, src, width);
-            dst += dst_stride;
-            src += src_stride;
-        }
-    }
-
-
-    static void drawPixelsBGRX8888(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                   int width, int height) {
-
-        while (height-- > 0) {
-            piv::pix_copy<2, 1, 0, 3>(dst, src, width);
-            dst += dst_stride;
-            src += src_stride;
-        }
-    }
-
-
-    static void drawPixelsBGRA8888(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                   int width, int height) {
-
-        // TDOO alpha blend
-//        while (height-- > 0) {
-//            piv::pix_copy<2, 1, 0, 3>(dst, src, width);
-//            dst += dst_stride;
-//            src += src_stride;
-//        }
-    }
-
 
     static void drawPixels(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
                            int width, int height, int dst_format, int src_format) {
@@ -77,22 +22,14 @@ namespace m2g {
                 drawPixelsAlpha8(dst, src, dst_stride, src_stride, width, height);
                 break;
             case RGB_888X:
-                drawPixelsRGB888X(dst, src, dst_stride, src_stride, width, height);
+            case XRGB_8888:
+            case BGRX_8888:
+                copyRect(dst, src, dst_format, src_format, dst_stride, src_stride, width, height);
                 break;
             case RGBA_8888:
-                drawPixelsRGBA8888(dst, src, dst_stride, src_stride, width, height);
-                break;
             case ARGB_8888:
-                drawPixelsARGB8888(dst, src, dst_stride, src_stride, width, height);
-                break;
-            case XRGB_8888:
-                drawPixelsXRGB8888(dst, src, dst_stride, src_stride, width, height);
-                break;
             case BGRA_8888:
-                drawPixelsBGRA8888(dst, src, dst_stride, src_stride, width, height);
-                break;
-            case BGRX_8888:
-                drawPixelsBGRX8888(dst, src, dst_stride, src_stride, width, height);
+                blendRect(dst, src, dst_format, src_format, dst_stride, src_stride, width, height);
                 break;
             case GREY:
             case GREY_ALPHA:

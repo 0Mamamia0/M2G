@@ -78,6 +78,10 @@ namespace m2g {
         return bottom - top;
     }
 
+    Rect Rect::offset(int x, int y) const {
+        return {left + x, top + y, right + x, bottom + y};
+    }
+
     Rect Rect::intersect(const Rect&rect) const {
         int left_ = std::max(left, rect.left);
         int top_ = std::max(top, rect.top);

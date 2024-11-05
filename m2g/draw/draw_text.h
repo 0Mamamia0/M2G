@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <cmath>
 #include "Rect.h"
 #include "Font.h"
 #include "UTF8Iterator.h"

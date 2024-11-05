@@ -10,28 +10,28 @@
 
 using namespace m2g;
 
-jlong NativeImageCodec_CreateImageWH(JNIEnv *, jclass, jint width, jint height) {
+static jlong NativeImageCodec_CreateImageWH(JNIEnv *, jclass, jint width, jint height) {
     if(auto* image = ImageCodec::createImage(width, height)) {
         return reinterpret_cast<jlong>(image);
     }
     return 0;
 }
 
-jlong NativeImageCodec_CreateImageFormImage(JNIEnv *, jclass, jlong handle) {
+static jlong NativeImageCodec_CreateImageFormImage(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return reinterpret_cast<jlong>(ImageCodec::createImage(image));
     }
     return 0;
 }
 
-jlong NativeImageCodec_CreateImageFromData(JNIEnv *env, jclass, jbyteArray imageData, jint imageOffset, jint imageLength) {
+static jlong NativeImageCodec_CreateImageFromData(JNIEnv *env, jclass, jbyteArray imageData, jint imageOffset, jint imageLength) {
     jbyte* data = jniGetByteArrayElements(env, imageData, nullptr);
     Image* image = ImageCodec::loadImage(reinterpret_cast<unsigned char *> (data), imageOffset, imageLength);
     jniReleaseByteArrayElements(env, imageData, data, JNI_ABORT);
     return reinterpret_cast<jlong>(image);
 }
 
-jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint width, jint height, jboolean processAlpha) {
+static jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint width, jint height, jboolean processAlpha) {
     jint* rgbData = jniGetIntArrayElements(env, rgb, nullptr);
     Image* image = ImageCodec::createRGBImage(rgbData, width, height, processAlpha);
     jniReleaseIntArrayElements(env, rgb, rgbData, JNI_ABORT);
@@ -39,7 +39,7 @@ jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint w
 }
 
 
-jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
+static jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return reinterpret_cast<jlong>(ImageCodec::createImage(image, x, y, width, height, transform));
     }

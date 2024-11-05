@@ -3,9 +3,8 @@
 #include <cmath>
 #include <bit>
 
-#include "draw.h"
-#include "draw_image.h"
-#include "draw_text.h"
+#include "draw/draw.h"
+
 #include "color.h"
 
 #include "m2g-def.h"
@@ -271,7 +270,9 @@ namespace m2g {
                    dst_buffer.getRowBytes(),
                    src_buffer.getRowBytes(),
                    x_dst, y_dst,
-                   Rect::makeXYWH(x_src, y_src, w_src, h_src), clip.getDeviceClipBounds(), dst_buffer.getFormat(),
+                   Rect::makeXYWH(x_src, y_src, w_src, h_src),
+                   clip.getDeviceClipBounds(),
+                   dst_buffer.getFormat(),
                    src_buffer.getFormat());
     }
 
@@ -402,7 +403,7 @@ namespace m2g {
             if (image->getFormat() == RGBA_8888) {
                 auto fun = [](uint32_t *dst, uint32_t *src, int w, int x_step) {
                     while (w-- > 0) {
-                        blend1px(dst, src);
+                        blend1px((uint8_t *) dst, (uint8_t *) src);
                         dst += 1;
                         src += x_step;
                     }
@@ -545,33 +546,6 @@ namespace m2g {
     }
 
 
-    void Graphics::drawRect(int x, int y, int w, int h) {
-
-        if (clip.isEmpty() || w < 0 || h < 0)
-            return;
-
-        if (w == 0 && h == 0) {
-            drawPoint(x, y);
-            return;
-        }
-
-        translatePoint(x, y);
-        int x1 = x + w;
-        int y1 = y + h;
-
-        drawLineH(x, x1, y);
-        drawLineV(x, y, y1);
-
-        if (w != 0) {
-            drawLineV(x1, y, y1);
-        }
-
-        if (h != 0) {
-            drawLineH(x, x1, y1);
-        }
-    }
-
-
     void Graphics::drawLine(int x0, int y0, int x1, int y1) {
         translatePoint(std::ref(x0), std::ref(y0));
         translatePoint(std::ref(x1), std::ref(y1));
@@ -595,7 +569,8 @@ namespace m2g {
     }
 
     void Graphics::drawPoint(Point point) {
-        if (clip.contain(point)) {
+        Rect clip_ = clip.getDeviceClipBounds();
+        if (clip_.contain(point)) {
             drawPixel(point.x, point.y);
         }
     }
@@ -616,36 +591,56 @@ namespace m2g {
         }
     }
 
+
+    void Graphics::drawRect(int x, int y, int w, int h) {
+
+        if (w < 0 || h < 0)
+            return;
+        if (w == 0 && h == 0) {
+            drawPoint(x, y);
+            return;
+        }
+
+        translatePoint(x, y);
+        int x1 = x + w;
+        int y1 = y + h;
+
+        drawLineH(x, x1, y);
+        drawLineV(x, y, y1);
+
+        if (w != 0) {
+            drawLineV(x1, y, y1);
+        }
+
+        if (h != 0) {
+            drawLineH(x, x1, y1);
+        }
+    }
+
     void Graphics::drawRect(const Rect &rect) {
         drawRect(rect.left, rect.top, rect.getWidth(), rect.getHeight());
     }
 
     void Graphics::fillRect(int x, int y, int w, int h) {
-        if (clip.isEmpty() || w <= 0 || h <= 0)
-            return;
-
-        translatePoint(x, y);
-
-        if (w == 1) {
-            drawLineV(x, y, y + h - 1);
-            return;
-        } else if (h == 1) {
-            drawLineH(x, x + w - 1, y);
-            return;
-        }
         fillRect({x, y, x + w, y + h});
     }
 
 
     void Graphics::fillRect(const Rect &rect) {
+
         if (rect.isEmpty())
             return;
 
-        Rect clipRect = clip.getDeviceClipBounds();
-        if (clipRect.isEmpty())
+        Rect clip_ = clip.getDeviceClipBounds();
+        if (clip_.isEmpty())
             return;
 
-        Rect bound = clipRect.intersect(rect);
+        Rect dst = rect.offset(translation.x, translation.y);
+        if (dst.isEmpty()) {
+            return;
+        }
+
+        Rect bound = clip_.intersect(dst);
         if (bound.isEmpty()) {
             return;
         }
@@ -700,57 +695,27 @@ namespace m2g {
         } while (x < 0);
 
 
-        //    int y = r;
-        //    int p = 1 - r;
-        //    double lastFadeAmount = 0;
-        //    double fadeAmount = 0;
-        //    const int32_t maxOpaque = paintColor.a;
-        ////    const int32_t noAlphaColor = color & 0x00FFFFFF;
-        //    for (int x = 0; x < y; x++) {
-        //        if (p < 0) {
-        //            p += 2 * x + 1;
-        //        } else {
-        //            y -= 1;
-        //            p += 2 * (x - y) + 1;
-        //        }
-        //
-        //        drawPixel(centerX + x, centerY + y);
-        //        drawPixel(centerX + y, centerY + x);
-        //        drawPixel(centerX + y, centerY - x);
-        //        drawPixel(centerX + x, centerY - y);
-        //
-        //        drawPixel(centerX - x, centerY + y);
-        //        drawPixel(centerX - y, centerY + x);
-        //        drawPixel(centerX - x, centerY - y);
-        //        drawPixel(centerX - y, centerY - x);
-        ////        double height_ = sqrt(r * r - x * x);
-        ////        fadeAmount = (double)maxOpaque * (1.0 - (ceil(height_) - height_));
-        //////        if (fadeAmount > lastFadeAmount)
-        //////            y--;
-        ////        lastFadeAmount = fadeAmount;
-        ////        paintColor.a = 0x54;
-        //
-        //
-        //    }
+
+//        auto fun = [this, centerX, centerY](int ox, int oy){
+//            drawPoint(centerX + ox, centerY + oy);
+//            drawPoint(centerX + ox, centerY - oy);
+//            drawPoint(centerX - ox, centerY + oy);
+//            drawPoint(centerX - ox, centerY - oy);
+//
+//            drawPoint(centerX + oy, centerY + ox);
+//            drawPoint(centerX + oy, centerY - ox);
+//            drawPoint(centerX - oy, centerY + ox);
+//            drawPoint(centerX - oy, centerY - ox);
+//        };
+//        circleRun<false>(r, fun);
     }
 
     void Graphics::fillCircle(int centerX, int centerY, int r) {
-        int y = r;
-        int p = 1 - r;
-        for (int x = 0; x < y; x++) {
-            if (p < 0) {
-                // 中点在园内
-                p += 2 * x + 1;
-            } else {
-                // 中点在圆外或圆上
-                y -= 1;
-                p += 2 * (x - y) + 1;
-                drawLineH(centerX - x, centerX + x, centerY + y);
-                drawLineH(centerX - x, centerX + x, centerY - y);
-            }
-            drawLineH(centerX - y, centerX + y, centerY + x);
-            drawLineH(centerX - y, centerX + y, centerY - x);
-        }
+        auto fun = [this, centerX, centerY](int ox, int oy){
+            drawLineH(centerX - ox, centerX + ox, centerY + oy);
+            drawLineH(centerX - ox, centerX + ox, centerY - oy);
+        };
+        circleRun<true>(r, fun);
     }
 
     void Graphics::copyArea(int x_src, int y_src, int width_, int height_, int x_dst, int y_dst, int anchor) {
@@ -920,88 +885,46 @@ namespace m2g {
     }
 
 
-    template<bool fill, typename Fun>
-    void arcRun(int cx, int cy, int rx, int ry, Fun fun) {
-        int rx2 = rx * rx;
-        int ry2 = ry * ry;
-        int p;
-
-        int x = 0, y = ry; // (区域1)初始点
-        int px = 0, py = 2 * rx2 * y; // 像素计算终止条件项
-
-        fun(cx, cy, x, y);
-
-        p = round(ry2 - rx2 * ry + 0.25 * rx2);
-        while (px < py) {
-            x++;
-            px += 2 * ry2; // 通过累加来计算 2ry^2 x[k+1], 而不是每次都用乘法
-            if (p < 0) {
-                p += ry2 + px;
-                if (!fill) {
-                    fun(cx, cy, x, y);
-                }
-            } else {
-                y--;
-                py -= 2 * rx2;
-                p += ry2 + px - py;
-                fun(cx, cy, x, y);
-            }
-        }
-
-        // 区域2
-        p = round(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
-        while (y > 0) {
-            y--;
-            py -= 2 * rx2;
-            if (p > 0) {
-                p += rx2 - py;
-            } else {
-                x++;
-                px += 2 * ry2;
-                p += rx2 - py + px;
-            }
-            fun(cx, cy, x, y);
-        }
-    }
-
     void Graphics::drawArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
-        translatePoint(x_, y_);
 
-        float radiusX = (float) w / 2.f;
-        float radiusY = (float) h / 2.f;
-        float centerX = (float) x_ + radiusX;
-        float centerY = (float) y_ + radiusY;
-        auto cx = static_cast<int>(std::roundf(centerX));
-        auto cy = static_cast<int>(std::roundf(centerY));
-        auto rx = static_cast<int>(std::roundf(radiusX));
-        auto ry = static_cast<int>(std::roundf(radiusY));
 
-        auto fun = [this](int cx, int cy, int x, int y) {
-            this->drawPoint(cx + x, cy + y);
-            this->drawPoint(cx - x, cy + y);
-            this->drawPoint(cx + x, cy - y);
-            this->drawPoint(cx - x, cy - y);
-        };
-        arcRun<false>(cx, cy, rx, ry, fun);
+//        translatePoint(x_, y_);
+
+//        float radiusX = (float) w / 2.f;
+//        float radiusY = (float) h / 2.f;
+//        float centerX = (float) x_ + radiusX;
+//        float centerY = (float) y_ + radiusY;
+//        auto cx = static_cast<int>(std::roundf(centerX));
+//        auto cy = static_cast<int>(std::roundf(centerY));
+//        auto rx = static_cast<int>(std::roundf(radiusX));
+//        auto ry = static_cast<int>(std::roundf(radiusY));
+
+//        auto fun = [this](int cx, int cy, int x, int y) {
+//            this->drawPoint(cx + x, cy + y);
+//            this->drawPoint(cx - x, cy + y);
+//            this->drawPoint(cx + x, cy - y);
+//            this->drawPoint(cx - x, cy - y);
+//        };
+//        arcRun<false>(cx, cy, rx, ry, fun);
     }
 
     void Graphics::fillArc(int x_, int y_, int w, int h, int startAngle, int arcAngle) {
-        translatePoint(x_, y_);
+//        translatePoint(x_, y_);
 
-        float radiusX = (float) w / 2.f;
-        float radiusY = (float) h / 2.f;
-        float centerX = (float) x_ + radiusX;
-        float centerY = (float) y_ + radiusY;
-        auto cx = static_cast<int>(std::roundf(centerX));
-        auto cy = static_cast<int>(std::roundf(centerY));
-        auto rx = static_cast<int>(std::roundf(radiusX));
-        auto ry = static_cast<int>(std::roundf(radiusY));
+//        float radiusX = (float) w / 2.f;
+//        float radiusY = (float) h / 2.f;
+//        float centerX = (float) x_ + radiusX;
+//        float centerY = (float) y_ + radiusY;
+//        auto cx = static_cast<int>(std::roundf(centerX));
+//        auto cy = static_cast<int>(std::roundf(centerY));
+//        auto rx = static_cast<int>(std::roundf(radiusX));
+//        auto ry = static_cast<int>(std::roundf(radiusY));
 
         auto fun = [this](int cx, int cy, int x, int y) {
             this->drawLineH(cx - x, cx + x, cy - y);
             this->drawLineH(cx - x, cx + x, cy + y);
         };
-        arcRun<false>(cx, cy, rx, ry, fun);
+//        arcRun<false>(cx, cy, rx, ry, fun);
     }
 
     int Graphics::save() {
@@ -1022,7 +945,7 @@ namespace m2g {
         if (count < 0 || count >= states.size()) {
             return false;
         }
-        while (states.size() > count + 1) {
+        while (states.size() > (count + 1)) {
             states.pop();
         }
         auto &state = states.top();
@@ -1037,11 +960,13 @@ namespace m2g {
     void Graphics::drawRGB(int *rgbData, int dataLength, int offset, int scanLength,
                            int x, int y, int width_, int height_,
                            bool processAlpha) {
-        if (clip.isEmpty() || width <= 0 || height <= 0) {
+
+        Rect clip_ = clip.getDeviceClipBounds();
+        if (clip_.isEmpty() || width <= 0 || height <= 0) {
             return;
         }
         translatePoint(x, y);
-        Rect dst_rect_clip = clip.intersect(Rect::makeXYWH(x, y, width_, height_));
+        Rect dst_rect_clip = clip_.intersect(Rect::makeXYWH(x, y, width_, height_));
         if (dst_rect_clip.isEmpty()) {
             return;
         }
@@ -1053,8 +978,6 @@ namespace m2g {
             src_format = processAlpha ? BGRA_8888 : BGRX_8888;
         } else if constexpr (std::endian::native == std::endian::big) {
             src_format = processAlpha ? ARGB_8888 : XRGB_8888;
-        } else {
-            // assert(false);
         }
 
 
@@ -1072,52 +995,76 @@ namespace m2g {
 
 
     void Graphics::drawRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
-        int cx = w / 2;
-        int cy = h / 2;
-        int ox = cx - arcWidth;
-        int oy = cy - arcHeight;
-
-        auto fun = [this, ox, oy, x, y](double centerX, double centerY, int rx, int ry) {
-            this->drawPoint(centerX + rx + ox, centerY + ry + oy);
-            this->drawPoint(centerX - rx - ox, centerY + ry + oy);
-            this->drawPoint(centerX + rx + ox, centerY - ry - oy);
-            this->drawPoint(centerX - rx - ox, centerY - ry - oy);
-        };
-
-        int top = y + arcHeight;
-        int bottom = y + h - arcHeight;
-        int left = x + arcWidth;
-        int right = x + w - arcWidth;
-
-        this->drawLineH(left, right, y);
-        this->drawLineH(left, right, y + h);
-
-        this->drawLineV(x, top, bottom);
-        this->drawLineV(x + w, top, bottom);
+        arcWidth = std::clamp(arcWidth, 0, w);
+        arcHeight = std::clamp(arcHeight, 0, h);
 
 
-        arcRun<false>(cx + x, cy + y, arcWidth, arcHeight, fun);
+        if (w <= 1 || h <= 1) {
+            if (w < 0 || h < 0) {
+                return;
+            } else if (w == 0 && h == 0) {
+                drawPoint(x, y);
+            } else {
+                drawLine(x, y, x + width, y + height);
+            }
+        } else {
+            if (arcWidth > 0 || arcHeight > 0) {
+                int rx = (arcWidth / 2);
+                int ry = (arcHeight / 2);
+                int tx1 = x + rx;
+                int tx2 = x + w - rx;
+                int ty1 = y + ry;
+                int ty2 = y + h - ry;
+
+                auto fun = [this, tx1, tx2, ty1, ty2](int ox, int oy) {
+                    this->drawPoint(tx1 - ox, ty1 - oy);
+                    this->drawPoint(tx2 + ox, ty1 - oy);
+                    this->drawPoint(tx1 - ox, ty2 + oy);
+                    this->drawPoint(tx2 + ox, ty2 + oy);
+                };
+                arcRun<false>(rx, ry, fun);
+
+                this->drawLineH(tx1, tx2, y);
+                this->drawLineH(tx2, tx2, y + h);
+                this->drawLineV(x, ty1, ty2);
+                this->drawLineV(x + w, ty1, ty2);
+            } else {
+                drawRect(x, y, w, h);
+            }
+        }
     }
 
     void Graphics::fillRoundRect(int x, int y, int w, int h, int arcWidth, int arcHeight) {
-        translatePoint(x, y);
 
-        int cx = w / 2;
-        int cy = h / 2;
-        int ox = cx - arcWidth;
-        int oy = cy - arcHeight;
+        arcWidth = std::clamp(arcWidth, 0, w);
+        arcHeight = std::clamp(arcHeight, 0, h);
 
-        auto fun = [this, ox, oy, x, y](double centerX, double centerY, int rx, int ry) {
-            this->drawLineH(centerX - rx - ox, centerX + rx + ox, centerY - ry - oy);
-            this->drawLineH(centerX - rx - ox, centerX + rx + ox, centerY + ry + oy);
-        };
+        if (w <= 1 || h <= 1) {
+            if (w == 1 && h == 0) {
+                drawPoint(x, y);
+            }
+        } else {
+            if (arcWidth > 0 || arcHeight > 0) {
 
-        int y_top = y + arcHeight;
-        int y_bottom = y + h - arcHeight;
-        for (int j = y_top; j < y_bottom; ++j) {
-            this->drawLineH(x, x + w, j);
+                int rx = (arcWidth / 2);
+                int ry = (arcHeight / 2);
+                int tx1 = x + rx;
+                int tx2 = x + w - rx;
+                int ty1 = y + ry;
+                int ty2 = y + h - ry;
+
+//                auto fun = [this, tx1, tx2, ty1, ty2](int ox, int oy) {
+//                    this->drawLineH(tx1 - ox, tx2 + ox, ty1 - oy);
+//                    this->drawLineH(tx1 - ox, tx2 + ox, ty2 + oy);
+//                };
+//                arcRun<true>(rx, ry, fun);
+
+                fillRect(x, ty1, w, ty2 - ty1);
+            } else {
+                fillRect(x, y, w, h);
+            }
         }
-        arcRun<true>(cx + x, cy + y, arcWidth, arcHeight, fun);
+
     }
 
     void Graphics::drawEllipse(int x, int y, int radiusX, int radiusY) {

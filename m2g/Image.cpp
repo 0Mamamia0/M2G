@@ -1,7 +1,7 @@
 
 
 #include <cstdint>
-#include "draw.h"
+#include "draw/draw.h"
 #include "Image.h"
 #include "Graphics.h"
 #include "PixelBuffer.h"
@@ -16,7 +16,7 @@ namespace m2g {
             : width(pixel->getWidth())
             , height(pixel->getHeight())
             , mut(isMutable)
-            ,pixel(std::move(pixel)){
+            , pixel(std::move(pixel)){
 
     }
 
@@ -45,24 +45,24 @@ namespace m2g {
         int image_width = getWidth();
         auto* rgba = pixel->addr<Color*>(x_, y_);
         while (height_ > 0) {
-            piv::pix_copy<piv::pix_order::ARGB>(argb + offset, (uint8_t*)rgba, width_);
-            auto* tmp = rgba;
-            for (int i = 0; i < width_; i ++) {
-                int value = 0;
-                value |= static_cast<int>(tmp->a) << 24;
-                value |= static_cast<int>(tmp->r) << 16;
-                value |= static_cast<int>(tmp->g) << 8;
-                value |= static_cast<int>(tmp->b);
-                argb[offset + i] = value;
-                tmp ++;
-            }
+            piv::pix_copy_order<pix_order::ARGB>(argb + offset, (uint8_t*)rgba, width_);
+//            auto* tmp = rgba;
+//            for (int i = 0; i < width_; i ++) {
+//                int value = 0;
+//                value |= static_cast<int>(tmp->a) << 24;
+//                value |= static_cast<int>(tmp->r) << 16;
+//                value |= static_cast<int>(tmp->g) << 8;
+//                value |= static_cast<int>(tmp->b);
+//                argb[offset + i] = value;
+//                tmp ++;
+//            }
             rgba += image_width;
             offset += scanLength;
             height_--;
         }
     }
 
-    PixelBuffer& Image::getPixelBufferRef() const{
+    PixelBuffer& Image::getPixelBufferRef() const {
         return *pixel;
     }
 
