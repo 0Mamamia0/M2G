@@ -26,7 +26,7 @@ void premultiply(uint8_t* rgba, size_t size) {
 
 static void LTR(uint8_t* dst, uint8_t* src, int pixel, ptrdiff_t src_stride) {
     assert(pixel > 0);
-    std::memcpy(dst, src, pixel << 2);
+    memcpy(dst, src, pixel << 2);
 }
 
 
