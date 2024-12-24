@@ -3,20 +3,24 @@
 #include "stb_truetype.h"
 
 
-class Typeface {
+namespace m2g {
+    class Typeface {
 
-public:
-    explicit Typeface(const stbtt_fontinfo& info);
-    Typeface(const Typeface& other) = delete;
-    void operator=(const Typeface& other) = delete;
-    ~Typeface();
+    public:
+        explicit Typeface(const stbtt_fontinfo& info);
+        Typeface(const Typeface& other) = delete;
+        void operator=(const Typeface& other) = delete;
+        ~Typeface();
 
-    const stbtt_fontinfo& getFontInfo();
-public:
-    static std::shared_ptr<Typeface> makeFormFile(const char* fileName);
+        const stbtt_fontinfo& getFontInfo();
+    public:
+        static Typeface* makeFormFile(const char* fileName);
 
 
-private:
-    stbtt_fontinfo fontInfo;
-};
+    private:
+        stbtt_fontinfo fontInfo;
+    };
+
+
+}
 

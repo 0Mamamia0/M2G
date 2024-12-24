@@ -1,9 +1,4 @@
-﻿//
-// Created by Admin on 2023/5/30.
-//
-
-#ifndef M2G_TYPEFACE_H
-#define M2G_TYPEFACE_H
+﻿#pragma once
 
 #include <memory>
 #include "cairo/cairo-ft.h"
@@ -17,7 +12,7 @@ namespace m2g {
         void operator=(const Typeface& other) = delete;
     public:
         explicit Typeface(FT_Face face);
-        static std::shared_ptr<Typeface> makeFormFile(const char* fileName);
+        static Typeface* makeFormFile(const char* fileName);
     private:
         cairo_font_face_t* getCairoFace() const;
 
@@ -30,4 +25,4 @@ namespace m2g {
 
 
 
-#endif //M2G_TYPEFACE_H
+

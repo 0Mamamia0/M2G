@@ -20,37 +20,26 @@ namespace m2g {
 
 
     public:
-        PixelBuffer(const PixelBuffer &other);
-
+        PixelBuffer(const PixelBuffer &other) = delete;
         PixelBuffer(PixelBuffer &&other) noexcept;
-
         PixelBuffer(uint8_t *pixels, int width, int height, int format, ReleaseFun *fun);
-
         PixelBuffer(uint8_t *pixels, int width, int height, int format, int rowBytes, ReleaseFun *fun);
 
         ~PixelBuffer();
-
         int getWidth() const;
-
         int getHeight() const;
-
         int getFormat() const;
-
         int getBytePerPixel() const;
-
         int getShiftPerPixel() const;
-
         int getStride() const;
-
         int getRowBytes() const;
-
         int getPaddedRowByte() const;
 
-        void erase(int i);
-
         bool hasAlpha() const;
-
         bool isColor() const;
+
+        void erase(int i);
+        bool copyTo(PixelBuffer &dst) const;
 
 
         template<typename T>

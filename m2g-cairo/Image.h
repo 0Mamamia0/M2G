@@ -1,9 +1,4 @@
-//
-// Created by Admin on 2024/2/20.
-//
-
-#ifndef CAIROIMAGE_H
-#define CAIROIMAGE_H
+#pragma once
 
 #include "cairo/cairo.h"
 
@@ -23,17 +18,16 @@ namespace m2g{
         int getStride() const;
         int getChannels() const;
         bool isMutable() const;
-
         void setImmutable();
-
-        const void* getPixels() const;
-
+        void* getPixels() const;
         void getRGB(int* argb, int dataLength, int offset, int scanLength, int x_, int y_, int width_,
                     int height_) const;
 
         cairo_surface_t* getCairoSurface() const;
 
-        void *pixels();
+
+
+        int getFormat();
 
     private:
         int width_;
@@ -50,4 +44,4 @@ namespace m2g{
 
 
 
-#endif //CAIROIMAGE_H
+

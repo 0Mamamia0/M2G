@@ -1,8 +1,5 @@
 ﻿
-
-#ifndef JNI_ONLOAD_H
-#define JNI_ONLOAD_H
-
+#pragma once
 #include "jni_def.h"
 
 
@@ -15,4 +12,3 @@ extern "C" {
 #endif
 
 
-#endif //JNI_ONLOAD_H

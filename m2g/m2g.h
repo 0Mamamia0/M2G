@@ -12,6 +12,5 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Typeface.h"
-#include "UTF8Iterator.h"
 
 

@@ -44,9 +44,9 @@ namespace m2g {
         getRGB(int *data, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) const;
 
     private:
-        int width;
-        int height;
-        bool mut;
-        std::shared_ptr<PixelBuffer> pixel;
+        int width_;
+        int height_;
+        bool mut_;
+        std::shared_ptr<PixelBuffer> pixel_;
     };
 }

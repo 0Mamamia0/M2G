@@ -8,37 +8,28 @@
 
 using namespace m2g;
 
-jlong NativeImageCodec_CreateImageWH(JNIEnv *, jclass, jint width, jint height) {
+jlong nCreateImage(JNIEnv *, jclass, jint width, jint height) {
     if(auto* image = ImageCodec::createImage(width, height)) {
         return reinterpret_cast<jlong>(image);
     }
     return 0;
 }
 
-jlong NativeImageCodec_CreateImageFormImage(JNIEnv *, jclass, jlong handle) {
+jlong nCreateImage(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return reinterpret_cast<jlong>(ImageCodec::createImage(image));
     }
     return 0;
 }
 
-jlong NativeImageCodec_CreateImageFromData(JNIEnv *env, jclass, jbyteArray imageData, jint imageOffset, jint imageLength) {
+jlong nCreateImage(JNIEnv *env, jclass, jbyteArray imageData, jint imageOffset, jint imageLength) {
     jbyte* data = jniGetByteArrayElements(env, imageData, nullptr);
     Image* image = ImageCodec::loadImage(reinterpret_cast<unsigned char *> (data), imageOffset, imageLength);
     jniReleaseByteArrayElements(env, imageData, data, JNI_ABORT);
     return reinterpret_cast<jlong>(image);
 }
 
-jlong NativeImageCodec_CreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint width, jint height, jboolean processAlpha) {
-
-    jint* rgbData = jniGetIntArrayElements(env, rgb, nullptr);
-    Image* image = ImageCodec::createRGBImage(rgbData, width, height, processAlpha);
-    jniReleaseIntArrayElements(env, rgb, rgbData, JNI_ABORT);
-    return reinterpret_cast<jlong>(image);
-}
-
-
-jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
+jlong nCreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return reinterpret_cast<jlong>(ImageCodec::createImage(image, x, y, width, height, transform));
     }
@@ -46,15 +37,28 @@ jlong NativeImageCodec_CreateImage(JNIEnv *env, jclass, jlong handle,jint  x, ji
 }
 
 
+jlong nCreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint width, jint height, jboolean processAlpha) {
+    jint* rgbData = jniGetIntArrayElements(env, rgb, nullptr);
+    Image* image = ImageCodec::createRGBImage(rgbData, width, height, processAlpha);
+    jniReleaseIntArrayElements(env, rgb, rgbData, JNI_ABORT);
+    return reinterpret_cast<jlong>(image);
+}
+
+
+
+
 
 extern "C" int register_m2g_ImageCodec(JNIEnv* env) {
+
+#define BIND_JNI(fun, sig, ptr) { const_cast<char*>(#fun), const_cast<char*>(sig), reinterpret_cast<void*>(ptr)}
     static const JNINativeMethod methods[] = {
-            {"jniCreateImage"        , "(II)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImageWH)      },
-            {"jniCreateImage"        , "(J)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImageFormImage)      },
-            {"jniCreateImage"        , "([BII)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImageFromData)      },
-            {"jniCreateRGBImage"        , "([IIIZ)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateRGBImage)      },
-            {"jniCreateImage"        , "(JIIIII)J"          , reinterpret_cast<void*>(NativeImageCodec_CreateImage)      },
+            BIND_JNI(nCreateImage, "(II)J", static_cast<jlong(*)(JNIEnv*,jclass,jint, jint)>(nCreateImage)),
+            BIND_JNI(nCreateImage, "(J)J", static_cast<jlong(*)(JNIEnv*,jclass,jlong)>(nCreateImage)),
+            BIND_JNI(nCreateImage, "([BII)J", static_cast<jlong(*)(JNIEnv*,jclass,jbyteArray, jint, jint)>(nCreateImage)),
+            BIND_JNI(nCreateImage, "(JIIIII)J", static_cast<jlong(*)(JNIEnv*,jclass,jlong, jint, jint, jint, jint, jint)>(nCreateImage)),
+            BIND_JNI(nCreateRGBImage, "([IIIZ)J",nCreateRGBImage)
     };
+
 
     const auto clazz = jniFindClass(env, "iml/m2g/NativeImageCodec");
     return clazz

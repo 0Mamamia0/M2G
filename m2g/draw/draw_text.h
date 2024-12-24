@@ -5,7 +5,7 @@
 #include <cmath>
 #include "Rect.h"
 #include "Font.h"
-#include "UTF8Iterator.h"
+
 #include "draw_image.h"
 
 
@@ -44,8 +44,7 @@ namespace m2g {
     }
 
 
-    static void
-    draw_glyphs(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, const std::vector<const Glyph *> &glyphs,
+    static void draw_glyphs(uint8_t *dst, ptrdiff_t dst_stride, int dst_format, const std::vector<const Glyph *> &glyphs,
                 int x, int y, const Rect &clip, const Font &font, int color) {
         if (clip.isEmpty()) {
             return;

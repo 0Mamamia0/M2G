@@ -7,6 +7,7 @@
 #include "blend.h"
 #include "copy.h"
 #include "run.h"
+#include "convert.h"
 #include "draw_text.h"
 #include "draw_image.h"
 

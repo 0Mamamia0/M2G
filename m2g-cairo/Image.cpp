@@ -1,6 +1,4 @@
-//
-// Created by Admin on 2024/2/20.
-//
+
 
 #include "Image.h"
 
@@ -67,7 +65,8 @@ namespace m2g {
         : width_(other.width_)
         , height_(other.height_)
         , stride_(other.stride_)
-        , mut_(other.mut_) {
+        , mut_(other.mut_)
+        , channels_(other.channels_){
 
         size_t data_size = stride_ * other.height_;
         this->data_ = malloc(data_size);
@@ -115,29 +114,31 @@ namespace m2g {
         this->mut_ = false;
     }
 
-    const void* Image::getPixels() const {
+    void* Image::getPixels() const {
         return data_ ? data_ : cairo_image_surface_get_data(surface_);
     }
 
 
-    void Image::getRGB(int* argb, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) const {
-        int image_width = getWidth();
+    void Image::getRGB(int* argb, int dataLength, int offset, int scanLength, int x_, int y_, int width, int height) const {
+
 
 
         auto pixels = static_cast<const uint8_t*>(getPixels());
-        while (height_ > 0) {
+        while (height --  > 0) {
 
             if(channels_ == 4) {
                 auto* tmp = static_cast<const uint8_t*>(pixels);
-                for (int i = 0; i < width_; i ++) {
+                for (int i = 0; i < width; i ++) {
                     int b = tmp[0];
                     int g = tmp[1];
                     int r = tmp[2];
                     int a = tmp[3];
 
+                    if(a == 0) {
+                        argb[offset + i] = 0;
+                        continue;
+                    }
                     double af =  0xFF / a;
-
-
                     b = std::clamp<int>(b*af, 0, 0xFF);
                     g = std::clamp<int>(g*af, 0, 0xFF);
                     r = std::clamp<int>(r*af, 0, 0xFF);
@@ -147,15 +148,13 @@ namespace m2g {
                 }
             } else if(channels_ == 3) {
                 auto* tmp = reinterpret_cast<const uint32_t*>(pixels);
-                for (int i = 0; i < width_; i ++) {
+                for (int i = 0; i < width; i ++) {
                     argb[offset + i] = (*tmp++) & 0xFF000000;
                 }
             }
 
-
-            pixels += image_width * 4;
+            pixels += stride_;
             offset += scanLength;
-            height_--;
         }
     }
 
@@ -163,7 +162,9 @@ namespace m2g {
         return surface_;
     }
 
-
+    int Image::getFormat() {
+        return 6; // BGRA
+    }
 }
 
 

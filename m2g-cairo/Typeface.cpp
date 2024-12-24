@@ -9,8 +9,12 @@ static std::once_flag flag;
 static FT_Library ft_library;
 
 
+
 namespace m2g {
-    std::shared_ptr<Typeface> Typeface::makeFormFile(const char *fileName) {
+
+
+
+    Typeface* Typeface::makeFormFile(const char *fileName) {
         std::call_once(flag, [] {
             FT_Init_FreeType(&ft_library);
             std::atexit([] {
@@ -20,7 +24,7 @@ namespace m2g {
         FT_Face ft_face;
         FT_Error error = FT_New_Face(ft_library, fileName, 0, &ft_face);
         if(!error) {
-            return std::make_shared<Typeface>(ft_face);
+            return new Typeface(ft_face);
         }
         return nullptr;
     }

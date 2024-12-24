@@ -1,9 +1,4 @@
-//
-// Created by Admin on 2024/2/20.
-//
-
-#ifndef CAIROFONT_H
-#define CAIROFONT_H
+#pragma once
 #include "cairo/cairo-features.h"
 #include "cairo/cairo-ft.h"
 
@@ -26,7 +21,7 @@ namespace m2g {
 
     class Font {
     public:
-        Font(std::shared_ptr<Typeface> typeface, int face, int style, int size);
+        Font(Typeface* typeface, int face, int style, int size);
         ~Font();
         int getStyle() const;
         int getFace() const;
@@ -59,4 +54,3 @@ namespace m2g {
 
 
 
-#endif //CAIROFONT_H

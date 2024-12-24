@@ -46,7 +46,6 @@ inline void copyRect_(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_
 
 
 namespace m2g::piv {
-
     template<int dst_r, int dst_g, int dst_b, int dst_a, int src_r, int src_g, int src_b, int src_a>
     void pix_copy(uint8_t *dst, const uint8_t *src, size_t size) {
         while (size -- > 0) {
@@ -166,8 +165,6 @@ namespace m2g::piv {
         } else {
             pix_copy_rect_order<dst_order, src_order>((uint8_t*)dst, src, dst_stride, src_stride, width, height);
         }
-
-
     }
 }
 

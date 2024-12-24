@@ -3,13 +3,13 @@
 #include "Rect.h"
 #include "color.h"
 #include "PixelFormat.h"
+
 #include "copy.h"
 #include "blend.h"
+#include "convert.h"
 
 namespace m2g {
-    static void drawPixelsAlpha8(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                 int width, int height) {
-    }
+
 
     static void drawPixels(uint8_t *dst, uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
                            int width, int height, int dst_format, int src_format) {
@@ -19,7 +19,9 @@ namespace m2g {
         }
         switch (src_format) {
             case ALPHA_8:
-                drawPixelsAlpha8(dst, src, dst_stride, src_stride, width, height);
+            case GREY:
+            case GREY_ALPHA:
+                convertRect(dst, src, dst_format, src_format, dst_stride, src_stride, width, height);
                 break;
             case RGB_888X:
             case XRGB_8888:
@@ -31,8 +33,7 @@ namespace m2g {
             case BGRA_8888:
                 blendRect(dst, src, dst_format, src_format, dst_stride, src_stride, width, height);
                 break;
-            case GREY:
-            case GREY_ALPHA:
+
             default:
                 break;
         }
@@ -69,7 +70,6 @@ namespace m2g {
         uint8_t *dst_pixels = dst + (dst_rect_clip.top * dst_stride) + (
                 dst_rect_clip.left * PixelFormat::getBytePerPixel(dst_format));
         uint8_t *src_pixels = src + (y0 * src_stride) + x0 * PixelFormat::getBytePerPixel(src_format);
-
         drawPixels(dst_pixels, src_pixels, dst_stride, src_stride, x1 - x0, y1 - y0, dst_format, src_format);
     }
 

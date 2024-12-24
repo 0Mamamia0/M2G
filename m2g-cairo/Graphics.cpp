@@ -1,6 +1,3 @@
-//
-// Created by Admin on 2024/2/20.
-//
 
 #include "Graphics.h"
 
@@ -13,6 +10,7 @@
 // TODO Fixed me
 #define CAIRO_HAS_FT_FONT 1
 #include "cairo/cairo.h"
+#include "m2g-def.h"
 #include "Image.h"
 #include "Font.h"
 
@@ -23,36 +21,6 @@
 #define A(argb) static_cast<uint8_t>((argb >> 24) & 0xFF)
 
 namespace m2g {
-
-
-    enum Anchor {
-        HCENTER = 1,
-        VCENTER = 2,
-        LEFT = 4,
-        RIGHT = 8,
-        TOP = 16,
-        BOTTOM = 32,
-        BASELINE = 64,
-    };
-
-
-    enum Transform {
-        TRANS_NONE          = 0,               //   0000
-        TRANS_MIRROR_ROT180 = 1,               //   0001
-        TRANS_MIRROR        = 2,               //   0010
-        TRANS_ROT180        = 3,               //   0011
-
-        TRANS_MIRROR_ROT270 = 4,               //   0100
-        TRANS_ROT90         = 5,               //   0101
-        TRANS_ROT270        = 6,               //   0110
-        TRANS_MIRROR_ROT90  = 7,               //   0111
-
-        TRANSFORM_MASK      =  0x7,
-        TRANSFORM_INVERTED_AXES =  1 << 2,
-        TRANSFORM_X_FLIP =         1 << 1,
-        TRANSFORM_Y_FLIP =         1,
-    };
-
     int anchorX(int anchor, int x, int w) {
         switch (anchor & (LEFT | RIGHT | HCENTER)) {
             case RIGHT:
@@ -106,14 +74,16 @@ namespace m2g {
     }
 
     Graphics::Graphics(Image* image)
-        : color(-1) {
+        : color(-1)
+        , saveCount_(0){
         this->surface_ = image->getCairoSurface();
         this->cr = cairo_create(surface_);
         reset();
     }
 
     Graphics::Graphics(cairo_surface_t* surface)
-        : color(-1) {
+        : color(-1)
+        , saveCount_(0){
         this->surface_ = surface;
         this->cr = cairo_create(surface);
         reset();
@@ -121,16 +91,19 @@ namespace m2g {
 
     Graphics::Graphics(const Graphics& other)
         : cr(nullptr)
-        , color(-1) {
+        , color(-1)
+        , saveCount_(0){
         this->surface_ = other.surface_;
         this->cr = cairo_create(surface_);
+        this->saveCount_ = other.saveCount_;
         reset();
     }
 
     Graphics::Graphics(Graphics&& other) noexcept
         : cr(nullptr)
         , surface_(nullptr)
-        , color(-1) {
+        , color(other.color)
+        , saveCount_(other.saveCount_){
         std::swap(surface_, other.surface_);
         std::swap(cr, other.cr);
     }
@@ -242,7 +215,6 @@ namespace m2g {
     }
 
     void Graphics::drawString(const char* str, size_t len, int x, int y, int anchor, const Font& font) {
-
         x = anchorTextX(anchor, x, font.charsWidth(str, len), font);
         y = anchorTextY(anchor, y, font);
 
@@ -356,7 +328,7 @@ namespace m2g {
 
     void Graphics::drawRegion(Image* image, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst, int anchor) {
         if (transform == 0) {
-            drawRegion(image, x_src, y_src, w_src, h_src, x_dst, y_dst, anchor);
+//            drawRegion(image, x_src, y_src, w_src, h_src, x_dst, y_dst, anchor);
             return;
         }
 
@@ -368,19 +340,19 @@ namespace m2g {
                 break;
             }
             case TRANS_ROT90: {
-                cairo_matrix_init_rotate(&matrix, M_PI);
+                cairo_matrix_init_rotate(&matrix, M_PI / 2);
                 H = h_src;
                 V = w_src;
                 DY = -h_src;
                 break;
             }
             case TRANS_ROT180:
-                cairo_matrix_init_rotate(&matrix, M_PI * 2);
+                cairo_matrix_init_rotate(&matrix, M_PI);
                 DX = -w_src;
                 DY = -h_src;
                 break;
             case TRANS_ROT270:
-                cairo_matrix_init_rotate(&matrix, M_PI * 3);
+                cairo_matrix_init_rotate(&matrix, M_PI * 1.5);
                 H = h_src;
                 V = w_src;
                 DX = -w_src;
@@ -390,7 +362,7 @@ namespace m2g {
                 DX = -w_src;
                 break;
             case TRANS_MIRROR_ROT90:
-                cairo_matrix_init_rotate(&matrix, M_PI);
+                cairo_matrix_init_rotate(&matrix, M_PI / 2);
                 cairo_matrix_scale(&matrix, -1, 1);
                 H = h_src;
                 V = w_src;
@@ -398,12 +370,12 @@ namespace m2g {
                 DX = -w_src;
                 break;
             case TRANS_MIRROR_ROT180:
-                cairo_matrix_init_rotate(&matrix, M_PI * 2);
+                cairo_matrix_init_rotate(&matrix, M_PI );
                 cairo_matrix_scale(&matrix, -1, 1);
                 DY = -h_src;
                 break;
             case TRANS_MIRROR_ROT270:
-                cairo_matrix_init_rotate(&matrix, M_PI * 3);
+                cairo_matrix_init_rotate(&matrix, M_PI * 1.5);
                 cairo_matrix_scale(&matrix, -1, 1);
                 H = h_src;
                 V = w_src;
@@ -412,7 +384,7 @@ namespace m2g {
                 return;
         }
 
-        //TODO  check this
+
         x_dst = anchorX(anchor, x_dst, H);
         y_dst = anchorY(anchor, y_dst, V);
 
@@ -420,7 +392,12 @@ namespace m2g {
         cairo_translate(cr, x_dst , y_dst);
         cairo_transform(cr, &matrix);
         cairo_translate(cr, DX, DY);
-        this->drawRegion(image, x_src, y_src, w_src, h_src, 0,0);
+
+        cairo_rectangle(cr, 0, 0, w_src, h_src);
+        cairo_clip(cr);
+        cairo_set_source_surface(cr, image->getCairoSurface(), - x_src, - y_src);
+        cairo_paint(cr);
+
         cairo_restore(cr);
     }
 
@@ -487,6 +464,7 @@ namespace m2g {
 
 
     void Graphics::translate(int x, int y) {
+        translation.offset(x, y);
         cairo_translate(cr, x, y);
     }
 
@@ -526,28 +504,40 @@ namespace m2g {
     }
 
     int Graphics::getTranslateX() const {
-        double x;
-        cairo_get_current_point(cr, &x, nullptr);
-        return static_cast<int>(x);
+        return translation.x;
     }
 
     int Graphics::getTranslateY() const {
-        double y;
-        cairo_get_current_point(cr , nullptr, &y);
-        return static_cast<int>(y);
+        return translation.y;
     }
+
+
 
     int Graphics::save() {
         cairo_save(cr);
-        return 0;
+        int temp = saveCount_;
+        saveCount_ ++;
+        return temp;
     }
 
     bool Graphics::restore() {
-        cairo_restore(cr);
-        return true;
+        if(saveCount_ > 0) {
+            cairo_restore(cr);
+            saveCount_ --;
+            return true;
+        }
+        return false;
     }
 
     bool Graphics::restoreToCount(int count) {
+        if(count < 0) {
+            return false;
+        }
+
+        while (saveCount_ > count) {
+            cairo_restore(cr);
+            saveCount_ --;
+        }
         return true;
     }
 
@@ -562,10 +552,30 @@ namespace m2g {
         // cairo_paint(cr);
     }
 
+
+    void Graphics::clear(const Color& color) {
+    }
+
     void Graphics::drawPoint(int x, int y) {
         cairo_move_to(cr, x, y);
         cairo_line_to(cr, x+1, y+1);
         cairo_stroke(cr);
+    }
+
+
+
+    void Graphics::drawTriangle(Point p1, Point p2, Point p3) {
+
+    }
+
+
+    void Graphics::fillTriangle(Point p1, Point p2, Point p3) {
+
+    }
+
+
+    void Graphics::fillEllipse(int x, int y, int rx, int ry) {
+
     }
 
 

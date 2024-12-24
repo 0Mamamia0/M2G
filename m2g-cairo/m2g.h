@@ -1,14 +1,13 @@
-//
-// Created by Admin on 2024/9/8.
-//
-
-#ifndef NXJVM_M2G_H
-#define NXJVM_M2G_H
+#pragma once
 
 #include "m2g-def.h"
+#include "Point.h"
+#include "Rect.h"
+#include "color.h"
 #include "Font.h"
 #include "Graphics.h"
 #include "Image.h"
 #include "ImageCodec.h"
+#include "Typeface.h"
 
-#endif //NXJVM_M2G_H
+

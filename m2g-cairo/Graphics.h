@@ -1,23 +1,23 @@
-//
-// Created by Admin on 2024/2/20.
-//
-
-#ifndef CAIROGRAPHICS_H
-#define CAIROGRAPHICS_H
+#pragma once
 
 #include <string>
 #include "cairo/cairo.h"
+#include "color.h"
+#include "Point.h"
 #include "Image.h"
+
 
 
 namespace m2g {
 
     class Font;
-    class Graphics {
-    public:
-        explicit Graphics(Image* image);
 
-        explicit Graphics(cairo_surface_t* surface);
+    class Graphics {
+        using Translate = Point;
+    public:
+        explicit Graphics(Image *image);
+
+        explicit Graphics(cairo_surface_t *surface);
 
         // explicit Graphics(std::shared_ptr<PixelBuffer> buffer);
         //
@@ -25,15 +25,15 @@ namespace m2g {
         //
         // Graphics(std::shared_ptr<PixelBuffer> buffer, int width, int height);
 
-        Graphics(const Graphics& other);
+        Graphics(const Graphics &other);
 
-        Graphics(Graphics&& other) noexcept;
+        Graphics(Graphics &&other) noexcept;
 
         ~Graphics();
 
-        Graphics& operator =(const Graphics&s) = delete;
+        Graphics &operator=(const Graphics &s) = delete;
 
-        Graphics& operator =(const Graphics&&s) = delete;
+        Graphics &operator=(const Graphics &&s) = delete;
 
         // void setColor(const Color& color);
 
@@ -69,7 +69,7 @@ namespace m2g {
 
         void clear(int color);
 
-        // void clear(const Color&color);
+        void clear(const Color &color);
 
         void drawPoint(int x, int y);
 
@@ -78,6 +78,8 @@ namespace m2g {
         void drawLine(int x0, int y0, int x1, int y1);
 
         void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2);
+
+        void drawTriangle(Point p1, Point p2, Point p3);
 
         void drawRect(int x, int y, int w, int h);
 
@@ -91,23 +93,24 @@ namespace m2g {
 
         void drawCircle(int centerX, int centerY, int r);
 
-         void drawChar(char c, int x, int y, int anchor, const Font& font);
+        void drawChar(char c, int x, int y, int anchor, const Font &font);
 
-        void drawString(const char* str, int x, int y, int anchor, const Font& font);
+        void drawString(const char *str, int x, int y, int anchor, const Font &font);
 
-        void drawString(const char* str, size_t len, int x, int y, int anchor, const Font& font);
+        void drawString(const char *str, size_t len, int x, int y, int anchor, const Font &font);
 
-        void drawString(const std::string& str, int x, int y, int anchor, const Font& font);
+        void drawString(const std::string &str, int x, int y, int anchor, const Font &font);
 
-        void drawRGB(int* rgbData, int dataLength, int offset, int scanLength, int x, int y, int width, int height, bool processAlpha);
+        void drawRGB(int *rgbData, int dataLength, int offset, int scanLength, int x, int y, int width, int height,
+                     bool processAlpha);
 
-        void drawImage(Image* image, int x, int y, int anchor = 0);
+        void drawImage(Image *image, int x, int y, int anchor = 0);
 
-        void drawImage(Image* image, int x, int y, int dst_width, int dst_height, int anchor = 0);
+        void drawImage(Image *image, int x, int y, int dst_width, int dst_height, int anchor = 0);
 
-        void drawRegion(Image* image, int x_src, int y_src, int w_src, int h_src, int x_dst, int y_dst, int anchor = 0);
+        void drawRegion(Image *image, int x_src, int y_src, int w_src, int h_src, int x_dst, int y_dst, int anchor = 0);
 
-        void drawRegion(Image* image, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst,
+        void drawRegion(Image *image, int x_src, int y_src, int w_src, int h_src, int transform, int x_dst, int y_dst,
                         int anchor);
 
         void fillRect(int x, int y, int w, int h);
@@ -119,6 +122,7 @@ namespace m2g {
         // void fillEllipse(int x, int y, int radiusX, int radiusY);
         //
         void fillArc(int x, int y, int w, int h, int startAngle, int arcAngle);
+
         //
         void fillCircle(int centerX, int centerY, int r);
         //
@@ -126,11 +130,16 @@ namespace m2g {
 
         void copyArea(int x_src, int y_src, int width_, int height_, int x_dst, int y_dst, int anchor);
 
+        void fillTriangle(Point p1, Point p2, Point p3);
+
+        void fillEllipse(int x, int y, int rx, int ry);
+
     private:
         int color;
-        cairo_t* cr;
-        cairo_surface_t* surface_;
+        int saveCount_;
+        cairo_t *cr;
+        cairo_surface_t *surface_;
+        Translate translation;
     };
 }
 
-#endif //CAIROGRAPHICS_H

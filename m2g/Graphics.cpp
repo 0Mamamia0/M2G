@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <bit>
+#include <cassert>
 
 #include "draw/draw.h"
 
@@ -356,8 +357,8 @@ namespace m2g {
                 case TRANS_ROT180:
                     x_step = -1;
                     y_step = -src_stride;
-                    x0 = w_src - y_offset - 1;
-                    y0 = h_src - x_offset - 1;
+                    x0 = w_src - x_offset - 1;
+                    y0 = h_src - y_offset - 1;
                     break;
                 case TRANS_MIRROR_ROT180:
                     x_step = 1;
@@ -760,14 +761,29 @@ namespace m2g {
 
 
     void Graphics::drawChar(char c, int x, int y, int anchor, const Font &font) {
-        auto *pixel = buffer->addr<uint8_t *>();
-        ptrdiff_t stride = buffer->getRowBytes();
-        int format = buffer->getFormat();
-        translatePoint(x, y);
-        x = anchorTextX(anchor, x, font.charWidth(c), font);
-        y = anchorTextY(anchor, y, font);
+        auto* glyph = font.getGlyph(c);
+        drawGlyph(glyph, x, y, anchor, font);
+    }
 
-        draw_char(pixel, stride, format, c, x, y, clip.getDeviceClipBounds(), font, paintColor.ToARGB());
+
+    void Graphics::drawChar(char16_t c, int x, int y, int anchor, const Font &font) {
+        auto* glyph = font.getGlyph((int)c);
+        drawGlyph(glyph, x, y, anchor, font);
+    }
+
+
+    void Graphics::drawGlyph(const Glyph *glyph, int x, int y, int anchor, const Font &font) {
+        auto *pixel = buffer->addr<uint8_t *>();
+        auto stride = buffer->getRowBytes();
+        auto format = buffer->getFormat();
+        auto color = paintColor.ToARGB();
+        auto c = clip.getDeviceClipBounds();
+        auto w = font.glyphWidth(glyph);
+
+        translatePoint(x, y);
+        x = anchorTextX(anchor, x, w, font);
+        y = anchorTextY(anchor, y, font);
+        draw_glyph(pixel, stride, format, glyph, x, y, c, font, color);
     }
 
     void Graphics::drawString(const std::string &str, int x, int y, int anchor, const Font &font) {
@@ -783,7 +799,21 @@ namespace m2g {
 
 
     void Graphics::drawString(const char *str, size_t len, int x, int y, int anchor, const Font &font) {
-        if (str == nullptr) {
+        if (str == nullptr || len == 0) {
+            return;
+        }
+
+        Rect bounds = clip.getDeviceClipBounds();
+        if (bounds.isEmpty()) {
+            return;
+        }
+        std::vector<const Glyph *> glyphs = font.findGlyphs(str, len);
+        drawGlyphs(glyphs, x, y, anchor, font);
+    }
+
+
+    void Graphics::drawString(const char16_t* str, size_t len, int x, int y, int anchor, const Font &font) {
+        if (str == nullptr || len == 0) {
             return;
         }
 
@@ -792,17 +822,32 @@ namespace m2g {
             return;
         }
 
+        std::vector<const Glyph *> glyphs = font.findGlyphs(str, len);
+        drawGlyphs(glyphs, x, y, anchor, font);
+    }
+
+    void Graphics::drawGlyphs(const std::vector<const Glyph *> &glyphs, int x, int y, int anchor, const Font &font) {
+        if(glyphs.empty())
+            return;
+
         int x_offset = x;
         int y_offset = y;
 
+        Rect bounds = clip.getDeviceClipBounds();
+        if (bounds.isEmpty()) {
+            return;
+        }
+
+        auto dst = buffer->addr<uint8_t *>();
+        auto dst_stride = buffer->getRowBytes();
+        auto dst_format = buffer->getFormat();
+        auto color = paintColor.ToARGB();
+        auto w = font.glyphsWidth(glyphs);
+
         translatePoint(x_offset, y_offset);
-        x_offset = anchorTextX(anchor, x_offset, font.charsWidth(str, (int) len), font);
+        x_offset = anchorTextX(anchor, x_offset, w, font);
         y_offset = anchorTextY(anchor, y_offset, font);
-
-
-        draw_string(buffer->addr<uint8_t *>(), buffer->getRowBytes(), buffer->getFormat(), str, len, x_offset, y_offset,
-                    bounds, font,
-                    paintColor.ToARGB());
+        draw_glyphs(dst, dst_stride, dst_format, glyphs, x_offset, y_offset, bounds, font, color);
     }
 
     void Graphics::drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2) {
@@ -915,11 +960,6 @@ namespace m2g {
 
 
     void Graphics::drawArc(int x, int y, int w, int h, int startAngle, int arcAngle) {
-
-
-
-
-
         if ((w < 2) || (h < 2)) {
             if (w < 0 || h < 0) {
                 return;
@@ -1163,4 +1203,8 @@ namespace m2g {
             drawPixel(point.x, point.y);
         }
     }
+
+
+
+
 }

@@ -1,22 +1,15 @@
-//
-// Created by Admin on 2024/2/20.
-//
+
 
 #include "Font.h"
 
 #include <string>
 #include <cmath>
+#include "m2g-def.h"
 #include "cairo/cairo.h"
 #include "Typeface.h"
 
 
 namespace m2g {
-
-    enum FontSize {
-        SMALL = 8,
-        MEDIUM = 0,
-        LARGE = 16,
-    };
 
     static int getFontSize(int font_size) {
         switch (font_size) {
@@ -27,8 +20,8 @@ namespace m2g {
         }
     }
 
-    Font::Font(std::shared_ptr<Typeface> typeface, int face, int style, int size)
-        : typeface_(std::move(typeface))
+    Font::Font(Typeface* typeface, int face, int style, int size)
+        : typeface_(typeface)
         , face_(face)
         , style_(style)
         , size_(size)
@@ -39,8 +32,6 @@ namespace m2g {
         this->surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
         this->cr_ = cairo_create(surface_);
 
-
-        unsigned char data[1000];
 
         cairo_set_font_face(cr_, typeface_-> getCairoFace());
         cairo_set_font_size(cr_, this->font_size_);

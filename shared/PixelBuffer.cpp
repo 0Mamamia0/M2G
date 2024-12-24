@@ -1,4 +1,4 @@
-﻿//
+﻿
 
 
 #include "PixelBuffer.h"
@@ -47,13 +47,15 @@ namespace m2g {
           , size(height * paddedRowByte) {
     }
 
-    PixelBuffer::PixelBuffer(const PixelBuffer& other)
-        : PixelBuffer(nullptr, other.width, other.height, other.format, nullptr) {
-        auto* data = new uint8_t[size];
-        std::memcpy(data, other.pixel, size);
-        this->pixel = data;
-        this->fun = &Release;
-    }
+//    PixelBuffer::PixelBuffer(const PixelBuffer& other)
+//        : PixelBuffer(nullptr, other.width, other.height, other.format, nullptr) {
+//
+//        // TODO : fixed bad allocation
+//        auto* data = new uint8_t[size];
+//        std::memcpy(data, other.pixel, size);
+//        this->pixel = data;
+//        this->fun = &Release;
+//    }
 
 
     PixelBuffer::PixelBuffer(PixelBuffer&& other) noexcept
@@ -102,7 +104,15 @@ namespace m2g {
     }
 
     void PixelBuffer::erase(int val) {
-        memset(pixel, val, size);
+        int h = height;
+        int w = width;
+        int bytes = w << spp;
+        uint8_t* pix = this->pixel;
+
+        while (h -- > 0) {
+            memset(pix, val, bytes);
+            pix += rowByte;
+        }
     }
 
     bool PixelBuffer::hasAlpha() const {
@@ -129,5 +139,31 @@ namespace m2g {
             default:
                 return false;
         }
+    }
+
+    bool PixelBuffer::copyTo(PixelBuffer &dst) const {
+        int src_width = getWidth();
+        int src_height = getHeight();
+        int src_format = getFormat();
+        int dst_width = dst.getWidth();
+        int dst_height = dst.getHeight();
+        int dst_format = dst.getFormat();
+
+        if(src_width == dst_width && src_height == dst_height && src_format == dst_format) {
+
+            if(rowByte == paddedRowByte && dst.rowByte == dst.paddedRowByte) {
+                memcpy(dst.pixel, pixel, size);
+            } else {
+                uint8_t* src_pixel = pixel;
+                uint8_t* dst_pixel = dst.pixel;
+                while (src_height--) {
+                    memcpy(dst_pixel, src_pixel, rowByte);
+                    src_pixel += paddedRowByte;
+                    dst_pixel += dst.paddedRowByte;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

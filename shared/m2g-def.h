@@ -1,9 +1,4 @@
-﻿//
-// Created by Admin on 2023/12/4.
-//
-
-#ifndef M2G_DEF_H
-#define M2G_DEF_H
+﻿#pragma once
 namespace m2g{
 
     enum Transform {
@@ -63,5 +58,3 @@ namespace m2g{
 
 
 
-
-#endif //M2G_DEF_H

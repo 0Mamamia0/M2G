@@ -7,28 +7,28 @@
 
 using namespace m2g;
 
-static jint NativeImage_GetWidth (JNIEnv *, jclass, jlong handle) {
+static jint nGetWidth (JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->getWidth();
     }
     return 0;
 }
 
-static jint NativeImage_GetHeight (JNIEnv *, jclass, jlong handle) {
+static jint nGetHeight (JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->getHeight();
     }
     return 0;
 }
 
-static jboolean NativeImage_IsMutable(JNIEnv *, jclass, jlong handle) {
+static jboolean nIsMutable(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->isMutable();
     }
     return false;
 }
 
-static void NativeImage_GetRGB(JNIEnv *env, jclass, jlong handle, jintArray data, jint dataLength, jint offset, jint scanLength, jint x, jint y, jint width, jint height) {
+static void nGetRGB(JNIEnv *env, jclass, jlong handle, jintArray data, jint dataLength, jint offset, jint scanLength, jint x, jint y, jint width, jint height) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         jboolean isCopy;
         jint* argb = jniGetIntArrayElements(env, data, &isCopy);
@@ -37,36 +37,39 @@ static void NativeImage_GetRGB(JNIEnv *env, jclass, jlong handle, jintArray data
     }
 }
 
-static jlong NativeImage_GetPixelsAdders(JNIEnv *, jclass, jlong handle) {
+static jlong nGetPixelsAdders(JNIEnv *, jclass, jlong handle) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return image->getPixelBufferRef().addr<jlong>();
     }
     return 0;
 }
 
-static jint NativeImage_GetChannels(JNIEnv *, jclass, jlong handle) {
-    if(auto* image = reinterpret_cast<Image*>(handle)) {
-        return image->getPixelBufferRef().getBytePerPixel();
-    }
-    return 0;
-}
 
-static void NativeImage_Release(JNIEnv *, jclass, jlong handle) {
+static void nRelease(JNIEnv *, jclass, jlong handle) {
     auto* image = reinterpret_cast<Image*>(handle);
     delete image;
 }
 
+static jint  nGetFormat(JNIEnv *, jclass, jlong handle) {
+    if (auto *image = reinterpret_cast<Image *>(handle)) {
+        return image->getFormat();
+    }
+    return -1;
+};
+
+
 
 
  extern "C" int register_m2g_Image(JNIEnv* env) {
+#define BIND_JNI(fun, sig) { const_cast<char*>(#fun), const_cast<char*>(sig), reinterpret_cast<void*>(fun)}
      static const JNINativeMethod methods[] = {
-             {"jniGetWidth"      , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetWidth)      },
-             {"jniGetHeight"     , "(J)I"           , reinterpret_cast<void*>(NativeImage_GetHeight)      },
-             {"jniIsMutable"     , "(J)Z"           , reinterpret_cast<void*>(NativeImage_IsMutable)      },
-             {"jniGetRGB"        , "(J[IIIIIIII)V"  , reinterpret_cast<void*>(NativeImage_GetRGB)      },
-             {"jniRelease"       , "(J)V"           , reinterpret_cast<void*>(NativeImage_Release)      },
-             {"jniGetPixelsAdders"       , "(J)J"   , reinterpret_cast<void*>(NativeImage_GetPixelsAdders)      },
-             {"jniGetChannels"       , "(J)I"       , reinterpret_cast<void*>(NativeImage_GetChannels)      },
+             BIND_JNI(nGetWidth, "(J)I"),
+             BIND_JNI(nGetHeight, "(J)I"),
+             BIND_JNI(nIsMutable, "(J)Z"),
+             BIND_JNI(nGetRGB, "(J[IIIIIIII)V"),
+             BIND_JNI(nRelease, "(J)V"),
+             BIND_JNI(nGetPixelsAdders, "(J)J"),
+             BIND_JNI(nGetFormat, "(J)I"),
      };
 
      const auto clazz = jniFindClass(env, "iml/m2g/NativeImage");

@@ -1,6 +1,4 @@
-//
-// Created by Admin on 2024/2/20.
-//
+
 
 #include "ImageCodec.h"
 
@@ -9,33 +7,25 @@
 #include <cstring>
 #include <algorithm>
 
+#include "m2g-def.h"
 #include "Image.h"
 #include "stb_image.h"
 
 namespace m2g {
-    enum Transform {
-        TRANS_NONE          = 0,               //   0000
-        TRANS_MIRROR_ROT180 = 1,               //   0001
-        TRANS_MIRROR        = 2,               //   0010
-        TRANS_ROT180        = 3,               //   0011
 
-        TRANS_MIRROR_ROT270 = 4,               //   0100
-        TRANS_ROT90         = 5,               //   0101
-        TRANS_ROT270        = 6,               //   0110
-        TRANS_MIRROR_ROT90  = 7,               //   0111
-
-        TRANSFORM_MASK      =  0x7,
-        TRANSFORM_INVERTED_AXES =  1 << 2,
-        TRANSFORM_X_FLIP =         1 << 1,
-        TRANSFORM_Y_FLIP =         1,
-    };
 
     Image* ImageCodec::createEmptyImage(int width, int height, bool isMutable) {
         return nullptr;
     }
 
     Image* ImageCodec::createImage(int width, int height) {
-        return new Image(width, height);
+        Image* image = new Image(width, height);
+        void* pixels = image->getPixels();
+        int stride = image->getStride();
+        while (height -- > 0) {
+            memset(pixels, 0xFF, stride);
+        }
+        return image;
     }
 
     Image* ImageCodec::loadImage(const char* filename) {

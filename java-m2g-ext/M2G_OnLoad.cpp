@@ -20,7 +20,9 @@ jint M2G_OnLoad(JavaVM* vm, void* reserved) {
     REGISTER_NATIVES(Image)
     REGISTER_NATIVES(ImageCodec)
     REGISTER_NATIVES(Graphics)
+    REGISTER_NATIVES(Typeface)
     REGISTER_NATIVES(Font)
-    REGISTER_NATIVES(Objects)
+//    REGISTER_NATIVES(Objects)
+
     return JNI_VERSION_1_6;
 }

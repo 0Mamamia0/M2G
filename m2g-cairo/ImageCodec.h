@@ -1,22 +1,12 @@
-//
-// Created by Admin on 2024/2/20.
-//
-
-#ifndef CAIROIMAGECODEC_H
-#define CAIROIMAGECODEC_H
-
 
 
 #include <cstdint>
 
 
 
-
-
+#pragma once
 namespace m2g {
-
     class Image;
-
     class ImageCodec {
     public:
         static Image* createEmptyImage(int width, int height, bool isMutable);
@@ -31,4 +21,3 @@ namespace m2g {
 
 
 
-#endif //CAIROIMAGECODEC_H

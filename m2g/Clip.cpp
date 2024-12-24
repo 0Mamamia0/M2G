@@ -93,6 +93,7 @@ namespace m2g {
             int codeOut = code1 ? code1 : code2;
 
             if (codeOut & CLIP_TOP) {
+                // TODO / 0
                 // 点在上方区域外
                 new_x = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
                 new_y = y;

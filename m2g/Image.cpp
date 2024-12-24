@@ -1,6 +1,7 @@
 
 
 #include <cstdint>
+#include <span>
 #include "draw/draw.h"
 #include "Image.h"
 #include "Graphics.h"
@@ -13,91 +14,90 @@ namespace m2g {
     }
 
     Image::Image(std::shared_ptr<PixelBuffer> pixel, bool isMutable)
-            : width(pixel->getWidth())
-            , height(pixel->getHeight())
-            , mut(isMutable)
-            , pixel(std::move(pixel)){
-
+            : width_(pixel->getWidth())
+            , height_(pixel->getHeight())
+            , mut_(isMutable)
+            , pixel_(std::move(pixel)){
     }
 
-
-
-
     int Image::getHeight() const {
-        return pixel->getHeight();
+        return height_;
     }
 
     int Image::getWidth() const {
-        return pixel->getWidth();
+        return width_;
     }
 
     bool Image::isMutable() const {
-        return mut;
+        return mut_;
     }
 
     void Image::setImmutable() {
-        this->mut = false;
+        this->mut_ = false;
     }
 
     Image::~Image() = default;
 
-    void Image::getRGB(int* argb, int dataLength, int offset, int scanLength, int x_, int y_, int width_, int height_) const {
-        int image_width = getWidth();
+    void Image::getRGB(int* argb, int dataLength, int offset, int scanLength, int x, int y, int width, int height) const {
+//        int image_width = getWidth();
         int format = getFormat();
-        int stride = pixel->getRowBytes();
+        int stride = pixel_->getRowBytes();
 
-        if(format != PixelFormatType::RGB_888X && format != PixelFormatType::RGBA_8888) {
-            return;
+        if(format == PixelFormatType::RGB_888X || format == PixelFormatType::RGBA_8888) {
+            auto* rgba = pixel_->addr<Color*>(x, y);
+            piv::pix_copy_rect_order<pix_order::ARGB, pix_order::RGBA>((uint32_t*)argb + offset, (uint8_t*)rgba, scanLength * 4, stride, width, height);
+        } else if(format == PixelFormatType::GREY) {
+            auto* src = pixel_->addr<uint8_t*>(x, y);
+            auto* dst = argb + offset;
+            while (height-- > 0) {
+                for (int i = 0; i < width; ++i) {
+                    uint8_t gray = src[i];
+                    dst[i] = 0xFF << 24 | gray << 16 | gray << 8 | gray;
+                }
+                src += stride;
+                dst += scanLength;
+            }
+
+        } else if(format == PixelFormatType::GREY_ALPHA) {
+            auto* src = pixel_->addr<uint8_t*>(x, y);
+            auto* dst = argb + offset;
+            while (height-- > 0) {
+                for (int i = 0; i < width; ++i) {
+                    uint8_t gray = src[i * 2];
+                    uint8_t alpha = src[i * 2 + 1];
+                    dst[i] = alpha << 24 | gray << 16 | gray << 8 | gray;
+                }
+                src += stride;
+                dst += scanLength;
+            }
         }
 
 
-        auto* rgba = pixel->addr<Color*>(x_, y_);
-
-        piv::pix_copy_rect_order<pix_order::ARGB, pix_order::RGBA>((uint32_t*)argb + offset, (uint8_t*)rgba, scanLength * 4, stride, width_, height_);
-
-//        while (height_ > 0) {
-////            if constexpr ()
-//            piv::pix_copy_order<pix_order::RGBA>(argb + offset, (uint8_t*)rgba, width_);
-////            auto* tmp = rgba;
-////            for (int i = 0; i < width_; i ++) {
-////                int value = 0;
-////                value |= static_cast<int>(tmp->a) << 24;
-////                value |= static_cast<int>(tmp->r) << 16;
-////                value |= static_cast<int>(tmp->g) << 8;
-////                value |= static_cast<int>(tmp->b);
-////                argb[offset + i] = value;
-////                tmp ++;
-////            }
-//            rgba += image_width;
-//            offset += scanLength;
-//            height_--;
-//        }
     }
 
     PixelBuffer& Image::getPixelBufferRef() const {
-        return *pixel;
+        return *pixel_;
     }
 
 
     std::shared_ptr<PixelBuffer> Image::getPixelBuffer() const {
-        return pixel;
+        return pixel_;
     }
 
-
     int Image::getFormat() const {
-        return pixel->getFormat();
+        return pixel_->getFormat();
     }
 
     bool Image::hasAlpha() const {
-        return pixel->hasAlpha();
+        return pixel_->hasAlpha();
     }
 
     bool Image::isColor() const {
-        return pixel->isColor();
+        return pixel_->isColor();
     }
 
     void* Image::getPixels() const {
-        return pixel->addr<void*>();
+        return pixel_->addr<void*>();
     }
 }
 

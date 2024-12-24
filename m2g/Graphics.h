@@ -3,6 +3,7 @@
 #include <stack>
 #include <memory>
 #include <string>
+#include <vector>
 #include "color.h"
 #include "Point.h"
 #include "Clip.h"
@@ -114,10 +115,14 @@ namespace m2g {
         void drawCircle(int centerX, int centerY, int r);
 
         void drawChar(char c, int x, int y, int anchor, const Font &font);
+        void drawChar(char16_t c, int x, int y, int anchor, const Font &font);
+        void drawGlyph(const Glyph *glyph, int x, int y, int anchor, const Font &font);
 
         void drawString(const char *str, int x, int y, int anchor, const Font &font);
 
         void drawString(const char *str, size_t len, int x, int y, int anchor, const Font &font);
+        void drawString(const char16_t *str, size_t len, int x, int y, int anchor, const Font &font);
+        void drawGlyphs(const std::vector<const Glyph *> &glyphs, int x, int y, int anchor, const Font &font);
 
         void drawString(const std::string &str, int x, int y, int anchor, const Font &font);
 
