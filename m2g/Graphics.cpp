@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <bit>
-#include <cassert>
 
 #include "draw/draw.h"
 

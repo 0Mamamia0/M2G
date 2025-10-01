@@ -1,24 +1,25 @@
 #pragma once
 
+#include "pix_def.h"
+#include "string.h"
 #include "PixelFormat.h"
 
 
 inline void blend1px(uint8_t *dst, const uint8_t *src) {
-    int alpha = src[3];
-
-    if (alpha == 0x0) {
-        return;
-    }
+    uint16_t alpha = src[3];
 
     if (alpha == 0xFF) {
         memcpy(dst, src, 4);
         return;
     }
+    if (alpha == 0x0) {
+        return;
+    }
 
-    int invAlpha = 0xFF - alpha;
-    dst[0] = (src[0] * alpha + dst[0] * invAlpha) >> 8;
-    dst[1] = (src[1] * alpha + dst[1] * invAlpha) >> 8;
-    dst[2] = (src[2] * alpha + dst[2] * invAlpha) >> 8;
+    uint16_t inv_alpha = 255 - alpha;
+    dst[0] = (src[0] * alpha + dst[0] * inv_alpha) >> 8;
+    dst[1] = (src[1] * alpha + dst[1] * inv_alpha) >> 8;
+    dst[2] = (src[2] * alpha + dst[2] * inv_alpha) >> 8;
     dst[3] = 0xFF;
 }
 
@@ -93,12 +94,16 @@ static void blendA8_8(uint8_t *dst, const uint8_t *src, uint8_t *rgba) {
 #endif
 
 
+template<int src_order>
+   void pix_blend_order(uint8_t *dst, const uint8_t *src, int n);
+
 namespace m2g::piv {
     template<int src_order>
     void blend_rect_order(uint8_t *dst, const uint8_t *src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
                           int width, int height) {
         while (height-- > 0) {
             pix_blend_order<src_order>(dst, src, width);
+
             dst += dst_stride;
             src += src_stride;
         }

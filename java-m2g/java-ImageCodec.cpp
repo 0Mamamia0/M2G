@@ -12,13 +12,13 @@ using namespace m2g;
 
 
 void throwOOM(JNIEnv* env) {
-    if (env->ExceptionCheck()) {
-        return;
-    }
-    jclass oomClass = env->FindClass("java/lang/OutOfMemoryError");
-    if (oomClass) {
-        env->ThrowNew(oomClass, "std::bad_alloc: Out of memory");
-    }
+//    if (env->ExceptionCheck()) {
+//        return;
+//    }
+//    jclass oomClass = env->FindClass("java/lang/OutOfMemoryError");
+//    if (oomClass) {
+//        env->ThrowNew(oomClass, "std::bad_alloc: Out of memory");
+//    }
 }
 
 static jlong nCreateImage(JNIEnv *, jclass, jint width, jint height) {

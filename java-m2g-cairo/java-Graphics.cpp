@@ -1,4 +1,5 @@
 ﻿#include <array>
+#include <cstring>
 #include "jni_def.h"
 #include "java-Objects.h"
 

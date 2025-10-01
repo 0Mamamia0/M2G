@@ -50,7 +50,8 @@ target_compile_definitions(m2g PRIVATE -D_USE_MATH_DEFINES)
 target_compile_definitions(m2g-cairo PRIVATE -D_USE_MATH_DEFINES)
 
 
-target_link_libraries(java-m2g PRIVATE m2g)
+target_link_libraries(java-m2g PUBLIC m2g)
+target_link_libraries(java-m2g-cairo PUBLIC m2g)
 
 
 

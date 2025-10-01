@@ -1,48 +1,44 @@
 #pragma once
 
 #include "arm_neon.h"
-
+#include "pix_def.h"
+#include "blend.h"
+#include "string.h"
+#include "assert.h"
 #define R 0
 #define G 1
 #define B 2
 #define A 3
 
+// int16_t src = cast<int16_t>(src);
+// int16_t dst = cast<int16_t>(dst);
+// int16_t alpha = cast<int16_t>(alpha);
+// dst += (src - dst) * alpha / 0xFF;
+// return cast<uint8_t>(dst);
 
 
-
-static inline uint8x8_t blend_32_neon(uint8x8_t src, uint8x8_t dst, uint16x8_t alpha) {
+static uint8x8_t alpha_blend_channel_neon(uint8x8_t src, uint8x8_t dst, uint16x8_t alpha) {
     int16x8_t src_wide, dst_wide;
-
-    // int16_t src = cast<int16_t>(src);
-    // int16_t dst = cast<int16_t>(dst);
-    // int16_t alpha = cast<int16_t>(alpha);
-    // dst += (src - dst) * alpha / 0xFF;
-    // return cast<uint8_t>(dst);
-
-
     src_wide = vreinterpretq_s16_u16(vmovl_u8(src));
     dst_wide = vreinterpretq_s16_u16(vmovl_u8(dst));
-
     src_wide = (src_wide - dst_wide) * vreinterpretq_s16_u16(alpha);
     dst_wide += vshrq_n_s16(src_wide, 8);
-
     return vmovn_u16(vreinterpretq_u16_s16(dst_wide));
 }
 
 
 
 
-template<int _R, int _G, int _B, int _A>
+template<int __R, int __G, int __B, int __A>
 void blend_rgba_neon_order(uint8_t* dst, const uint8_t* src, size_t size) {
-    uint8x8x4_t vdst;
-    uint8x8x4_t vsrc;
+    // assert(size % 32 == 0);
     for (int i = 0; i < size; i += 8) {
-        vdst = vld4_u8(dst);
-        vsrc = vld4_u8(src);
-        uint16x8_t a = vmovl_u8(vsrc.val[_A]);
-        vdst.val[R] = blend_32_neon(vsrc.val[_R], vdst.val[R], a);
-        vdst.val[G] = blend_32_neon(vsrc.val[_G], vdst.val[G], a);
-        vdst.val[B] = blend_32_neon(vsrc.val[_B], vdst.val[B], a);
+        uint8x8x4_t vdst = vld4_u8(dst);
+        uint8x8x4_t vsrc = vld4_u8(src);
+        uint16x8_t alpha = vmovl_u8(vsrc.val[__A]);
+        vdst.val[R] = alpha_blend_channel_neon(vsrc.val[__R], vdst.val[R], alpha);
+        vdst.val[G] = alpha_blend_channel_neon(vsrc.val[__G], vdst.val[G], alpha);
+        vdst.val[B] = alpha_blend_channel_neon(vsrc.val[__B], vdst.val[B], alpha);
         vdst.val[A] = vdup_n_u8(0xFF);;
         vst4_u8(dst, vdst);
 
@@ -52,22 +48,18 @@ void blend_rgba_neon_order(uint8_t* dst, const uint8_t* src, size_t size) {
 }
 
 inline void blend_a8_neon(uint8_t* dst, uint8_t* a8, uint8_t* rgba, int size) {
-    uint8x8x4_t vdst;
-    uint8x8x4_t vsrc;
-    uint16x8_t valpha;
-
     uint8x8_t vred   = vdup_n_u8(rgba[0]);
     uint8x8_t vgreen = vdup_n_u8(rgba[1]);
     uint8x8_t vblue  = vdup_n_u8(rgba[2]);
+    uint8x8_t valpha_full = vdup_n_u8(0xFF);
 
     for (int i = 0; i < size; i += 8) {
+        uint8x8x4_t vdst = vld4_u8(dst);
+        uint16x8_t valpha = vmovl_u8(vld1_u8(a8));
 
-        vdst = vld4_u8(dst);
-        valpha = vmovl_u8(vld1_u8(a8));
-
-        vdst.val[0] = blend_32_neon(vred, vdst.val[0], valpha);
-        vdst.val[1] = blend_32_neon(vgreen, vdst.val[1], valpha);
-        vdst.val[2] = blend_32_neon(vblue, vdst.val[2], valpha);
+        vdst.val[0] = alpha_blend_channel_neon(vred, vdst.val[0], valpha);
+        vdst.val[1] = alpha_blend_channel_neon(vgreen, vdst.val[1], valpha);
+        vdst.val[2] = alpha_blend_channel_neon(vblue, vdst.val[2], valpha);
         vdst.val[3] = vdup_n_u8(0xFF);
         vst4_u8(dst, vdst);
 
@@ -81,7 +73,7 @@ static inline void blend_r8g8b8a8_neon(uint8_t* dst, uint8_t* src, int size) {
 }
 
 template<int order>
-static inline void blend_rgba_neon(uint8_t* dst, const uint8_t* src, int count) {
+static void blend_rgba_neon(uint8_t* dst, const uint8_t* src, int count) {
     if constexpr (order == pix_order::ARGB) {
         blend_rgba_neon_order<1, 2, 3, 0>(dst, src, count);
     } else if constexpr (order == pix_order::BGRA) {
@@ -91,7 +83,7 @@ static inline void blend_rgba_neon(uint8_t* dst, const uint8_t* src, int count) 
     }
 }
 
-static inline void blend_(uint8_t* dst, uint8_t* src, int count) {
+static void blend_(uint8_t* dst, uint8_t* src, int count) {
     int num = count % 8;
     int offset = count - num;
     blend_rgba_neon<pix_order::RGBA>(dst, src, offset);
