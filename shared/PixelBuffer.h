@@ -38,7 +38,8 @@ namespace m2g {
         bool hasAlpha() const;
         bool isColor() const;
 
-        void erase(int i);
+        void erase(uint8_t i);
+        void erase(uint32_t argb);
         bool copyTo(PixelBuffer &dst) const;
 
 

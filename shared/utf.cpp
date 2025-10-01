@@ -13,18 +13,21 @@ namespace m2g::utf8 {
         if ((c1 & 0x80) == 0x00) {
             *codepoint = c1;
             return 1;
-        } else if ((c1 & 0xE0) == 0xC0 && len >= 2) {
+        }
+        if ((c1 & 0xE0) == 0xC0 && len >= 2) {
             *codepoint = (c1 & 0x1F) << 6 | (str[1] & 0x3F);
             return 2;
-        } else if ((c1 & 0xF0) == 0xE0 && len >= 3) {
+        }
+        if ((c1 & 0xF0) == 0xE0 && len >= 3) {
             *codepoint = (c1 & 0x0F) << 12 | (str[1] & 0x3F) << 6 | (str[2] & 0x3F);
             return 3;
-        } else if ((c1 & 0xF8) == 0xF0 && len >= 4) {
+        }
+        if ((c1 & 0xF8) == 0xF0 && len >= 4) {
             *codepoint = (c1 & 0x07) << 18 | (str[1] & 0x3F) << 12 | (str[2] & 0x3F) << 6 | (str[3] & 0x3F);
             return 4;
-        } else {
-            return -1;
         }
+        return -1;
+
     }
 
 

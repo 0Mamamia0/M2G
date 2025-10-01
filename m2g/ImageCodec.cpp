@@ -90,11 +90,20 @@ namespace m2g {
         }
     }
 
-    Image* ImageCodec::createImage(int width, int height) {
+    Image* ImageCodec::createImage(int width, int height, int argb) {
         Image* image = createEmptyImage(width, height, true);
+        uint8_t alpha = argb >> 24 & 0xFF;
+        uint8_t red = argb >> 16 & 0xFF;
+        uint8_t green = argb >> 8 & 0xFF;
+        uint8_t blue = argb & 0xFF;
+
         if (image != nullptr) {
             PixelBuffer &pixel = image->getPixelBufferRef();
-            pixel.erase(0xFF);
+            if (alpha == red && red == green && green == blue) {
+                pixel.erase(alpha);
+            } else {
+                pixel.erase((uint32_t)argb);
+            }
         }
         return image;
     }
