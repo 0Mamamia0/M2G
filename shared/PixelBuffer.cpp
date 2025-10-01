@@ -5,6 +5,8 @@
 
 #include <memory>
 #include <cstring>
+
+#include "color.h"
 #include "PixelFormat.h"
 
 static void Release(m2g::PixelBuffer* buffer, void* pixels) {
@@ -103,15 +105,33 @@ namespace m2g {
         return paddedRowByte;
     }
 
-    void PixelBuffer::erase(int val) {
+    void PixelBuffer::erase(uint8_t val) {
         int h = height;
         int w = width;
         int bytes = w << spp;
         uint8_t* pix = this->pixel;
-
         while (h -- > 0) {
             memset(pix, val, bytes);
-            pix += rowByte;
+            pix += paddedRowByte;
+        }
+    }
+    void PixelBuffer::erase(uint32_t argb) {
+        int h = height;
+        int w = width;
+
+        Color color{(int)argb};
+
+        uint8_t* pix = this->pixel;
+        uint8_t* row = pix;
+        while (h-- > 0) {
+            while (w -- > 0) {
+                memcpy(pix, &color, 4);
+                row += 4;
+            }
+
+            w = width;
+            pix += paddedRowByte;
+            row = pix;
         }
     }
 

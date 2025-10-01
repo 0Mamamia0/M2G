@@ -21,8 +21,8 @@ void throwOOM(JNIEnv* env) {
 //    }
 }
 
-static jlong nCreateImage(JNIEnv *, jclass, jint width, jint height) {
-    if(auto* image = ImageCodec::createImage(width, height)) {
+static jlong nCreateImage(JNIEnv *, jclass, jint width, jint height, jint argb) {
+    if(auto* image = ImageCodec::createImage(width, height, argb)) {
         return reinterpret_cast<jlong>(image);
     }
     return 0;
@@ -46,7 +46,7 @@ static jlong nCreateImage(JNIEnv *env, jclass, jbyteArray imageData, jint imageO
     return reinterpret_cast<jlong>(image);
 }
 
-static jlong nCreateImage(JNIEnv *env, jclass, jlong handle,jint  x, jint y, jint width, jint height, jint transform) {
+static jlong nCreateImage(JNIEnv *env, jclass, jlong handle, jint  x, jint y, jint width, jint height, jint transform) {
     if(auto* image = reinterpret_cast<Image*>(handle)) {
         return reinterpret_cast<jlong>(ImageCodec::createImage(image, x, y, width, height, transform));
     }
@@ -68,7 +68,7 @@ static jlong nCreateRGBImage(JNIEnv *env, jclass, jintArray rgb, jint width, jin
 extern "C" int register_m2g_ImageCodec(JNIEnv* env) {
 #define BIND_JNI(fun, sig, ptr) { const_cast<char*>(#fun), const_cast<char*>(sig), reinterpret_cast<void*>(ptr)}
     static const JNINativeMethod methods[] = {
-            BIND_JNI(nCreateImage, "(II)J", static_cast<jlong(*)(JNIEnv*,jclass,jint, jint)>(nCreateImage)),
+            BIND_JNI(nCreateImage, "(III)J", static_cast<jlong(*)(JNIEnv*,jclass,jint, jint, jint)>(nCreateImage)),
             BIND_JNI(nCreateImage, "(J)J", static_cast<jlong(*)(JNIEnv*,jclass,jlong)>(nCreateImage)),
             BIND_JNI(nCreateImage, "([BII)J", static_cast<jlong(*)(JNIEnv*,jclass,jbyteArray, jint, jint)>(nCreateImage)),
             BIND_JNI(nCreateImage, "(JIIIII)J", static_cast<jlong(*)(JNIEnv*,jclass,jlong, jint, jint, jint, jint, jint)>(nCreateImage)),
