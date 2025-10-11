@@ -5,3 +5,8 @@ enum pix_order {
     RGBA,
     BGRA
 };
+
+
+enum blend_mode {
+    SRC_OVER
+};

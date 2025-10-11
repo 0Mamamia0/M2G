@@ -5,6 +5,11 @@
 #define BGRA_ORDER 2,1,0,3
 
 
+
+
+
+
+
 inline void copyLTR(uint8_t *dst, uint8_t *src, int pixel) {
     memcpy(dst, src, pixel << 2);
 }

@@ -1,5 +1,7 @@
 ﻿#include <array>
 #include <cstring>
+#include <iostream>
+
 #include "jni_def.h"
 #include "java-Objects.h"
 
@@ -176,10 +178,11 @@ static jint nGetClipHeight(JNIEnv *, jclass, jlong handle) {
 
 static void nDrawString(JNIEnv *env, jclass, jlong handle, jstring str, jint x, jint y, jint anchor, jlong fontHandle) {
     auto *graphics = reinterpret_cast<Graphics *>(handle);
-    auto *font = reinterpret_cast<const Font *>(fontHandle);
+    auto *font = reinterpret_cast<Font*>(fontHandle);
     if (graphics != nullptr && font != nullptr) {
         const char *text = jniGetStringUTFChars(env, str, nullptr);
         jsize len = jniGetStringUTFLength(env, str);
+
         graphics->drawString(text, len, x, y, anchor, *font);
         jniReleaseStringUTFChars(env, str, text);
     }

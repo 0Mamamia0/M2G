@@ -26,20 +26,38 @@ static uint8x8_t alpha_blend_channel_neon(uint8x8_t src, uint8x8_t dst, uint16x8
     return vmovn_u16(vreinterpretq_u16_s16(dst_wide));
 }
 
+inline uint8x8_t alpha_blend_alpha_neon(uint8x8_t src_a, uint8x8_t dst_a) {
+    // inv = 255 - src_a
+    uint8x8_t inv = vsub_u8(vdup_n_u8(255), src_a);
+
+    // 扩展到 16bit
+    uint16x8_t s16   = vmovl_u8(src_a);
+    uint16x8_t d16   = vmovl_u8(dst_a);
+    uint16x8_t inv16 = vmovl_u8(inv);
+
+    // A_out = src + dst * (255 - src) / 255
+    uint16x8_t blended = vmlaq_u16(s16, d16, inv16);
+    blended = vshrq_n_u16(blended, 8);  // >> 8 截断
+
+    return vmovn_u16(blended);
+}
+
 
 
 
 template<int __R, int __G, int __B, int __A>
 void blend_rgba_neon_order(uint8_t* dst, const uint8_t* src, size_t size) {
-    // assert(size % 32 == 0);
+    assert(size % 8 == 0);
     for (int i = 0; i < size; i += 8) {
         uint8x8x4_t vdst = vld4_u8(dst);
         uint8x8x4_t vsrc = vld4_u8(src);
+
         uint16x8_t alpha = vmovl_u8(vsrc.val[__A]);
         vdst.val[R] = alpha_blend_channel_neon(vsrc.val[__R], vdst.val[R], alpha);
         vdst.val[G] = alpha_blend_channel_neon(vsrc.val[__G], vdst.val[G], alpha);
         vdst.val[B] = alpha_blend_channel_neon(vsrc.val[__B], vdst.val[B], alpha);
-        vdst.val[A] = vdup_n_u8(0xFF);;
+        // vdst.val[A] = vdup_n_u8(0xFF);;
+        vdst.val[A] = alpha_blend_alpha_neon( vsrc.val[__A], vdst.val[A]);
         vst4_u8(dst, vdst);
 
         src += 32;
@@ -47,20 +65,26 @@ void blend_rgba_neon_order(uint8_t* dst, const uint8_t* src, size_t size) {
     }
 }
 
+
+
+
 inline void blend_a8_neon(uint8_t* dst, uint8_t* a8, uint8_t* rgba, int size) {
     uint8x8_t vred   = vdup_n_u8(rgba[0]);
     uint8x8_t vgreen = vdup_n_u8(rgba[1]);
     uint8x8_t vblue  = vdup_n_u8(rgba[2]);
     uint8x8_t valpha_full = vdup_n_u8(0xFF);
-
+    // uint8x8_t valpha  = vdup_n_u8(rgba[3]);
     for (int i = 0; i < size; i += 8) {
         uint8x8x4_t vdst = vld4_u8(dst);
-        uint16x8_t valpha = vmovl_u8(vld1_u8(a8));
+        uint8x8_t v_a = vld1_u8(a8);
+        uint16x8_t valpha = vmovl_u8(v_a);
 
         vdst.val[0] = alpha_blend_channel_neon(vred, vdst.val[0], valpha);
         vdst.val[1] = alpha_blend_channel_neon(vgreen, vdst.val[1], valpha);
         vdst.val[2] = alpha_blend_channel_neon(vblue, vdst.val[2], valpha);
-        vdst.val[3] = vdup_n_u8(0xFF);
+        // vdst.val[3] = vdup_n_u8(0xFF);
+        vdst.val[3] = alpha_blend_alpha_neon(v_a, vdst.val[3]);
+
         vst4_u8(dst, vdst);
 
         a8  += 8;

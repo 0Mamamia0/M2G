@@ -46,7 +46,7 @@ namespace m2g {
         cairo_font_extents_t extents_;
 
         FontMetrics metrics_;
-        std::shared_ptr<Typeface> typeface_;
+        Typeface* typeface_;
     };
 }
 

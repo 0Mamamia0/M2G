@@ -403,7 +403,7 @@ namespace m2g {
             if (image->getFormat() == RGBA_8888) {
                 auto fun = [](uint32_t *dst, uint32_t *src, int w, int x_step) {
                     while (w-- > 0) {
-                        blend1px((uint8_t *) dst, (uint8_t *) src);
+                        blend_n<SRC_OVER, RGBA>((uint8_t *) dst, (uint8_t *) src, 1);
                         dst += 1;
                         src += x_step;
                     }
@@ -467,7 +467,7 @@ namespace m2g {
             count += count < 0 ? -1 : 1;
             auto *begin = buffer->addr<uint8_t *>(x, y0);
             auto stride = buffer->getPaddedRowByte();
-            blitLineV(begin, count, stride, paintColor.addr8());
+            blit_line_v(begin, count, stride, paintColor.addr8());
         }
     }
 
@@ -476,7 +476,7 @@ namespace m2g {
             int count = x1 - x0;
             count += count < 0 ? -1 : 1;
             auto *begin = buffer->addr<uint8_t *>(x0, y);
-            blitLineH(begin, count, paintColor.addr8());
+            blit_line_h(begin, count, paintColor.addr8());
         }
     }
 
@@ -586,11 +586,7 @@ namespace m2g {
         auto *pixel = buffer->addr<uint8_t *>();
         ptrdiff_t stride_ = buffer->getRowBytes();
 
-        if (stride_ == width * 4) {
-            blitH(pixel, width * height, (uint8_t *) &color);
-        } else {
-            blitRect(pixel, width, height, stride_, (uint8_t *) &color);
-        }
+        blit_rect(pixel, width, height, stride_, (uint8_t *) &color);
     }
 
 
@@ -658,7 +654,7 @@ namespace m2g {
         auto *pixel = buffer->addr<uint8_t *>(x, y);
         ptrdiff_t stride_ = buffer->getRowBytes();
 
-        blitRect(pixel, w, h, stride_, (uint8_t *) &paintColor);
+        blit_rect(pixel, w, h, stride_, (uint8_t *) &paintColor);
     }
 
     void Graphics::drawCircle(int centerX, int centerY, int r) {
@@ -755,7 +751,8 @@ namespace m2g {
 
     void Graphics::drawPixelAlpha(int x, int y, int alpha) {
         auto *pixels = buffer->addr<uint8_t *>(x, y);
-        blendA8(pixels, alpha, (uint8_t *) &paintColor);
+        uint8_t alpha_ = alpha;
+        blend_a8_num<1>(pixels, &alpha_, (uint8_t *) &paintColor);
     }
 
 

@@ -19,12 +19,53 @@ namespace m2g {
     }
 
     Image* ImageCodec::createImage(int width, int height) {
-        Image* image = new Image(width, height);
-        void* pixels = image->getPixels();
+        return createImage(width, height, 0xFFFFFFFF);
+    }
+
+    Image* ImageCodec::createImage(int width, int height, int argb) {
+        auto* image = new Image(width, height);
+        auto* pixels = (uint8_t*)image->getPixels();
         int stride = image->getStride();
-        while (height -- > 0) {
-            memset(pixels, 0xFF, stride);
+        uint8_t alpha = (argb >> 24) & 0xFF;
+        uint8_t red = (argb) & 0xFF;
+        uint8_t green = (argb >> 8) & 0xFF;
+        uint8_t blue = (argb >> 16) & 0xFF;
+        if ( alpha == red ==  green ==  blue) {
+            if (stride == width * 4) {
+                memset(pixels, alpha ,  stride * height);
+            } else {
+                while (height -- > 0) {
+                    memset(pixels, 0xFF, stride);
+                }
+            }
+        } else {
+            uint8_t color[4] = {red, green, blue, alpha};
+            if (stride == width * 4) {
+                size_t count = width * height;
+                while (count -- > 0) {
+                    memcpy(pixels, color, 4);
+                    pixels += 4;;
+                }
+            } else {
+                uint8_t* row = pixels;
+                int w = width;
+                while (height -- > 0) {
+                    while (w -- > 0) {
+                        memcpy(row, color, 4);
+                        row += 4;
+                    }
+                    pixels += stride;
+                    row = pixels;
+                    w = width;
+
+
+
+                }
+            }
         }
+
+
+
         return image;
     }
 

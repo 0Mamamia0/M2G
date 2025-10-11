@@ -1,5 +1,26 @@
 #pragma once
 
+inline uint8_t premultiply_channel(uint8_t c, int a) {
+    return (c * a) >> 8;
+}
+
+
+template<pix_order order>
+inline void premultiply_pixel(const uint8_t* src, uint8_t* out) {
+    uint8_t a = src[3];
+    if constexpr (order == ARGB) {
+        out[0] = a;
+        out[1] = premultiply_channel(src[1], a);
+        out[2] = premultiply_channel(src[2], a);
+        out[3] = premultiply_channel(src[3], a);
+    } else if constexpr (order == RGBA || order == BGRA) {
+        out[0] = premultiply_channel(src[0], a);
+        out[1] = premultiply_channel(src[1], a);
+        out[2] = premultiply_channel(src[2], a);
+        out[3] = a;
+    }
+}
+
 
 
 namespace m2g::piv {

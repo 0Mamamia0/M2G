@@ -90,6 +90,10 @@ namespace m2g {
         }
     }
 
+    Image* ImageCodec::createImage(int width, int height) {
+        return createImage(width, height, (int)0xFFFFFFFF);
+    }
+
     Image* ImageCodec::createImage(int width, int height, int argb) {
         Image* image = createEmptyImage(width, height, true);
         uint8_t alpha = argb >> 24 & 0xFF;

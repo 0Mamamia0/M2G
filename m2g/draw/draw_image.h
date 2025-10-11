@@ -115,7 +115,7 @@ namespace m2g {
         auto fun = [](uint8_t *dst, uint8_t *src, int l, int r, float ratio) {
             for (int x = l; x < r; ++x) {
                 int sx = (int) ((x + 0.5f) * ratio);
-                blend1px(dst, src + (sx << 2));
+                blend_n<SRC_OVER, RGBA>(dst, src + (sx << 2), 1);
                 dst += 4;
             }
         };
@@ -194,7 +194,7 @@ namespace m2g {
         Color paintColor(color);
         uint8_t *dst_row = dst + (y * dst_stride) + (x << 2);
         while (height-- > 0) {
-            blendA8(dst_row, src, paintColor.addr8(), width);
+            blend_a8_n<SRC_OVER>(dst_row, src, paintColor.addr8(), width);
             src += src_stride;
             dst_row += dst_stride;
         }
@@ -224,7 +224,7 @@ namespace m2g {
         uint8_t *src_row = src + (y1 * src_stride) + x1;
 
         while (h-- > 0) {
-            blendA8(dst_row, src_row, paintColor.addr8(), w);
+            blend_a8_n<SRC_OVER>(dst_row, src_row, paintColor.addr8(), w);
             src_row += src_stride;
             dst_row += dst_stride;
         }

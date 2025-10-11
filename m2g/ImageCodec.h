@@ -7,6 +7,7 @@ namespace m2g {
     class ImageCodec {
     public:
         static Image* createEmptyImage(int width, int height, bool isMutable);
+        static Image* createImage(int width, int height);
         static Image* createImage(int width, int height, int argb);
         static Image* loadImage(const char* filename);
         static Image* loadImage(uint8_t* data, int offset, int length);
